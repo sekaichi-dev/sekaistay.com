@@ -70,7 +70,7 @@ const PR_TIMES_BODY = `【プレスリリース】
 ■ お問い合わせ
 
 サービスサイト：https://sekaistay.com/switch
-60 秒の無料診断（物件情報なしで OK）：https://sekaistay.com/switch?utm_source=prtimes&utm_medium=press&utm_campaign=launch_20260601
+60 秒の無料診断（物件情報なしで OK）：https://sekaistay.com/go/pr
 
 【本プレスリリースに関するお問い合わせ】
 株式会社セカイチ 広報担当
@@ -108,7 +108,7 @@ const FB_T_BODY = `民泊運用代行「SEKAI STAY」を、本日 6 月 1 日に
 業界の常識を、ちゃんと変えていきたいと思っています。
 
 オーナーさん向けに、60 秒の無料診断（物件情報の入力なしで OK）を用意しています。
-気になる方は → https://sekaistay.com/switch?utm_source=facebook&utm_medium=organic&utm_campaign=launch_tenichi
+気になる方は → https://sekaistay.com/go/fbt
 
 応援していただける方は、シェアしていただけると嬉しいです。
 SEKAI STAY 代表 劉添毅`;
@@ -140,7 +140,7 @@ const FB_J_BODY = `民泊運用代行「SEKAI STAY」が本日 6 月 1 日にロ
 - 価格を 3 ヶ月以上動かしてもらっていない方
 
 60 秒の無料診断（物件情報の入力なしで OK）はこちらから。
-→ https://sekaistay.com/switch?utm_source=facebook&utm_medium=organic&utm_campaign=launch_jiro
+→ https://sekaistay.com/go/fbj
 
 オーナーさんからの紹介・パートナー連携も歓迎です。お気軽にメッセージください。`;
 
@@ -200,7 +200,7 @@ const X_T_LAUNCH_BODY = `「民泊代行は高すぎる、品質も読めない�
 詳細はプレスリリースに書きました → [PR TIMES Link]
 
 うちの物件、いくら損してるか診断できます。
-よかったら → https://sekaistay.com/switch/founder?utm_source=x&utm_medium=organic&utm_campaign=launch&utm_content=launch_tenichi
+よかったら → https://sekaistay.com/go/xlt
 
 ※ Airbnb 未掲載のオーナーも OK`;
 
@@ -258,7 +258,7 @@ Pricelabs（AI 価格自動化）+ DP API で、毎日全物件の価格が自�
 詳細はプレスリリース → [PR TIMES Link]
 
 うちの物件、いくら損してるか診断 →
-https://sekaistay.com/switch?utm_source=x&utm_medium=organic&utm_campaign=launch&utm_content=launch_jiro
+https://sekaistay.com/go/xlj
 
 ※ Airbnb 未掲載のオーナーも OK`;
 

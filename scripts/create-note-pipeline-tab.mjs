@@ -106,7 +106,7 @@ const DRAFT_N1 = `# 民泊代行を 8% でやろうと決めた日
 ここまで読んでいただいてありがとうございました。
 
 もしご自身の物件で「今いくら稼げる物件か」気になる方は、
-60 秒で簡易診断ができます → https://sekaistay.com/switch?utm_source=note&utm_medium=organic&utm_campaign=note_founder&utm_content=tenichi_8pct_decision`;
+60 秒で簡易診断ができます → https://sekaistay.com/go/n1`;
 
 const DRAFT_N2 = `# 民泊代行の中身を、お金の流れから見直す
 
@@ -201,7 +201,7 @@ const DRAFT_N2 = `# 民泊代行の中身を、お金の流れから見直す
 ここまで読んでいただいてありがとうございました。
 
 もしご自身の物件の代行手数料が「業界相場のままで本当に妥当か」気になる方は、
-60 秒で簡易診断ができます → https://sekaistay.com/switch?utm_source=note&utm_medium=organic&utm_campaign=note_industry&utm_content=tenichi_cost_structure`;
+60 秒で簡易診断ができます → https://sekaistay.com/go/n2`;
 
 const DRAFT_N3 = `# 鎌倉でプール付き 1 棟貸しを作ったら、平均宿泊単価が 2 倍になった話
 
@@ -326,7 +326,7 @@ K さんの鎌倉と箱根の物件は今もうちで運用していて、毎月
 ここまで読んでいただいてありがとうございました。
 
 もしご自身の物件で「もっと単価を伸ばせる気がする」と感じている方は、
-60 秒で簡易診断ができます → https://sekaistay.com/switch/founder?utm_source=note&utm_medium=organic&utm_campaign=note_story&utm_content=tenichi_kamakura_pool`;
+60 秒で簡易診断ができます → https://sekaistay.com/go/n3`;
 
 const PIPELINE_ROWS = [
   ["N-1", "A. 経営者自己開示", "業界トレンド",

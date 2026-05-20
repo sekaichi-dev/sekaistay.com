@@ -72,7 +72,7 @@ const DRAFT_T1 = `「8%って、ボランティアでやってるんですか?�
 ここは、誰でも同じ構造で再現できるはず。
 
 うちの物件、今いくら損してるか診断できます。
-よかったら → https://sekaistay.com/switch?utm_source=x&utm_medium=organic&utm_campaign=longform&utm_content=tenichi_8pct_structure
+よかったら → https://sekaistay.com/go/t1
 
 ※ Airbnb 未掲載・アクティブなリスティングが無いオーナーもOKです`;
 
@@ -179,7 +179,7 @@ ADR: 維持しつつ稼働 +20% 以上
 でも、オーナーさんと喜びを分かち合えたのは、本当に嬉しかった。
 
 あなたの物件、いくら損してるか診断できます。
-よかったら → https://sekaistay.com/switch/founder?utm_source=x&utm_medium=organic&utm_campaign=longform&utm_content=tenichi_award_breakdown
+よかったら → https://sekaistay.com/go/t2
 
 ※ Airbnb 未掲載のオーナーも OK`;
 
@@ -254,7 +254,7 @@ const DRAFT_T3 = `「今の代行、ちょっと変えたいんですよね」
 どれか当てはまったら、変えどきかもしれません。
 
 うちの物件、いま変えるべきタイミングか診断できます。
-よかったら → https://sekaistay.com/switch?utm_source=x&utm_medium=organic&utm_campaign=longform&utm_content=tenichi_agency_switch_signals
+よかったら → https://sekaistay.com/go/t3
 
 ※ Airbnb 未掲載のオーナーも OK`;
 
@@ -373,7 +373,7 @@ ADR ¥26,000 / 稼働 65%
 家具投資の ROI を計算しないオーナーさんは、無自覚に機会を逃してる。
 
 うちの物件、家具投資で何が増収できそうか診断できます。
-よかったら → https://sekaistay.com/switch/portal?utm_source=x&utm_medium=organic&utm_campaign=longform&utm_content=tenichi_furniture_roi
+よかったら → https://sekaistay.com/go/t4
 
 ※ Airbnb 未掲載のオーナーも OK`;
 
@@ -445,7 +445,7 @@ const DRAFT_J4 = `保健所と毎月やり取りしてる立場から書きま�
 法務対応を「オーナーまかせ」にしてる代行は、トラブル時に動けません。
 
 うちは保健所対応・旅館業法切替まで一気通貫でサポートしてます。
-よかったら → https://sekaistay.com/switch?utm_source=x&utm_medium=organic&utm_campaign=longform&utm_content=jiro_minpaku_law_2026
+よかったら → https://sekaistay.com/go/j4
 
 ※ Airbnb 未掲載のオーナーも OK`;
 
@@ -507,7 +507,7 @@ K さんは、ポータルにログイン → 物件 3 件と過去 24 ヶ月を
 ダッシュボードは「機能」じゃなくて「オーナーさんの自由度」です。
 
 あなたの物件の収益、いつでも自分で出力できるダッシュボードがあります。
-よかったら → https://sekaistay.com/switch/portal?utm_source=x&utm_medium=organic&utm_campaign=longform&utm_content=unei_owner_dashboard_use
+よかったら → https://sekaistay.com/go/u6
 
 ※ Airbnb 未掲載のオーナーも OK`;
 
