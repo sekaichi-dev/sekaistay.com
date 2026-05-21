@@ -52,7 +52,7 @@ export default function SwitchPricing() {
                 clipRule="evenodd"
               />
             </svg>
-            業界でもっともシンプルな料金体系
+            シンプルな料金体系
           </span>
 
           <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
