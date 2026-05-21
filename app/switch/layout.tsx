@@ -21,11 +21,20 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ja_JP',
     siteName: 'SEKAI STAY',
+    images: [
+      {
+        url: 'https://sekaistay.com/og-image.png',
+        width: 2400,
+        height: 840,
+        alt: 'SEKAI STAY — 民泊運用のぜんぶを、手数料8%で、まるっとお任せ。',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: TITLE,
     description: '手数料、払いすぎていませんか。SEKAI STAYなら8%で高品質な運営を実現。',
+    images: ['https://sekaistay.com/og-image.png'],
   },
   robots: { index: true, follow: true },
 }

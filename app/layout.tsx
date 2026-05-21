@@ -87,10 +87,10 @@ export const metadata: Metadata = {
     url: SITE_URL,
     images: [
       {
-        url: `${SITE_URL}/og-image.jpg`,
-        width: 1200,
-        height: 630,
-        alt: 'SEKAI STAY — 成果で選ばれる民泊運用代行サービス',
+        url: `${SITE_URL}/og-image.png`,
+        width: 2400,
+        height: 840,
+        alt: 'SEKAI STAY — 民泊運用のぜんぶを、手数料8%で、まるっとお任せ。',
       },
     ],
   },
@@ -99,7 +99,7 @@ export const metadata: Metadata = {
     title: 'SEKAI STAY | 成果で選ばれる民泊運用代行',
     description:
       '管理物件レビュー平均4.8・Airbnbスーパーホスト認定。稼働率と収益を上げる民泊運用代行。全国7拠点。',
-    images: [`${SITE_URL}/og-image.jpg`],
+    images: [`${SITE_URL}/og-image.png`],
   },
   robots: {
     index: true,
