@@ -332,7 +332,10 @@ export async function forwardLeadToSalesPortal(leadId: string): Promise<ForwardO
  *     現状: C0AFH8LF3TK = #402-sekaistay面談申込
  * - 失敗してもクライアント応答 200 を維持 (Promise.allSettled 内で実行)。
  */
-export async function forwardLeadToSlack(leadId: string): Promise<ForwardOutcome> {
+export async function forwardLeadToSlack(
+  leadId: string,
+  options: { headerNote?: string } = {},
+): Promise<ForwardOutcome> {
   const token = (process.env.SLACK_BOT_TOKEN || "").trim();
   const channelId = (process.env.SLACK_LEAD_CHANNEL_ID || "").trim();
   if (!token || !channelId) {
@@ -373,25 +376,32 @@ export async function forwardLeadToSlack(leadId: string): Promise<ForwardOutcome
   if (r.complaints) lines.push(`*課題・要望:* ${r.complaints.slice(0, 1500)}`);
   lines.push(`*LP:* ${lpVariant}   *計測:* ${utmInfo}`);
 
+  const blocks: Array<Record<string, unknown>> = [
+    {
+      type: "header",
+      text: { type: "plain_text", text: `🏡 新規リード: ${r.name || "(未入力)"}`, emoji: true },
+    },
+  ];
+  if (options.headerNote) {
+    blocks.push({
+      type: "section",
+      text: { type: "mrkdwn", text: options.headerNote },
+    });
+  }
+  blocks.push(
+    { type: "section", text: { type: "mrkdwn", text: lines.join("\n") } },
+    {
+      type: "context",
+      elements: [{ type: "mrkdwn", text: `Lead ID: \`${r.id}\` · ${r.created_at}` }],
+    },
+  );
+
   const payload = {
     channel: channelId,
     text: `🔔 新規リード: ${r.name}`,
     unfurl_links: false,
     unfurl_media: false,
-    blocks: [
-      {
-        type: "header",
-        text: { type: "plain_text", text: `🏡 新規リード: ${r.name || "(未入力)"}`, emoji: true },
-      },
-      {
-        type: "section",
-        text: { type: "mrkdwn", text: lines.join("\n") },
-      },
-      {
-        type: "context",
-        elements: [{ type: "mrkdwn", text: `Lead ID: \`${r.id}\` · ${r.created_at}` }],
-      },
-    ],
+    blocks,
   };
 
   const ac = new AbortController();

@@ -176,8 +176,11 @@ export async function GET(req: NextRequest) {
       continue;
     }
 
-    // 通知実行
-    const outcome = await forwardLeadToSlack(lead.id);
+    // 通知実行 — フォーム送信から10分経過し TimeRex 予約も来ていない離脱リード
+    const minutesElapsed = Math.round((Date.now() - new Date(lead.created_at).getTime()) / 60_000);
+    const outcome = await forwardLeadToSlack(lead.id, {
+      headerNote: `⚠️ *TimeRex予約なし* — フォーム送信から ${minutesElapsed} 分経過。営業フォローアップ推奨。`,
+    });
     if (outcome.ok) {
       const { error: updErr } = await supabase
         .from("lead_submissions")
