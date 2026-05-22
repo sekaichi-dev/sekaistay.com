@@ -45,25 +45,25 @@ export default function FinalCTA() {
 
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 lg:gap-20 items-center">
           {/* Left — Statement */}
-          <div>
-            <h2 className="heading-masthead text-ivory jp-keep mb-8">
+          <div className="min-w-0">
+            <h2 className="heading-masthead text-ivory jp-break mb-8">
               <JP>{FINAL_CTA.headline}</JP>
             </h2>
             <p className="text-body-lg text-ivory/80 jp-break max-w-[540px] mb-10">
               {FINAL_CTA.body}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
               <Link
                 href={FINAL_CTA.primaryCta.href}
-                className="btn bg-ivory text-teal-ink hover:bg-bright-teal hover:text-ivory border-ivory"
+                className="btn bg-ivory text-teal-ink hover:bg-bright-teal hover:text-ivory border-ivory w-full sm:w-auto"
               >
                 {FINAL_CTA.primaryCta.label}
                 <IconArrowRight size={14} />
               </Link>
               <Link
                 href={FINAL_CTA.secondaryCta.href}
-                className="btn border-ivory/40 text-ivory hover:bg-ivory/10 hover:border-ivory"
+                className="btn border-ivory/40 text-ivory hover:bg-ivory/10 hover:border-ivory w-full sm:w-auto"
               >
                 {FINAL_CTA.secondaryCta.label}
               </Link>
@@ -79,7 +79,7 @@ export default function FinalCTA() {
           </div>
 
           {/* Right — Editorial note card */}
-          <div className="relative lg:pl-10">
+          <div className="relative lg:pl-10 min-w-0">
             <div className="border-l border-bright-teal/40 pl-8 md:pl-10">
               <p className="eyebrow-mono text-bright-teal mb-5">
                 A Note for the Owner
