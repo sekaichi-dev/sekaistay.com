@@ -5,5 +5,11 @@
       "destination": "/switch",
       "permanent": true
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/lead-slack-delayed",
+      "schedule": "* * * * *"
+    }
   ]
 }

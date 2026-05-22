@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { insertLeadSubmission, type SubmitPayload } from "@/lib/lead-submissions";
-import { forwardLead, forwardLeadToSalesPortal, forwardLeadToDiscord, forwardLeadToSlack } from "@/lib/lead-forward";
+import { forwardLead, forwardLeadToSalesPortal, forwardLeadToDiscord } from "@/lib/lead-forward";
 import { sendMetaCapiLead } from "@/lib/meta-capi";
 import { classifyKind } from "@/lib/test-classifier";
 import { appendLeadToSheet } from "@/lib/sheets-backup";
@@ -197,13 +197,15 @@ export async function POST(req: NextRequest) {
               value: 0,
             },
           });
-    const [yoshizoOutcome, salesPortalOutcome, capiOutcome, sheetOutcome, discordOutcome, slackOutcome] = await Promise.allSettled([
+    // Slack 通知は同期で投げず、cron (/api/lead-slack-delayed) が created_at + 10 分後に処理する。
+    // 理由: TimeRex の予約完了が #402-sekaistay面談申込 に独立して投稿されるため、即時にフォーム通知も
+    // 流すとダブル通知になる。10 分遅延 → 同名の TimeRex bot 投稿があれば抑制 → なければ Slack 通知。
+    const [yoshizoOutcome, salesPortalOutcome, capiOutcome, sheetOutcome, discordOutcome] = await Promise.allSettled([
       forwardLead(row.id),
       forwardLeadToSalesPortal(row.id),
       capiPromise,
       appendLeadToSheet(row),
       forwardLeadToDiscord(row.id),
-      forwardLeadToSlack(row.id),
     ]);
     if (yoshizoOutcome.status === "fulfilled" && !yoshizoOutcome.value.ok) {
       console.warn(`[submit] forward to 吉蔵 failed (lead=${row.id}): ${yoshizoOutcome.value.error}`);
@@ -231,11 +233,6 @@ export async function POST(req: NextRequest) {
       console.warn(`[submit] discord notification failed (lead=${row.id}): ${discordOutcome.value.error}`);
     } else if (discordOutcome.status === "rejected") {
       console.warn(`[submit] discord notification threw (lead=${row.id}): ${discordOutcome.reason}`);
-    }
-    if (slackOutcome.status === "fulfilled" && !slackOutcome.value.ok) {
-      console.warn(`[submit] slack notification failed (lead=${row.id}): ${slackOutcome.value.error}`);
-    } else if (slackOutcome.status === "rejected") {
-      console.warn(`[submit] slack notification threw (lead=${row.id}): ${slackOutcome.reason}`);
     }
     console.warn(`[submit] done lead=${row.id} eventId=${eventId} kind=${kind} capiPath=${kind === "test" ? "skipped" : "attempted"} capiOutcome=${capiOutcome.status}`);
     return NextResponse.json({ id: row.id, status: "received", eventId }, { status: 200 });
