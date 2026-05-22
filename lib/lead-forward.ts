@@ -314,3 +314,113 @@ export async function forwardLeadToSalesPortal(leadId: string): Promise<ForwardO
     clearTimeout(timer);
   }
 }
+
+/**
+ * Slack 通知: 新規リードを #402-sekaistay面談申込 に投稿。
+ *
+ * 設計背景 (2026-05-22):
+ * - Discord 通知 (forwardLeadToDiscord) と並行して Slack にも飛ばす。
+ *   Slack 主体で動いている運営/営業メンバーが気づけるようにする。
+ * - bot トークン (xoxb-) を使う chat.postMessage 経由。Incoming Webhook ではないので
+ *   チャネル変更時に Slack 側で再発行が不要。事前に bot を該当チャネルに invite しておくこと。
+ *
+ * 動作:
+ * - kind="test" は skip (テストリードでチャンネルを汚さない)
+ * - 環境変数:
+ *   - SLACK_BOT_TOKEN (必須・未設定なら no-op で成功扱い)
+ *   - SLACK_LEAD_CHANNEL_ID (必須・未設定なら no-op で成功扱い)
+ *     現状: C0AFH8LF3TK = #402-sekaistay面談申込
+ * - 失敗してもクライアント応答 200 を維持 (Promise.allSettled 内で実行)。
+ */
+export async function forwardLeadToSlack(leadId: string): Promise<ForwardOutcome> {
+  const token = (process.env.SLACK_BOT_TOKEN || "").trim();
+  const channelId = (process.env.SLACK_LEAD_CHANNEL_ID || "").trim();
+  if (!token || !channelId) {
+    return { ok: true, error: "SLACK_BOT_TOKEN / SLACK_LEAD_CHANNEL_ID not configured (skipped)" };
+  }
+
+  const supabase = getSupabaseAdmin();
+  const { data: row, error: fetchErr } = await supabase
+    .from("lead_submissions")
+    .select("*")
+    .eq("id", leadId)
+    .single();
+  if (fetchErr || !row) {
+    return { ok: false, error: fetchErr?.message || "row not found" };
+  }
+  const r = row as LeadSubmissionRow;
+
+  if (r.kind === "test") return { ok: true };
+
+  const lpVariant = r.lp_variant || "(direct)";
+  const utmInfo =
+    r.utm_source || r.utm_campaign
+      ? `${r.utm_source ?? "?"} / ${r.utm_campaign ?? "?"} / ${r.utm_content ?? "?"}`
+      : "(なし)";
+
+  const lines: string[] = [];
+  lines.push(`*👤 名前:* ${r.name || "(未入力)"}`);
+  lines.push(`*📧 Email:* ${r.email || "(未入力)"}`);
+  lines.push(`*📞 電話:* ${r.phone || "(未入力)"}`);
+  if (r.company_name) lines.push(`*🏢 会社:* ${r.company_name}`);
+  if (r.airbnb_url) lines.push(`*🏠 Airbnb URL:* ${r.airbnb_url}`);
+  if (typeof r.total_properties === "number") lines.push(`*物件数:* ${r.total_properties} 棟`);
+  if (r.commission_rate) lines.push(`*現手数料:* ${r.commission_rate}`);
+  if (r.operating_years) lines.push(`*運営年数:* ${r.operating_years}`);
+  if (r.peak_revenue || r.offpeak_revenue) {
+    lines.push(`*想定年商:* 繁忙期 ${r.peak_revenue ?? "?"} / 閑散期 ${r.offpeak_revenue ?? "?"}`);
+  }
+  if (r.complaints) lines.push(`*課題・要望:* ${r.complaints.slice(0, 1500)}`);
+  lines.push(`*LP:* ${lpVariant}   *計測:* ${utmInfo}`);
+
+  const payload = {
+    channel: channelId,
+    text: `🔔 新規リード: ${r.name}`,
+    unfurl_links: false,
+    unfurl_media: false,
+    blocks: [
+      {
+        type: "header",
+        text: { type: "plain_text", text: `🏡 新規リード: ${r.name || "(未入力)"}`, emoji: true },
+      },
+      {
+        type: "section",
+        text: { type: "mrkdwn", text: lines.join("\n") },
+      },
+      {
+        type: "context",
+        elements: [{ type: "mrkdwn", text: `Lead ID: \`${r.id}\` · ${r.created_at}` }],
+      },
+    ],
+  };
+
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), FORWARD_TIMEOUT_MS);
+  try {
+    const resp = await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+      signal: ac.signal,
+    });
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
+      return { ok: false, status: resp.status, error: `HTTP ${resp.status}: ${text.slice(0, 500)}` };
+    }
+    const json = (await resp.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+    if (!json?.ok) {
+      return { ok: false, status: resp.status, error: `slack error: ${json?.error || "unknown"}` };
+    }
+    return { ok: true, status: resp.status };
+  } catch (err: any) {
+    return {
+      ok: false,
+      error: err?.name === "AbortError" ? `timeout after ${FORWARD_TIMEOUT_MS}ms` : err?.message || String(err),
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
