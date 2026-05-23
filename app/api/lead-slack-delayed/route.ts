@@ -193,32 +193,31 @@ export async function GET(req: NextRequest) {
     // Slack #402 に同名の TimeRex 投稿があるか
     const matched = timerexMessages.find((m) => nameMatches(lead.name, m.haystack));
 
-    if (matched) {
-      const { error: updErr } = await supabase
-        .from("lead_submissions")
-        .update({
-          slack_notified_at: new Date().toISOString(),
-          slack_suppressed_reason: "timerex_booked",
-        })
-        .eq("id", lead.id);
-      results.push({ id: lead.id, action: "suppressed", reason: "timerex_booked", matchedTs: matched.ts, updErr: updErr?.message });
-      continue;
-    }
-
-    // 通知実行 — フォーム送信から10分経過し TimeRex 予約も来ていない離脱リード
+    // 予約あり → TimeRex スレッドにフォーム回答を返信。離脱なら通常通知。
     const minutesElapsed = Math.round((Date.now() - new Date(lead.created_at).getTime()) / 60_000);
-    const outcome = await forwardLeadToSlack(lead.id, {
-      headerNote: `⚠️ *TimeRex予約なし* — フォーム送信から ${minutesElapsed} 分経過。営業フォローアップ推奨。`,
-    });
+    const outcome = matched
+      ? await forwardLeadToSlack(lead.id, {
+          threadTs: matched.ts,
+          headerNote: `✅ *TimeRex 予約済み* — フォーム回答を共有します。`,
+        })
+      : await forwardLeadToSlack(lead.id, {
+          headerNote: `⚠️ *TimeRex予約なし* — フォーム送信から ${minutesElapsed} 分経過。営業フォローアップ推奨。`,
+        });
     if (outcome.ok) {
       const { error: updErr } = await supabase
         .from("lead_submissions")
         .update({
           slack_notified_at: new Date().toISOString(),
           slack_attempt_count: lead.slack_attempt_count + 1,
+          slack_suppressed_reason: matched ? "timerex_thread_reply" : null,
         })
         .eq("id", lead.id);
-      results.push({ id: lead.id, action: "notified", updErr: updErr?.message });
+      results.push({
+        id: lead.id,
+        action: matched ? "notified_thread" : "notified_standalone",
+        matchedTs: matched?.ts,
+        updErr: updErr?.message,
+      });
     } else {
       const nextAttempt = lead.slack_attempt_count + 1;
       const { error: updErr } = await supabase

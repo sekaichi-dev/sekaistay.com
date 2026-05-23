@@ -334,7 +334,7 @@ export async function forwardLeadToSalesPortal(leadId: string): Promise<ForwardO
  */
 export async function forwardLeadToSlack(
   leadId: string,
-  options: { headerNote?: string } = {},
+  options: { headerNote?: string; threadTs?: string } = {},
 ): Promise<ForwardOutcome> {
   const token = (process.env.SLACK_BOT_TOKEN || "").trim();
   const channelId = (process.env.SLACK_LEAD_CHANNEL_ID || "").trim();
@@ -396,13 +396,18 @@ export async function forwardLeadToSlack(
     },
   );
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     channel: channelId,
     text: `🔔 新規リード: ${r.name}`,
     unfurl_links: false,
     unfurl_media: false,
     blocks,
   };
+  if (options.threadTs) {
+    payload.thread_ts = options.threadTs;
+    // チャンネルにも broadcast したいケースは reply_broadcast=true。
+    // ここでは TimeRex スレッド内だけに静かに足す（営業はスレッドを開けば見える）。
+  }
 
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), FORWARD_TIMEOUT_MS);
