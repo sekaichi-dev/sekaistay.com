@@ -26,7 +26,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const DELAY_MS = 10 * 60_000; // フォーム送信から 10 分後に処理対象になる
-const SLACK_LOOKBACK_MS = 25 * 60_000; // Slack #402 を直近 25 分まで遡って TimeRex 投稿をチェック
+const SLACK_LOOKBACK_MS = 6 * 60 * 60_000; // TEMP 2026-05-23 動作確認用 6h. 通常は 25min (25*60_000)
 const PROCESS_LIMIT = 20;
 const TIME_BUDGET_MS = 50_000;
 const MAX_ATTEMPTS = 5;
