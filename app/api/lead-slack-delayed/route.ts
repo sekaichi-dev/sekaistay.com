@@ -116,18 +116,59 @@ function isTimerexBookingMessage(msg: SlackMessage): boolean {
 }
 
 /**
+ * 全角カタカナ → 全角ひらがな への変換。
+ * フォーム側の name 表記とTimeRex投稿の名前表記でカナ種別が違うケースに備える。
+ * 漢字や半角は素通し。
+ */
+function katakanaToHiragana(s: string): string {
+  return s.replace(/[\u30A1-\u30F6]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+}
+
+/**
  * リード氏名が TimeRex 投稿に含まれているか判定。
  * 名前は「丸山」のような姓だけのケースもあるので、空白除去 + 部分一致でラフに照合する。
  * フォームの name 全体 / 空白を取り除いた version / 先頭2文字 のいずれかが match すれば一致扱い。
+ * カタカナ↔ひらがなの揺れは正規化して再判定する。
+ *
+ * 注意: 漢字↔かなの揺れは検出不可（例: 岩崎健佑 vs いわさきけんすけ）。
+ * その場合は cron 側で時間窓フォールバックを使う。
  */
 function nameMatches(leadName: string | null | undefined, haystack: string): boolean {
   if (!leadName) return false;
   const cleaned = leadName.replace(/\s+/g, "");
   if (cleaned.length === 0) return false;
+  const cleanedHira = katakanaToHiragana(cleaned);
+  const haystackHira = katakanaToHiragana(haystack);
   if (haystack.includes(cleaned)) return true;
+  if (haystackHira.includes(cleanedHira)) return true;
   // 姓+名で送ってきた場合、TimeRex 側は氏のみ入力されがちなので最初の2文字も試す
   if (cleaned.length >= 2 && haystack.includes(cleaned.slice(0, 2))) return true;
+  if (cleanedHira.length >= 2 && haystackHira.includes(cleanedHira.slice(0, 2))) return true;
   return false;
+}
+
+/**
+ * 名前マッチが外れた場合の時間窓フォールバック。
+ * フォーム送信時刻 ±TIME_WINDOW_MS 以内のTimeRex投稿が「ちょうど1つ」で、
+ * かつその投稿が他のリードの名前マッチに使われていないなら、それを採用する。
+ *
+ * 主な狙い: 漢字↔かなの揺れ（岩崎健佑 ↔ いわさきけんすけ）で名前マッチが失敗する事故の救済。
+ * 誤接続リスク: 同時間窓に複数リードがあり全員かな表記でマッチ外れの場合のみ。実運用では低頻度。
+ */
+const TIME_WINDOW_MS = 15 * 60_000;
+
+function findTimerexMatchByTime(
+  leadCreatedAt: string,
+  timerexMessages: Array<{ ts: string; haystack: string }>,
+  claimedTs: Set<string>,
+): { ts: string; haystack: string } | null {
+  const leadMs = new Date(leadCreatedAt).getTime();
+  const candidates = timerexMessages.filter((m) => {
+    if (claimedTs.has(m.ts)) return false;
+    const tsMs = parseFloat(m.ts) * 1000;
+    return Math.abs(tsMs - leadMs) <= TIME_WINDOW_MS;
+  });
+  return candidates.length === 1 ? candidates[0] : null;
 }
 
 export async function GET(req: NextRequest) {
@@ -183,38 +224,62 @@ export async function GET(req: NextRequest) {
   const startedAt = Date.now();
   const results: Array<Record<string, unknown>> = [];
 
-  for (const row of data) {
+  // 2-pass: まず name match で claimed ts を確定させ、残りを time-window で救済する
+  const leads = data as Array<{ id: string; created_at: string; name: string | null; email: string | null; slack_attempt_count: number }>;
+  const nameMatched = new Map<string, { ts: string; haystack: string }>();
+  const claimedTs = new Set<string>();
+  for (const lead of leads) {
+    const m = timerexMessages.find((tm) => nameMatches(lead.name, tm.haystack));
+    if (m) {
+      nameMatched.set(lead.id, m);
+      claimedTs.add(m.ts);
+    }
+  }
+
+  for (const lead of leads) {
     if (Date.now() - startedAt > TIME_BUDGET_MS) {
-      results.push({ id: row.id, skipped: "time-budget" });
+      results.push({ id: lead.id, skipped: "time-budget" });
       continue;
     }
-    const lead = row as { id: string; created_at: string; name: string | null; email: string | null; slack_attempt_count: number };
 
-    // Slack #402 に同名の TimeRex 投稿があるか
-    const matched = timerexMessages.find((m) => nameMatches(lead.name, m.haystack));
+    let matched: { ts: string; haystack: string } | null = nameMatched.get(lead.id) || null;
+    let matchMethod: "name" | "time_window" | null = matched ? "name" : null;
+    if (!matched) {
+      const tw = findTimerexMatchByTime(lead.created_at, timerexMessages, claimedTs);
+      if (tw) {
+        matched = tw;
+        matchMethod = "time_window";
+        claimedTs.add(tw.ts);
+      }
+    }
 
     // 予約あり → TimeRex スレッドにフォーム回答を返信。離脱なら通常通知。
     const minutesElapsed = Math.round((Date.now() - new Date(lead.created_at).getTime()) / 60_000);
+    const headerNote = matched
+      ? matchMethod === "time_window"
+        ? `✅ *TimeRex 予約済み* (時間窓で同定) — フォーム回答を共有します。`
+        : `✅ *TimeRex 予約済み* — フォーム回答を共有します。`
+      : `⚠️ *TimeRex予約なし* — フォーム送信から ${minutesElapsed} 分経過。営業フォローアップ推奨。`;
     const outcome = matched
-      ? await forwardLeadToSlack(lead.id, {
-          threadTs: matched.ts,
-          headerNote: `✅ *TimeRex 予約済み* — フォーム回答を共有します。`,
-        })
-      : await forwardLeadToSlack(lead.id, {
-          headerNote: `⚠️ *TimeRex予約なし* — フォーム送信から ${minutesElapsed} 分経過。営業フォローアップ推奨。`,
-        });
+      ? await forwardLeadToSlack(lead.id, { threadTs: matched.ts, headerNote })
+      : await forwardLeadToSlack(lead.id, { headerNote });
     if (outcome.ok) {
+      const suppressedReason = matched
+        ? matchMethod === "time_window"
+          ? "timerex_thread_reply_timewindow"
+          : "timerex_thread_reply"
+        : null;
       const { error: updErr } = await supabase
         .from("lead_submissions")
         .update({
           slack_notified_at: new Date().toISOString(),
           slack_attempt_count: lead.slack_attempt_count + 1,
-          slack_suppressed_reason: matched ? "timerex_thread_reply" : null,
+          slack_suppressed_reason: suppressedReason,
         })
         .eq("id", lead.id);
       results.push({
         id: lead.id,
-        action: matched ? "notified_thread" : "notified_standalone",
+        action: matched ? `notified_thread_${matchMethod}` : "notified_standalone",
         matchedTs: matched?.ts,
         updErr: updErr?.message,
       });
