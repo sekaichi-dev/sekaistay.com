@@ -44,9 +44,9 @@
 ## Phase 2: Meta CAPI 実装 [P1]
 
 - [ ] (人間) テストイベント コード取得（Events Manager → テストイベント タブ）→ Discord 共有 → META_CAPI_TEST_EVENT_CODE Vercel env 登録 @impact:8 @urgency:8 @effort:1
-- [ ] PR4: lib/meta-capi.ts 作成（SHA-256 ハッシュ + Meta Graph API 呼び出し helper） @impact:9 @urgency:8 @effort:3
-- [ ] PR4: /api/report-requests/submit に CAPI 統合実装（event_id 生成・fire-and-forget） @impact:9 @urgency:8 @effort:2
-- [ ] PR4: ReportRequestForm.tsx の fbq 呼び出しに eventID を渡す（重複除去のキー） @impact:8 @urgency:8 @effort:1
+- [x] PR4: lib/meta-capi.ts 作成（SHA-256 ハッシュ + Meta Graph API 呼び出し helper） @impact:9 @urgency:8 @effort:3
+- [x] PR4: /api/report-requests/submit に CAPI 統合実装（event_id 生成・fire-and-forget） @impact:9 @urgency:8 @effort:2
+- [x] PR4: ReportRequestForm.tsx の fbq 呼び出しに eventID を渡す（重複除去のキー） @impact:8 @urgency:8 @effort:1
 - [ ] Test Events 動作確認（Pixel + CAPI 2 件確認・Meta が両方受信表示） @impact:7 @urgency:7 @effort:1
 - [ ] EMQ スコア 8 点以上確認 @impact:7 @urgency:6 @effort:1
 - [ ] (人間) 本番 Live（META_CAPI_TEST_EVENT_CODE を空に → Redeploy） @impact:8 @urgency:7 @effort:1
@@ -55,8 +55,8 @@
 
 ## Phase 3: X Ads 計測セットアップ [P2]
 
-- [ ] (人間) X Pixel ID 取得（Ads Manager → ツール → コンバージョン トラッキング → UWT 作成） @impact:7 @urgency:6 @effort:1
-- [ ] X Pixel ID・タグコードを Discord 共有 → app/layout.tsx 実装（PR5） @impact:7 @urgency:6 @effort:2
+- [x] (人間) X Pixel ID 取得（Ads Manager → ツール → コンバージョン トラッキング → UWT 作成） @impact:7 @urgency:6 @effort:1
+- [x] X Pixel ID・タグコードを Discord 共有 → app/layout.tsx 実装（PR5） @impact:7 @urgency:6 @effort:2
 - [ ] (人間) X Ads コンバージョン イベント定義（URL ベース or イベントベース・方式選択要） @impact:7 @urgency:6 @effort:1
 - [ ] (人間) X Ads 課金方法設定（法人クレジットカード・Ads Manager → アカウント設定 → 課金） @impact:7 @urgency:6 @effort:1
 - [ ] x-ads/audience-targeting.md 作成 @impact:6 @urgency:5 @effort:2
