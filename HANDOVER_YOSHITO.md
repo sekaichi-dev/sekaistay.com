@@ -17,6 +17,7 @@
 | 4 | 📰 **PR / メディア露出** | [handover/PR_MEDIA_2026-05-31.md](handover/PR_MEDIA_2026-05-31.md) | PR TIMES・JIRO 出演・ウェビナー・受賞バッジ |
 | 5 | 📥 **リード獲得パイプライン** | [handover/LEAD_PIPELINE_2026-05-31.md](handover/LEAD_PIPELINE_2026-05-31.md) | フォーム → 6系統転送 → TimeRex照合 → Discord/Slack通知 |
 | 6 | 📐 **ブランド・コピーガイドライン** | [handover/BRAND_GUIDELINES_2026-05-31.md](handover/BRAND_GUIDELINES_2026-05-31.md) | Creative Guide + コピー規約 + 媒体別トーン |
+| 7 | 📝 **6月コンテンツドラフト設計** | [handover/JUNE_CONTENT_DRAFTS_2026-06.md](handover/JUNE_CONTENT_DRAFTS_2026-06.md) | オーガニック5本柱 + 架空社員4本柱の月次配分・各軸 6本ストック・週次ローテ |
 
 ---
 
