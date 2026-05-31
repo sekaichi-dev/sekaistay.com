@@ -4,58 +4,83 @@
 > **作成者**: テンイチ
 > **引き継ぎ先**: 本間ヨシト（リード獲得・マーケ責任者 / `design.7247@gmail.com`）
 > **対象**: Google Ads / Meta Ads / X Ads の運用全権
-> **目的**: テンイチが個別運用していた広告アカウント・戦略・既存資産をヨシトに完全移譲し、6月以降の運用責任者として独立稼働できる状態にする
+> **目的**: テンイチが個別運用していた広告アカウントと運用知見をヨシトに完全移譲し、6月以降の運用責任者として独立稼働できる状態にする
+
+---
+
+## ⚡ サマリー（3分で読める現状）
+
+### 媒体別ステータス（2026-05-31 時点）
+
+| 媒体 | 状態 | 直近30日実績 | 注力先 |
+|---|---|---|---|
+| **Google Ads** | 🟢 稼働中（4キャンペーン） | spend ¥182K / CV 12件 / CPA ¥12-13K | **SS-Generic-Price**（¥10K/日・予算の67%） |
+| **Meta Ads** | 🔴 **停止中** | — | 再開判断要 |
+| **X Ads** | 🟡 オーガニック先行 | Promoted 未開始 | 長文B 投稿でフォロワー基盤構築中 |
+
+### Google Ads の改善経緯（4週間で何があったか）
+
+```
+5/12  📦 5キャンペーン体制で立ち上げ (Price/Trust/Portal/Geo/Brand・計¥13K/日)
+5/18  🔧 入札上限調整・コピー差替え
+5/19  💰 Price に予算傾斜開始 (¥3K → ¥10K/日) + Sitelink/Callout/Snippets 追加
+5/22  📈 全キャンペーン予算再調整・KW status見直し
+5/25  ➕ 競合社名の負KW を大量追加（30件以上）
+5/28  ❌ 上記の競合社名負KW を 全部削除 ← ★現状の課題
+5/29  🛑 SS-Generic-Trust / SS-Generic-Portal を一時停止（3週間 CV ゼロのため）
+5/29  🆕 SS-Demand-Generation 新規立ち上げ (YouTube/Discover/Gmail 面・¥2K/日)
+```
+
+### 即対応が必要な3点
+
+1. 🔴 **競合社名の除外キーワード未設定** — 5/28に削除されて以降、復元されていない。共有除外リスト「SS共通-オフターゲット」(19件) しか機能していない
+2. 🔴 **Meta 広告 停止中** — 再開条件・改善方針の合意要
+3. 🟡 **SS-Brand の CV ゼロ** — 指名検索で 27 click / 0 CV は計測 or LP着地後の異常の可能性
 
 ---
 
 ## 0. このドキュメントの読み方
 
-ヨシトが最初に読むべき順:
+1. **⚡ サマリー**（上記）— 全体像
+2. **§1-2** 役割分担と意思決定権限 — 何を自分で決めて何を確認するか
+3. **§3-5** 媒体別の詳細（Google / Meta / X）
+4. **§9** すぐにやってほしいこと（次のステップ）
+5. **§10** 既知の課題・未解決事項
 
-1. **§1 引き継ぎサマリー** — 全体像を5分で把握
-2. **§2 役割分担と意思決定権限** — 何を自分で決めて何を確認するか
-3. **§3-5 媒体別現況**（Google / Meta / X）— 各媒体の状態
-4. **§9 すぐにやってほしいこと（次のステップ）** — 引き継ぎ後の最初の1週間
-
-戦略の詳細（なぜこの設計か）は `STRATEGY_REPORT_*.md` 3本に集約済み。本ドキュメントは「現況スナップショット + 引き継ぎ事項」に絞っている。
+戦略の詳細は `STRATEGY_REPORT_*.md` 3本に集約済み。本ドキュメントは「現況スナップショット + 引き継ぎ事項」に絞っている。
 
 ---
 
-## 1. 引き継ぎサマリー
+## 1. 引き継ぎサマリー（詳細）
 
-### 体制の現状（2026-05-31 時点）
-
-| 媒体 | 立ち上げ日 | 稼働状態 | 月予算枠 | 直近30日実績 |
-|---|---|---|---|---|
-| Google Ads | 2026-05-12 | 5キャンペーン稼働中 | ¥39万 | spend ¥164K / CV 10件 / 平均CPA ¥11-15K |
-| Meta Ads | 2026-05-14 | 1キャンペーン学習期完了 | ¥10-13万（学習期）→ ¥9万（維持期） | 配信中・CV数値はAds Managerで要確認 |
-| X Ads | 2026-05-18 | オーガニック先行 + Boost待機 | ¥15万 | 長文B投稿開始済・Promoted未開始 |
-| **合計（暫定）** | — | — | **約 ¥55-60万/月** | — |
-
-### 完了している主要マイルストーン
+### 完了済みマイルストーン
 
 - ✅ 計測タグ完備（GA4・Google Ads CV・Meta Pixel・Meta CAPI）
-- ✅ 3 LP variants 体制（`/switch` / `/switch/founder` / `/switch/portal`）+ A/Bテスト枠組
+- ✅ 3 LP variants 体制（`/switch` / `/switch/founder` / `/switch/portal`）
 - ✅ 訴求3パターン（価格 / 信頼 / ポータル）× LPマッピング統一
 - ✅ ジロー時代の広告残骸クリーンアップ完了（PEST URL Trigger Lead 偽CV 17,274件削除）
 - ✅ 戦略レポート3本（Google/Meta/X）執筆済み
 - ✅ 5/22 プロダクトローンチ + PR TIMES 配信実施済み
-- ✅ Google Ads は API スナップショット自動化（`sekaichi-dashboard/scripts/snapshot-google-ads.mjs`）
+- ✅ Google Ads スナップショット自動化（`sekaichi-dashboard/scripts/snapshot-google-ads.mjs`）
+- ✅ 価格訴求への予算傾斜（5/19以降・Price ¥10K/日 = 全体の67%）
+- ✅ 効かないキャンペーン2本（Trust / Portal）の停止（5/29）
 
-### 未完了 / 引き継ぎ後に判断が必要なもの
+### 未完了・引き継ぎ後に判断が必要
 
+- 🔴 競合社名の除外KW再構築（5/28削除以降未復元）
+- 🔴 Meta Ads 再開判断（停止理由・改善方針）
 - 🟡 GA4 (`G-B7M920RCGR`) 管理者権限がジロー所有のまま → 強化CV有効化がブロック中
 - 🟡 Meta Pixel 2つ（`1658477098524563` + `989839370242915`）の統合判断
 - 🟡 X Pixel 未取得・Promoted Post 配信開始判断
-- 🟡 Meta Phase 2（Retargeting / Lookalike）の立ち上げタイミング（Pixel蓄積14日 / Lead 100件依存）
+- 🟡 SS-Demand-Generation 効果検証（5/29立ち上げの新キャンペーン）
 
 ---
 
 ## 2. 役割分担と意思決定権限（吉蔵基準 / Human-in-the-Loop）
 
-セカイチ全体の運用思想として「AI（てんちむ）は提案・観測、人間が判断・実行」を採用している。ヨシトの判断権限は以下の通り。
+セカイチ全体の運用思想として「AI（てんちむ）は提案・観測、人間が判断・実行」を採用。
 
-### ヨシト（マーケ責任者）が単独で判断・実行してよい
+### ヨシトが単独で判断・実行してよい
 
 | 領域 | 例 |
 |---|---|
@@ -82,15 +107,15 @@
 | 計測タグの実装変更 | 新規 CV 定義・Pixel 追加削除 |
 | 新規ドメインの追加 | サブドメイン追加でのCV計測など |
 
-### 法務・契約系（要 Toyo / 義人 確認）
+### 法務系（要 Toyo / 義人 確認）
 
 - 比較広告での競合社名使用
 - 「No.1」「業界初」などの最上級表現
-- 受賞表記の使用（媒体側の審査がある場合）
+- 受賞表記の使用
 
 ---
 
-## 3. Google Ads（現況）
+## 3. Google Ads（現況・改善経緯）
 
 ### 3-1. アカウント情報
 
@@ -101,70 +126,147 @@
 | MCC経由 | `311-728-0923` (3117280923) |
 | 通貨 / TZ | JPY / Asia/Tokyo |
 | 管理者（現状） | テンイチ（`tenichi@sekaichi.org`） |
-| アクセス追加方法 | Google Ads UI → ツール → アクセスとセキュリティ → ヨシトのGoogleアカウントを「管理者」または「標準」で招待 |
+| アクセス追加 | Google Ads UI → ツール → アクセスとセキュリティ → ヨシトの Google アカウントを招待 |
 
-### 3-2. キャンペーン体制（直近30日実績・2026-05-28 snapshot）
+### 3-2. キャンペーン構造（5/31 snapshot・直近30日実績）
 
-| キャンペーン | 種別 | 訴求 | LP | 日予算 | Spend | Clicks | CV | CPA |
-|---|---|---|---|---|---|---|---|---|
-| SS-Generic-Price | SEARCH | 価格主導 | /switch | ¥10,000 | ¥88,426 | 131 | 8 | ¥11,053 |
-| SS-Generic-Trust | SEARCH | 信頼主導 | /switch/founder | ¥1,000 | ¥20,097 | 21 | 0 | — |
-| SS-Geo | SEARCH | 地名×業界 | /switch | ¥2,000 | ¥19,792 | 19 | 2 | ¥9,896 |
-| SS-Generic-Portal | SEARCH | ポータル | /switch/portal | ¥1,000 | ¥17,861 | 29 | 0 | — |
-| SS-Brand | SEARCH | 指名 | /switch | ¥1,000 | ¥5,232 | 11 | 0 | — |
-| **合計** | — | — | — | **¥15,000/日** | **¥151,408** | 211 | 10 | — |
+| キャンペーン | 種別 | ステータス | 入札戦略 | 日予算 | Spend | Clicks | CV | CPA | 注力度 |
+|---|---|---|---|---|---|---|---|---|---|
+| **SS-Generic-Price** | SEARCH | 🟢 ENABLED | MAXIMIZE_CONVERSIONS | **¥10,000** | ¥120,798 | 160 | **10** | **¥12,080** | ⭐⭐⭐ 主力 |
+| **SS-Geo** | SEARCH | 🟢 ENABLED | MAXIMIZE_CONVERSIONS | ¥2,000 | ¥26,836 | 27 | 2 | ¥13,418 | ⭐⭐ 副軸 |
+| **SS-Brand** | SEARCH | 🟢 ENABLED | TARGET_SPEND | ¥1,000 | ¥7,416 | 16 | 0 | — | ⭐ 指名 |
+| **SS-Demand-Generation-2026-05-29** | DEMAND_GEN | 🟢 ENABLED | MAXIMIZE_CONVERSIONS | ¥2,000 | ¥7,077 | 56 | 0 | — | 🆕 実験 |
+| SS-Generic-Trust | SEARCH | 🔴 PAUSED | TARGET_SPEND | ¥1,000 | ¥20,097 | 21 | 0 | — | （5/29停止） |
+| SS-Generic-Portal | SEARCH | 🔴 PAUSED | TARGET_SPEND | ¥1,000 | ¥19,004 | 31 | 0 | — | （5/29停止） |
+| SS_Search_Switch_Core_202604 | SEARCH | ⚫ REMOVED | — | — | ¥13,285 | 19 | 0 | — | （旧・ジロー残骸） |
+| /switch test1 | PMAX | ⚫ REMOVED | — | — | ¥0 | 0 | 0 | — | （削除済） |
 
-> 入札戦略: Price は `MAXIMIZE_CONVERSIONS`、他は `TARGET_SPEND`（学習データが集まっていないため）
-> 旧キャンペーン `SS_Search_Switch_Core_202604` は REMOVED 済み（ジロー時代の残骸）
+**注力先の意図**:
+- **SS-Generic-Price** が CV エンジン（10 CV / 12 件中の 83%）。¥10K/日 = 全体予算の 67% を集中投下
+- **SS-Geo** は地名×業界の長尾で CPA ¥13K と Price と同等。サブとして温存
+- **SS-Brand** は指名検索だが現状 CV ゼロ（要調査）
+- **SS-Demand-Generation** は 5/29 に新規立ち上げた YouTube/Discover/Gmail 面の Demand Gen 形式実験。まだ評価には早い
+- **Trust / Portal** は3週間 ¥20K ずつ消化して CV ゼロのため 5/29 に停止
 
-### 3-3. 効いているキーワード / 効いていないキーワード
+### 3-3. 改善経緯（4週間の運用ログ）
 
-**効いている（CV発生・直近30日）**:
-- `民泊 代行` (PHRASE) → ¥45,620 spend / 3 CV / CPA ¥15,207
-- `民泊 管理代行` (PHRASE) → ¥18,602 spend / 4 CV / CPA ¥4,651 ⭐ 最高効率
-- `沖縄 民泊代行` (PHRASE) → ¥8,156 / 1 CV / CPA ¥8,156
-- `民泊 運用代行` (PHRASE) → ¥5,986 / 1 CV / CPA ¥5,986
-- `福岡 民泊代行` (PHRASE) → ¥2,977 / 1 CV / CPA ¥2,977 ⭐ 最高効率
+```
+2026-05-12 ── 5キャンペーン体制で本格稼働開始（Price/Trust/Portal/Geo/Brand）
+              初期予算: Price ¥3K / Trust ¥3K / Portal ¥3K / Geo ¥3K / Brand ¥1K = 計¥13K/日
+              旧 SS_Search_Switch_Core_202604 (ジロー残骸) を一時停止
 
-**効いていない（spend あるが CV ゼロ）**:
-- SS-Generic-Portal 全KW（民泊ポータル等）— 検索Vol は最大だが CV に至っていない
-- SS-Generic-Trust 全KW（民泊代行 評判/口コミ/ランキング）— 同上
-- SS-Brand `sekai stay` (EXACT) — ¥4,099 / 0 CV（指名なのに CV ゼロは要調査）
+2026-05-18 ── 入札上限 (cpcBidCeilingMicros) 調整・全広告コピー差替え
+              ジロー時代の景表法違反リスク表現を全削除
+              → 「成果型でお約束」「手数料8%だけ」等 NG表現を削除
+              → 「業界相場の半額・手数料8%」「Airbnbスーパーホスト多数認定」に統一
 
-### 3-4. 否定キーワード設計
+2026-05-19 ── Price への予算傾斜開始 + Asset 大量追加
+              → Sitelink Asset 3+件、Callout Asset 6件、Structured Snippets 4件
+              → 受賞バッジ「BEST OF SAUNA STAY 2026」をサイトリンクで露出
 
-**共有リスト「SS共通-オフターゲット」** （ID: 12067846660・全キャンペーン適用）
+2026-05-22 ── 全キャンペーンの予算再調整 + KW status 一括見直し
+              → 価格主導で実績が出始めたので Price 予算を ¥10K/日 に固定
 
-19件: 求人 / 仕事 / バイト / 旅行 / 旅館 / ホテル / 予約 / 観光 / ブログ / 副業 / 宿泊 / ログイン / ゲスト / 清掃 求人 / やり方 / 始め方 / 登録方法 / 泊まりたい / airbnb ログイン
+2026-05-25 ── 競合社名の負キーワード 30件以上を大量追加
+              → dent / コンパス / プレイス / バンク / weli / matatabi / リン / tabiii /
+                 エアサポ / オシエテ / sozonext / matsuri technologies / nakajitsu /
+                 all fortune partners / アンドヴィラ / clean-bnb / torayado / 等
 
-**SS-Generic-Price キャンペーンレベル**（11件）: 求人 / DIY / 資格 / 申請 / コンテスト / コンテンツ / コンサル / 個人事業主 / 駆けつけ / 住宅宿泊管理業 / 駆け付け
+2026-05-28 ── 上記の競合社名負KW を 23:58 に全件削除 ★現状の課題
+              → AD_GROUP_CRITERION REMOVE が 30件以上連続発火
+              → CAMPAIGN_CRITERION REMOVE も同時発火
+              → 削除理由は記録なし（再構築要）
 
-**競合社名の除外**（AdGroupレベル）: dent / コンパス / プレイス / バンク / weli / matatabi / リン / tabiii / pqd / エアサポ / オシエテ / sozonext / matsuri technologies / nakajitsu / all fortune partners / アンドヴィラ / clean-bnb / torayado / abc-booking / hudousanlink / コハダルーム / ペセン
+2026-05-29 ── 戦略大幅見直し
+              → SS-Generic-Trust 停止（3週間 ¥20K 消化 / CV ゼロ・KW自体に検索Volほぼなし）
+              → SS-Generic-Portal 停止（同上）
+              → SS-Geo を MAXIMIZE_CONVERSIONS に切替（TARGET_SPEND から変更）
+              → SS-Demand-Generation-2026-05-29 新規立ち上げ
+                  (Demand Gen形式・YouTube/Discover/Gmail 面・¥2K/日)
+              → SS-Generic-Price に aiMax / assetAutomation 有効化試行
+```
 
-### 3-5. CV 設定
+### 3-4. 注力キャンペーン: SS-Generic-Price 詳細
 
-| CV名 | ステータス | カテゴリ | Primary | ルックバック |
+**効いている検索KW（CV発生・直近30日）**
+
+| KW | マッチタイプ | Spend | CV | CPA |
 |---|---|---|---|---|
-| SEKAI STAY (web) generate_lead | ENABLED | SUBMIT_LEAD_FORM | ✓ | 60日 |
-| リードフォーム - 送信 | ENABLED | SUBMIT_LEAD_FORM |  | 1日 |
-| SEKAI STAY (web) close_convert_lead | HIDDEN | CONVERTED_LEAD | — | 90日 |
-| SEKAI STAY (web) qualify_lead | HIDDEN | QUALIFIED_LEAD | — | 90日 |
-| SEKAI STAY (web) purchase | HIDDEN | PURCHASE | — | 90日 |
+| 民泊 管理代行 | PHRASE | ¥24,104 | 4 | **¥6,026** ⭐最高効率 |
+| 民泊 代行 | PHRASE | ¥60,197 | 3 | ¥20,066 |
+| 民泊 運用代行 | PHRASE | ¥5,986 | 1 | ¥5,986 |
+
+**効いていない（spend ありCV ゼロ）**
+
+| KW | マッチタイプ | Spend | クリック |
+|---|---|---|---|
+| 民泊 代行 | EXACT | ¥8,069 | 8（PHRASE と被るので EXACT 不要かも） |
+| 民泊 運営代行 | EXACT | ¥4,761 | 2 |
+| 民泊 管理代行 | EXACT | ¥2,594 | 2 |
+| 民泊 代行 費用 | PHRASE | ¥1,434 | 5 |
+| 民泊 代行 手数料 | PHRASE | ¥510 | 2 |
+
+**SS-Geo の効率良KW**
+
+| KW | Spend | CV | CPA |
+|---|---|---|---|
+| 福岡 民泊代行 (PHRASE) | ¥4,172 | 1 | **¥4,172** ⭐ |
+| 沖縄 民泊代行 (PHRASE) | ¥9,534 | 1 | ¥9,534 |
+
+### 3-5. 除外キーワード（現状）— ★要対応
+
+| レベル | 件数 | 状態 |
+|---|---|---|
+| キャンペーンレベル | **0件** | ❌ なし |
+| AdGroup レベル | **0件** | ❌ なし |
+| 共有除外リスト | 1件 | 🟢 SS共通-オフターゲット（19件・ENABLED） |
+
+**SS共通-オフターゲット（共有リスト・全キャンペーン適用）**
+```
+求人 / 仕事 / バイト / 旅行 / 旅館 / ホテル / 予約 / 観光 / ブログ /
+副業 / 宿泊 / ログイン / ゲスト / 清掃 求人 / やり方 / 始め方 /
+登録方法 / 泊まりたい / airbnb ログイン
+```
+
+⚠️ **重要な未解決事項**: 5/25 に追加した競合社名30件以上の負KW（dent / コンパス / matsuri technologies / nakajitsu 等）は 5/28 23:58 に **全件削除済**。理由不明。
+- → 競合社名検索クエリで広告がマッチする状態に戻っている可能性
+- → 検索クエリレポートで競合社名流入を再確認 → 必要なら共有リスト化で再構築すべき
+
+### 3-6. CV 設定
+
+| CV名 | ステータス | Primary | ルックバック |
+|---|---|---|---|
+| SEKAI STAY (web) generate_lead | ENABLED | ✓ | 60日 |
+| リードフォーム - 送信 | ENABLED | — | 1日 |
+| SEKAI STAY (web) qualify_lead | HIDDEN | — | 90日 |
+| SEKAI STAY (web) close_convert_lead | HIDDEN | — | 90日 |
+| SEKAI STAY (web) purchase | HIDDEN | — | 90日 |
 
 > 主CV = `SEKAI STAY (web) generate_lead`（GA4 import）
 
-### 3-6. 戦略レポート
+### 3-7. 戦略レポート参照
 
-- 詳細: [`STRATEGY_REPORT_2026-05-12.md`](STRATEGY_REPORT_2026-05-12.md)（12章構成・全259行）
+- 詳細: [`STRATEGY_REPORT_2026-05-12.md`](STRATEGY_REPORT_2026-05-12.md)（259行・12章）
 - キーワード一覧: [`google-ads/keyword-list.md`](google-ads/keyword-list.md)
 - コピー一覧: [`google-ads/copy-drafts.md`](google-ads/copy-drafts.md)
 - スナップショット再生成: `cd projects/sekaichi-dashboard && node scripts/snapshot-google-ads.mjs`
 
 ---
 
-## 4. Meta Ads（現況）
+## 4. Meta Ads（現況: 🔴 停止中）
 
-### 4-1. アカウント情報
+### 4-1. 停止状況
+
+2026-05-31 時点で **広告配信を停止中**。
+
+戦略レポート（2026-05-14 作成）では Phase 1（学習期 14日 ¥7K/日 → Day 15 から ¥3K/日 維持期 → 6月以降 Retargeting + Lookalike 追加）の計画だったが、実配信は途中で停止している。
+
+**停止理由（推測・要本人確認）**:
+- 学習期完了前に CPL が想定外に悪化した可能性
+- 予算消化と CV 効率の見合いで判断停止した可能性
+- LP A/Bテスト準備期間で広告止めた可能性
+
+### 4-2. アカウント情報
 
 | 項目 | 値 |
 |---|---|
@@ -172,25 +274,18 @@
 | Meta Pixel（メイン） | `1658477098524563` |
 | Meta Pixel（追加・統合検討中） | `989839370242915` |
 | Meta CAPI | 実装完了（`lib/meta-capi.ts`） |
-| 環境変数（Vercel） | `META_PIXEL_ID` / `META_CAPI_TOKEN` / `META_CAPI_TEST_EVENT_CODE` / `META_ACCESS_TOKEN` / `META_AD_ACCOUNT_ID` |
+| 環境変数（sekaistay-com） | `META_PIXEL_ID` / `META_CAPI_TOKEN` / `META_CAPI_TEST_EVENT_CODE` |
+| 環境変数（sekaichi-dashboard） | `META_ACCESS_TOKEN` / `META_AD_ACCOUNT_ID` |
 
-### 4-2. キャンペーン体制
+### 4-3. 直近の配信履歴（戦略レポート時点の計画）
 
-**Phase 1（学習期 14日・2026-05-14〜）**
-
-| キャンペーン | Ad Set | 配置 | 日予算 | 入札戦略 |
-|---|---|---|---|---|
-| SS-Meta-Interest-202605 | AS_Interest_Airbnb_Hosts_JP_v1 | FB Feed + IG Feed のみ | ¥7,000 | 最大量（Highest Volume） |
-
-**Phase 2（学習完了後・¥3,000/日 維持期）** ← 6月以降
-
-| キャンペーン | 役割 | 立ち上げ条件 |
+| キャンペーン | 状態 | メモ |
 |---|---|---|
-| SS-Meta-Interest（既存） | 維持配信 | Day 15 から ¥3,000/日 に減額 |
-| SS-Meta-Retargeting | Pixel 訪問者追跡 | Pixel 14日蓄積完了後 |
-| SS-Meta-Lookalike | 既存契約済オーナー 1% 類似 | Lead 母集団 100 件突破後 |
+| SS-Meta-Interest-202605 | 停止中 | Phase 1 学習期で立ち上げ。3クリエイティブ dynamic creative |
+| SS-Meta-Retargeting | 未着手 | Pixel 14日蓄積後の立ち上げ予定だった |
+| SS-Meta-Lookalike | 未着手 | Lead 母集団 100件突破後の立ち上げ予定だった |
 
-### 4-3. クリエイティブ（3パターン dynamic creative）
+### 4-4. 3クリエイティブ（dynamic creative）
 
 | 広告ID | 訴求 | LP | コピー要約 |
 |---|---|---|---|
@@ -198,49 +293,59 @@
 | AD_Price_20vs8_v1 | 価格 | /switch | 「手数料8%・業界半額」/ 最短2週間で切替 |
 | AD_Portal_Dashboard_v1 | ポータル | /switch/portal | 「24h可視化のオーナーポータル」/ 全物件を一画面で |
 
-> CTA は3広告とも `Learn More` で統一（A/Bテストの変数を減らす目的）
 > 画像: `meta-ads/creatives/ss-price.png` / `ss-portal.png` / `ss-trust.png`（1254×1254）
 
-### 4-4. ジロー時代の汚染履歴（クリーンアップ済）
+### 4-5. ジロー時代の汚染履歴（クリーンアップ済）
 
-| 旧資産 | 状態 | メモ |
-|---|---|---|
-| `SEKAI STAY_Lead_BroadVsNarrow_202605` | 🔻 Paused | PEST 由来偽 Lead で AI 学習汚染 |
-| `SS_Conversion_Switch_Meta_202604` | 🔻 Paused | 同上 |
-| `AS_Price_Switch_Broad_JP` | 🔻 Paused | 偽 Lead 17,274 件（CPL ¥1）で汚染 |
-| `AD01_Loss_A` / `AD03_Compare_A` / `AD05_Service_A` | 🔻 Paused | 同上 |
-| **PEST URL Trigger Lead 設定**（Pixel Event Setup Tool） | ✅ 削除済 | ハッシュリンク毎に Lead 誤発火する設定 |
+| 旧資産 | 状態 |
+|---|---|
+| `SEKAI STAY_Lead_BroadVsNarrow_202605` | 🔻 Paused |
+| `SS_Conversion_Switch_Meta_202604` | 🔻 Paused |
+| `AS_Price_Switch_Broad_JP`（偽 Lead 17,274件で AI 学習汚染） | 🔻 Paused |
+| PEST URL Trigger Lead 設定 | ✅ 削除済 |
 
-⚠️ **重要**: 旧 active キャンペーン群はPause済みだが履歴は残してある。**新規 ad set を旧 ad set にぶら下げず、Clean Slate で新規立ち上げる**こと（AI 学習履歴の汚染を引き継がないため）。
+⚠️ **Clean Slate ルール**: 再開時も旧 ad set 履歴の汚染を引き継がないよう、新規 ad set で立ち上げる方針を維持すること。
 
-### 4-5. 戦略レポート
+### 4-6. 再開時の判断事項
 
-- 詳細: [`STRATEGY_REPORT_META_2026-05-14.md`](STRATEGY_REPORT_META_2026-05-14.md)（13章構成・全370行）
+ヨシトが再開判断する時のチェックリスト:
+- [ ] 停止理由をテンイチに確認（戦略変更 / コスト悪化 / 一時休止 etc）
+- [ ] 戦略レポート [`STRATEGY_REPORT_META_2026-05-14.md`](STRATEGY_REPORT_META_2026-05-14.md) 通読
+- [ ] Phase 1 から再開するか、Lookalike 含む Phase 2 構造で立ち上げ直すか判断
+- [ ] 月予算と入札戦略を吉田と再合意
+- [ ] LP A/Bテスト勝者がいるならその LP に絞って再配信
+
+### 4-7. 戦略レポート参照
+
+- 詳細: [`STRATEGY_REPORT_META_2026-05-14.md`](STRATEGY_REPORT_META_2026-05-14.md)（370行・13章）
 - セットアップ手順: [`meta-ads/setup-draft.md`](meta-ads/setup-draft.md)
 - オーディエンス設計: [`meta-ads/audience-targeting.md`](meta-ads/audience-targeting.md)
 - CAPI セットアップ: [`setup-guides/meta-conversions-api.md`](setup-guides/meta-conversions-api.md)
 
 ---
 
-## 5. X Ads（現況）
+## 5. X Ads（現況: 🟡 オーガニック先行）
 
-### 5-1. アカウント体制（3アカウント運用）
+### 5-1. アカウント体制
 
-| アカウント | 担当 | 役割 | 投稿頻度 |
+| アカウント | 担当 | 開設状況 | X Premium+ |
 |---|---|---|---|
-| **@tenichiliu** | テンイチ（本人） | 経営者目線・業界構造論・受賞PR | 通常×週5・長文B×週2・スレッドC×週1 |
-| **@jirosan**（仮置きハンドル） | ジロー（本人） | 現場運用ノウハウ・OTA運用テクニック | 通常×週5・長文B×週2 |
-| **@ss_unei_chan**（架空社員） | アバター運用 | 日常業務・家具選定・オーナー対応 | 通常×週4・長文B×週1 |
+| **@tenichiliu** | テンイチ（本人） | ✅ 開設済 | ✅ 課金済（長文4000字解禁） |
+| **@jirosan**（仮置きハンドル） | ジロー（本人） | 要確認 | 開設後課金 |
+| **@ss_unei_chan**（架空社員） | アバター運用 | ⚠️ 未作成 | 作成後にOAuth実行で自動投稿即有効化可能 |
 
 > 透明性: 架空社員 bio に「SEKAI STAY 運営チームメンバー」と明記（虚構ではなく実在運用チームのペルソナ化）
+> @jirosan は自動投稿せず手動投稿運用
 
-### 5-2. アカウント開設状況
+### 5-2. 投稿フォーマット
 
-| アカウント | 開設状況 | X Premium+ |
+| 種別 | 字数 | 頻度 |
 |---|---|---|
-| @tenichiliu | ✅ 開設済 | ✅ 課金済（長文4000字解禁） |
-| @jirosan（仮） | 開設要確認 | 開設後課金 |
-| @ss_unei_chan | ⚠️ アカウント未作成 | 作成後OAuth実行で自動投稿即有効化可能 |
+| 通常投稿 | 280字以内 | 週5本/アカウント |
+| 長文B | 280-4000字（X Premium+ 必須） | 週2本/アカウント |
+| スレッドC | 280字 × 5-10連 | 週1本/アカウント |
+
+→ 月間 約 80 投稿（テン+ジロー+架空社員 合算）
 
 ### 5-3. 「Boost the Winners」運用モデル
 
@@ -263,8 +368,9 @@ Day 7: 勝者継続・敗者停止判定
 
 ### 5-5. 未完了の準備項目
 
-- ⚠️ X Pixel 未取得（`NEXT_PUBLIC_X_PIXEL_ID` env 未登録・ROADMAP Phase 3）
-- ⚠️ Promoted Post 配信未開始（5/25 以降開始予定だったが、現在状況確認要）
+- ⚠️ X Pixel 未取得（`NEXT_PUBLIC_X_PIXEL_ID` env 未登録）
+- ⚠️ Promoted Post 配信未開始
+- ⚠️ @ss_unei_chan アカウント未作成
 
 ### 5-6. KPI（3ヶ月）
 
@@ -276,9 +382,9 @@ Day 7: 勝者継続・敗者停止判定
 | X リード（org + paid） | 3-5 | 8-12 | 15-20 |
 | Promoted CPL | ¥10-15K | ¥7-12K | ¥5-10K |
 
-### 5-7. 戦略レポート
+### 5-7. 戦略レポート参照
 
-- 詳細: [`STRATEGY_REPORT_X_2026-05-17.md`](STRATEGY_REPORT_X_2026-05-17.md)（12章構成・全338行）
+- 詳細: [`STRATEGY_REPORT_X_2026-05-17.md`](STRATEGY_REPORT_X_2026-05-17.md)（338行・12章）
 - 既存9パターンコピー: [`x-ads/copy-drafts.md`](x-ads/copy-drafts.md)
 - 長文B ドラフトバンク: [`x-ads/long-form-content-bank.md`](x-ads/long-form-content-bank.md)
 - オーディエンス設計: [`x-ads/audience-targeting.md`](x-ads/audience-targeting.md)
@@ -348,8 +454,6 @@ X (paid): utm_source=x&utm_medium=cpc&utm_campaign=boost-the-winners&utm_content
 | CV ゼロ | 24時間 CV=0 かつ予算消化あり | Inbox `general` + Slack 同上 |
 | 単一広告コスト | 単一広告グループで ¥50,000 消化＆ CV=0 | Inbox `general` |
 
-数値は初月のテンタティブ。月次レビューで調整可能。
-
 ---
 
 ## 8. ダッシュボード・ツール
@@ -366,7 +470,7 @@ X (paid): utm_source=x&utm_medium=cpc&utm_campaign=boost-the-winners&utm_content
 ### 8-2. 学習ログ運用
 
 - `ad-ops/learnings.md` に「仮説 → 試行 → 結果 → 学び」を蓄積
-- AI が下書き、ヨシトが週次で「気づき」を追記する想定（テンイチが従来やっていた役割）
+- AI が下書き、ヨシトが週次で「気づき」を追記する想定
 - 確定した学びは「恒久ナレッジ」セクションに昇格
 
 ### 8-3. 戦略レポート再生成
@@ -375,49 +479,54 @@ ad-ops/STRATEGY_REPORT_*.md は配信データが揃ったタイミングで週�
 
 ---
 
-## 9. すぐにやってほしいこと（引き継ぎ後の最初の1週間）
+## 9. すぐにやってほしいこと
 
 ### 🔴 Day 1（引き継ぎ当日）
 
-- [ ] **Google Ads アクセス権付与**（テンイチが UI から招待 → ヨシトの Google アカウント `design.7247@gmail.com` 受諾）
-- [ ] **Meta Business Manager アクセス権付与**（同上・ヨシトを管理者または広告主として追加）
-- [ ] **3つの戦略レポートを通読**（Google / Meta / X・所要時間 約1時間）
+- [ ] **Google Ads アクセス権付与**（テンイチが UI から招待 → ヨシト `design.7247@gmail.com` 受諾）
+- [ ] **Meta Business Manager アクセス権付与**（同上）
 - [ ] **このドキュメント（HANDOVER_YOSHITO_2026-05-31.md）を通読**
-- [ ] テンイチと30分の引き継ぎMTG（質疑応答 + 直近の運用判断の意図共有）
+- [ ] **3つの戦略レポートを通読**（Google / Meta / X・所要時間 約1時間）
+- [ ] テンイチと 30分の引き継ぎMTG（質疑応答 + 直近の運用判断の意図共有・特に「Meta停止理由」「除外KW削除理由」を確認）
 
 ### 🟡 Week 1（6/1〜6/7）
 
-- [ ] **Google Ads 直近30日の検索クエリレポート確認** → 否定KW追加候補抽出
-- [ ] **Meta Ads Day 14 振り返り**（学習期完了判定 → ¥3,000/日 維持期に切替判断）
-- [ ] **Meta Phase 2 立ち上げ判断**:
-  - SS-Meta-Retargeting（Pixel 14日蓄積完了していれば即可）
-  - SS-Meta-Lookalike（Lead 母集団 100件突破していれば可。未達なら待機）
-- [ ] **X Pixel 取得 + Vercel env 登録**（`NEXT_PUBLIC_X_PIXEL_ID`）
-- [ ] **GA4 (G-B7M920RCGR) 権限移行**（ジロー → ヨシト・テンイチ）
-  - ルート1: ジローが `@sekaichi.org` Workspace アカウントなら admin.google.com から権限移行（10分）
-  - ルート2: ジロー直接連絡で権限追加依頼
-  - ルート3: Google サポートに所有者復元申請
+- [ ] **競合社名の除外KW 再構築**（最優先）
+  - 検索クエリレポートで競合社名流入の有無を確認
+  - 必要なら共有除外リスト「SS共通-オフターゲット」に競合社名を追加
+- [ ] **SS-Brand CV ゼロ問題の原因究明**（指名検索 27 click / 0 CV）
+  - LP着地後の挙動確認（GA4 イベント発火確認）
+  - 計測タグ設定の確認
+- [ ] **Meta Ads 再開判断**
+  - 停止理由ヒアリング
+  - 再開条件・予算・運用方針の合意
+- [ ] **SS-Demand-Generation 効果検証**（5/29立ち上げ・1週間データ）
+  - CPL / CV が見合うなら継続、ダメなら停止判断
 - [ ] **第1回 週次振り返り**（金曜・先週分の数値レビュー + 翌週の仮説立案）
 
 ### 🟢 Week 2-4（6/8〜6/30）
 
+- [ ] **GA4 (G-B7M920RCGR) 権限移行**（ジロー → ヨシト・テンイチ）
+- [ ] **X Pixel 取得 + Vercel env 登録**（`NEXT_PUBLIC_X_PIXEL_ID`）
 - [ ] **Meta Pixel 統合判断**（`1658477098524563` と `989839370242915` のどちらに寄せるか）
 - [ ] **X Boost the Winners 開始**（オーガニック上位20%抽出 → Promoted化）
-- [ ] **LP A/Bテスト勝者判定**（Z≥1.96 達成 variant の選定・敗者 archive）
+- [ ] **LP A/Bテスト勝者判定**（Z≥1.96 達成 variant の選定）
 - [ ] **6月実績で7月の予算配分見直し**（CPA 最良チャネルへ傾斜配分）
 
 ---
 
 ## 10. 既知の課題・未解決事項
 
-| # | 課題 | 緊急度 | メモ |
+| # | 課題 | 緊急度 | 詳細 |
 |---|---|---|---|
-| 1 | GA4 管理者権限がジロー所有のまま | 🟡 | 強化CV有効化のみブロック中。配信には影響なし |
-| 2 | Meta Pixel 2つ並存（`1658477098524563` + `989839370242915`） | 🟡 | layout.tsx に追加Pixelハードコード。統合判断要 |
-| 3 | X Pixel 未取得 | 🟡 | X Ads CV最適化が機能しない。早期取得推奨 |
-| 4 | SS-Brand CV ゼロ | 🟠 | 指名検索 11 click あって CV ゼロは異常。LP着地後の挙動要調査 |
-| 5 | SS-Generic-Portal / Trust の CV ゼロ | 🟠 | 価格主導以外のパターンは CV 出ていない。LP/コピーの磨き込みか媒体・KWの構造的問題かの切り分け要 |
-| 6 | 5月のリード目標（75件）未達 | — | 戦略レポート §8 で「5月は実証期」に再定義済み。6-7月達成パスに移行 |
+| 1 | 競合社名の負KW未設定 | 🔴 高 | 5/25 追加 → 5/28 全削除（理由不明）。共有リスト「SS共通-オフターゲット」(19件) しか機能していない |
+| 2 | Meta 広告 停止中 | 🔴 高 | 戦略レポート時点の計画と実態が乖離。再開判断要 |
+| 3 | SS-Brand CV ゼロ | 🟠 中 | 指名検索 27 click あって CV ゼロは異常。計測タグ or LP着地後の挙動要調査 |
+| 4 | GA4 管理者権限がジロー所有 | 🟡 低 | 強化CV有効化のみブロック中。配信には影響なし |
+| 5 | Meta Pixel 2つ並存 | 🟡 低 | layout.tsx に追加Pixelハードコード。統合判断要 |
+| 6 | X Pixel 未取得 | 🟡 低 | X Ads CV最適化が機能しない。早期取得推奨 |
+| 7 | SS-Demand-Generation 効果未検証 | 🟡 低 | 5/29 立ち上げ・¥7K消化・CV ゼロ。継続/停止判断要 |
+| 8 | 5月のリード目標（75件）未達 | — | 戦略レポート §8 で「5月は実証期」に再定義済み。6-7月達成パスに移行 |
 
 ---
 
@@ -474,7 +583,7 @@ ad-ops/STRATEGY_REPORT_*.md は配信データが揃ったタイミングで週�
 
 ### スナップショット
 
-`~/.claude/projects/-Users-sekaichi-Desktop-claude-code/memory/project_sekai_stay_google_ads_learnings.md` — Google Ads の最新キャンペーン構造・キーワード設計・否定KW・CV設定・直近30日の変更履歴と実績（API 自動生成）
+`~/.claude/projects/-Users-sekaichi-Desktop-claude-code/memory/project_sekai_stay_google_ads_learnings.md` — Google Ads の最新キャンペーン構造・キーワード設計・除外KW・CV設定・直近30日の変更履歴と実績（API 自動生成・本ドキュメントもこれを参照）
 
 ### Vercel 環境変数（広告関連抜粋）
 
@@ -499,11 +608,13 @@ ad-ops/STRATEGY_REPORT_*.md は配信データが揃ったタイミングで週�
 - [ ] ヨシトが Google Ads / Meta Ads / X Ads の全管理画面に自分のアカウントでログインできる
 - [ ] ヨシトが戦略レポート3本 + このドキュメントを通読済み
 - [ ] テンイチとの引き継ぎMTGを実施（30-60分）
+- [ ] 競合社名の除外KW 再構築完了
+- [ ] Meta 再開判断（再開 or 当面停止維持）完了
 - [ ] 第1回週次振り返り（金曜）を実施
-- [ ] 引き継ぎ後 2週間以内に、ヨシトが独立して1つ以上の運用判断を実行（予算変更 / 入札変更 / KW追加 / クリエイティブ差替えなど）
+- [ ] 引き継ぎ後 2週間以内に、ヨシトが独立して1つ以上の運用判断を実行
 
 完了後、ヨシトは月次で吉田に進捗報告、随時テンイチにプロダクト連動の相談、という運用に移行する。
 
 ---
 
-*このドキュメントは 2026-05-31 時点のスナップショット。引き継ぎ完了後はヨシトが必要に応じて更新する。*
+*このドキュメントは 2026-05-31 時点のスナップショット。引き継ぎ完了後はヨシトが必要に応じて更新する。Google Ads データは `snapshot-google-ads.mjs` の出力に基づく。*
