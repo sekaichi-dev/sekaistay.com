@@ -36,7 +36,7 @@
 
 ### 即知っておいてほしい3点
 
-1. 🔴 **Vercel プロジェクト名は `minpaku-audit`**（NOT `sekaistay-com`）— 本番デプロイ先。プロジェクト `sekaistay-com` は別物（プレビュー専用）
+1. 🟢 **Vercel プロジェクトは `sekaistay-com` に統合済み**（2026-06-01・旧 `minpaku-audit` をリネーム。旧並行運用していた空 `sekaistay-com` は削除）
 2. 🟡 **LP コンテンツ軸は freeze 中**（コピー・訴求内容は変えず、デザインのみ変更する方針）
 3. 🟡 **デザインガイドのブランドトークン厳守**（赤系不使用・独自カラー追加禁止）
 
@@ -108,13 +108,14 @@
 
 | 項目 | 値 |
 |---|---|
-| **本番プロジェクト名** | **`minpaku-audit`** ⚠️ 名前に注意 |
-| 本番ドメイン | https://sekaistay.com |
-| プレビュー（別プロジェクト） | https://sekaistay-com.vercel.app（プロジェクト `sekaistay-com`・別物） |
+| **本番プロジェクト名** | **`sekaistay-com`** |
+| プロジェクト ID | `prj_qfaTcxdt6mQ18ARDg046q5febS0d` |
+| 本番ドメイン | https://sekaistay.com / https://www.sekaistay.com |
+| Vercel 自動ドメイン | https://sekaistay-com.vercel.app（本番）/ https://minpaku-audit.vercel.app（互換のため残存） |
 | デプロイトリガー | main push で本番自動デプロイ・PR ごとにプレビュー |
 | Organization | sekaichi |
 
-> **なぜ名前がズレているか**: 元々「民泊診断」（minpaku-audit）として立ち上げたサービスをリブランドして SEKAI STAY 本サイトに進化させた経緯。Vercel プロジェクト名は変更コストが高いのでそのまま運用。
+> **統合履歴（2026-06-01）**: 元々「民泊診断」（`minpaku-audit`）として立ち上げたサービスをリブランドして SEKAI STAY 本サイトに進化させた経緯で、Vercel プロジェクト名が `minpaku-audit` のまま運用されていた。並行して空の `sekaistay-com` プロジェクトも存在しており混乱の元になっていたため、空のプロジェクトを削除して `minpaku-audit` を `sekaistay-com` にリネームし1本に統合した（プロジェクト ID は変わっていないので env・cron・履歴・GitHub 連携・カスタムドメインすべて引き継ぎ）。`minpaku-audit.vercel.app` 自動ドメインは過去 deployment URL 参照との互換のため残してある。
 
 ### 2-2. ドメイン構成
 
@@ -787,7 +788,7 @@ CTA ボタン文言（`lp_button_language` / `lp_button_text_style`）:
 - [ ] **このドキュメント通読**
 - [ ] **README.md / CLAUDE.md 通読**（`projects/sekaistay-com/`）
 - [ ] **デザインガイド通読**（`SEKAI_STAY_Creative_Guide.md`）
-- [ ] テンイチと 30分の引き継ぎMTG（プロジェクト名が `minpaku-audit` であることを必ず確認）
+- [ ] テンイチと 30分の引き継ぎMTG
 
 ### 🟡 Week 1（6/1〜6/7）
 
