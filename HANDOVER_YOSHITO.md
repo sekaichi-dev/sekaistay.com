@@ -27,13 +27,14 @@
 ### 戦略の中核
 
 1. 🔴 **Price 主導 LP の仮説検証中**（広告 × LP/HP）— Google Ads で **SS-Generic-Trust / SS-Generic-Portal を 5/29 停止**（3週間 CV ゼロのため）。**SS-Generic-Price (¥10K/日・予算の67%)** に絞り込み。LP も `/switch`（価格主導）が一番コンバージョンする仮説で 3バリアント A/B 検証中。広告運用 §3 + LP/HP §3
-2. 🔴 **Meta Ads は停止中** — 戦略レポート（5/14 作成）の Phase 1 計画と実態が乖離。再開条件・改善方針の合意要。広告運用 §4
+2. 🟢 **Google Ads が現状もっとも順調な広告媒体・CPL は今後さらに下がる試算**（広告）— 直近30日 全体 Spend ¥182K / CV 12件 / **平均 CPL ¥15,193**、Price 単独は **CPA ¥12,080**。5/29 以降は CV ゼロだった Trust(¥20K) + Portal(¥19K) + 旧 Core(¥13K) = **約 ¥52K の無駄予算がカット**されたので、CV を維持できれば **6月の CPL は ¥10,000–¥11,000 台に低下する試算**（約 30% 改善）。広告運用 §3
+3. 🔴 **Meta Ads は停止中** — 戦略レポート（5/14 作成）の Phase 1 計画と実態が乖離。再開条件・改善方針の合意要。広告運用 §4
 
 ### 媒体・コピー・通知の地雷
 
-3. 🟡 **媒体別 AI 言及ポリシー**（ブランド/SNS/PR/HP 横断）— **X = OK**、**note / HP / PR TIMES = AI 言及禁止**。「AI化」→「仕組み化」、「AI自動」→「日次自動」へ言い換え。初日にコピー書くと必ず引っかかる地雷。ブランド §1 + SNS §3
-4. 🟡 **リード通知の見え方が経路で違う**（リード獲得）— 全リードは **Discord に即時全件**流れる。Slack `#402-sekaistay面談申込` は **フォーム送信から10分後** に **TimeRex で予約しなかった離脱リードのみ** 流れる dedup 設計（TimeRex 予約済みリードは Slack に流れない）。Slack だけ見ると離脱リードしか見えないので、**リード総数を判断したい時は Discord か `SEKAI STAY Lead Submissions Log` Sheet を見る**。リード獲得 §3
-5. 🟡 **X (@tenichiliu) は公式バッジ・X Premium 課金中・しかし運用は未稼働**（SNS）— 長文投稿 (280字超) が使え Bio 上部表示や SEO 効果がある資産だが、**自動投稿 cron は未配置・コンテンツドラフトも未作成**（1ヶ月分ドラフトはテンイチが順次作成中）。「X の自動運用が回ってる」と勘違いしないように。SNS §2
+4. 🟡 **媒体別 AI 言及ポリシー**（ブランド/SNS/PR/HP 横断）— **X = OK**、**note / HP / PR TIMES = AI 言及禁止**。「AI化」→「仕組み化」、「AI自動」→「日次自動」へ言い換え。初日にコピー書くと必ず引っかかる地雷。ブランド §1 + SNS §3
+5. 🟡 **リード通知の見え方が経路で違う・数字は専用ダッシュボードで見る**（リード獲得）— 全リードは **Discord に即時全件**流れる。Slack `#402-sekaistay面談申込` は **フォーム送信から10分後** に **TimeRex で予約しなかった離脱リードのみ** 流れる dedup 設計（TimeRex 予約済みリードは Slack に流れない）。Slack だけ見ると離脱リードしか見えない。**リード総数・経路別の集計は [sekaichi-dashboard.vercel.app/marketing](https://sekaichi-dashboard.vercel.app/marketing)、LP 単位の CVR・Δ・Z-score 分析は [sekaichi-dashboard.vercel.app/lp-analytics](https://sekaichi-dashboard.vercel.app/lp-analytics)** で見れる。リード獲得 §3
+6. 🟡 **X (@tenichiliu) は公式バッジ・X Premium 課金中・しかし運用は未稼働**（SNS）— 長文投稿 (280字超) が使え Bio 上部表示や SEO 効果がある資産だが、**自動投稿 cron は未配置・コンテンツドラフトも未作成**（1ヶ月分ドラフトはテンイチが順次作成中）。「X の自動運用が回ってる」と勘違いしないように。SNS §2
 
 ---
 
