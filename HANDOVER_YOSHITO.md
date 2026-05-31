@@ -20,11 +20,20 @@
 
 ---
 
-## ⚡ 即知っておいてほしい 3点
+## ⚡ 即知っておいてほしい
 
-1. 🔴 **Price 主導 LP の仮説検証中** — Google Ads で **SS-Generic-Trust / SS-Generic-Portal を 5/29 停止**（3週間 CV ゼロのため）。**Price 主導 (SS-Generic-Price ¥10K/日・予算の67%)** に絞り込み。LP も `/switch`（価格主導）が一番コンバージョンする仮説で、3バリアント（`/switch` 価格 / `/switch/portal` ポータル / `/switch/founder` Founder）を A/B 検証中。Z≥1.96 で1週間判定。広告運用 §3 + LP/HP §3
+セクション横断で「初日にミスする / ブランド毀損する / 数字を誤読する」レベルだけに絞った。
+
+### 戦略の中核
+
+1. 🔴 **Price 主導 LP の仮説検証中**（広告 × LP/HP）— Google Ads で **SS-Generic-Trust / SS-Generic-Portal を 5/29 停止**（3週間 CV ゼロのため）。**SS-Generic-Price (¥10K/日・予算の67%)** に絞り込み。LP も `/switch`（価格主導）が一番コンバージョンする仮説で 3バリアント A/B 検証中。広告運用 §3 + LP/HP §3
 2. 🔴 **Meta Ads は停止中** — 戦略レポート（5/14 作成）の Phase 1 計画と実態が乖離。再開条件・改善方針の合意要。広告運用 §4
-3. 🟠 **SS-Brand CV ゼロ問題** — 指名検索で 27 click / 0 CV は異常値。**計測タグ or LP 着地後の挙動異常の可能性**があり、数字をそのまま信じて「指名検索は機能してない」と判断するとミスする。広告運用 §10
+
+### 媒体・コピー・通知の地雷
+
+3. 🟡 **媒体別 AI 言及ポリシー**（ブランド/SNS/PR/HP 横断）— **X / LinkedIn = OK**、**note / HP / PR TIMES = AI 言及禁止**。「AI化」→「仕組み化」、「AI自動」→「日次自動」へ言い換え。初日にコピー書くと必ず引っかかる地雷。ブランド §1 + SNS §3
+4. 🟡 **リード通知の Slack 数字は dedup されている**（リード獲得）— TimeRex 予約あり = Slack 通知スキップ・**離脱したフォーム提出のみ Slack `#402-sekaistay面談申込` に流れる**設計。Discord は全件流れる。Slack だけ見て「リード少ない」と判断するとミスる。リード獲得 §3
+5. 🟡 **LinkedIn 返信は Discord 承認制**（SNS）— AI 生成 → drafts.json → Discord ボタンで承認分のみ posts.json に反映。**即時投稿・テンプレ返信は NG**。SNS §2
 
 ---
 
@@ -106,7 +115,7 @@
 特に確認すべき事項:
 - [ ] Price 主導 LP の仮説検証状況（Trust/Portal 停止・Price 一本化の経緯と判定基準）
 - [ ] Meta Ads の停止理由・再開条件
-- [ ] SS-Brand CV ゼロ問題の原因仮説（計測タグ or LP着地後）
+- [ ] リード通知 dedup ロジック（TimeRex 照合）の現状の挙動
 - [ ] PR TIMES（5/22 配信済み）の反響分析状況
 - [ ] 吉蔵 CRM vs HubSpot 移行判断
 
