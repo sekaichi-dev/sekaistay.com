@@ -40,6 +40,13 @@
 2. 🟡 **LP コンテンツ軸は freeze 中**（コピー・訴求内容は変えず、デザインのみ変更する方針）
 3. 🟡 **デザインガイドのブランドトークン厳守**（赤系不使用・独自カラー追加禁止）
 
+### 姉妹資料との重複範囲
+
+[`ad-ops/HANDOVER_YOSHITO_2026-05-31.md`](ad-ops/HANDOVER_YOSHITO_2026-05-31.md) §6 にも LP 3 variants / 計測スタック / UTM規約 が記載されている。両資料を読む順番:
+
+1. **本資料**（LP/HP）→ サイト全体の構造・ソース配置・ページ単位の構成
+2. **ad-ops 資料** → 媒体別の運用・LP別広告との対応関係
+
 ---
 
 ## 0. このドキュメントの読み方
@@ -47,10 +54,12 @@
 1. **⚡ サマリー**（上記）— 全体像
 2. **§1** 役割分担と権限
 3. **§2** デプロイ・環境（**重要**: Vercel プロジェクト名）
-4. **§3-4** サイト構造 / LP 詳細
-5. **§5** デザインシステム（厳守ルール）
-6. **§6-7** フォーム / 計測タグ
-7. **§9** すぐにやってほしいこと
+4. **§3** ★ サイト全体のソースマップ（全ファイル一覧 + 何が何をするか）
+5. **§4** ★ ページ別の構成詳細（LP・HP・各下層ページの component 構成）
+6. **§5** デザインシステム（厳守ルール）
+7. **§6-7** フォーム / 計測タグ
+8. **§9** すぐにやってほしいこと
+9. **§10** 既知の課題
 
 ---
 
@@ -101,7 +110,7 @@
 |---|---|
 | **本番プロジェクト名** | **`minpaku-audit`** ⚠️ 名前に注意 |
 | 本番ドメイン | https://sekaistay.com |
-| プレビュー | https://sekaistay-com.vercel.app（プロジェクト `sekaistay-com`・別物） |
+| プレビュー（別プロジェクト） | https://sekaistay-com.vercel.app（プロジェクト `sekaistay-com`・別物） |
 | デプロイトリガー | main push で本番自動デプロイ・PR ごとにプレビュー |
 | Organization | sekaichi |
 
@@ -149,132 +158,357 @@
 ### 2-5. 技術スタック
 
 - Next.js 14.2.0（App Router）
-- React 18
-- TypeScript 5
-- Tailwind CSS 3.4
+- React 18 / TypeScript 5 / Tailwind CSS 3.4
 - Supabase SDK v2
 - Vercel Edge Functions（API routes）
 - Node v22+
 
 ---
 
-## 3. サイト構造（全ページ一覧）
+## 3. ★ サイト全体のソースマップ
 
-### 3-1. HP メイン
+### 3-1. ディレクトリ構成（プロジェクトルート）
 
-| URL | 役割 | 主要コンポーネント |
+```
+projects/sekaistay-com/
+├── app/                  # Next.js App Router（ページ + APIルート）
+├── components/           # React コンポーネント
+├── lib/                  # ロジック・データ取得・外部連携
+├── data/                 # 設問・コピー定数
+├── content/              # ブログ・HP記事の JSON
+├── public/               # 静的ファイル（画像・robots.txt・OG画像）
+├── ad-ops/               # 広告運用ドキュメント・コピードラフト
+├── ROADMAP.md            # 広告運用ロードマップ
+├── README.md             # 技術スタック・セットアップ
+├── CLAUDE.md             # AI エージェント向け作業ガイド
+├── SEKAI_STAY_Creative_Guide.md  # ブランドガイドライン
+├── IMAGES_MANIFEST.md    # 画像アセット目録
+├── SEO_AUDIT_REPORT.md   # SEO 監査結果
+├── tailwind.config.js    # ブランドトークン
+├── next.config.js        # リダイレクト・画像最適化
+├── vercel.json           # Vercel 設定（redirect・cron）
+└── package.json
+```
+
+### 3-2. `app/` ディレクトリ（全42ファイル）
+
+#### HP / 主要ページ
+
+| ファイル | URL | 役割 |
 |---|---|---|
-| `/` | トップページ | Hero / AuthorityBar / NavCards / Results / FinalCTA |
-| `/about` | 会社案内 | — |
-| `/company` | 会社概要 | — |
-| `/services` | サービス詳細（3バケット: 集客/運営/開業成長） | SwitchSimulator（Chapter Ⅴ） |
-| `/pricing` | 料金プラン | — |
-| `/portfolio` | 運営物件ポートフォリオ | — |
-| `/case-studies` | 導入事例（7件） | — |
-| `/area` | エリア別ページ（20地域） | 動的ルーティング `/area/[slug]` |
-| `/audit` | 自己診断（7ステップ・18問） | SwitchSimulator（Step 02） |
-| `/blog` | ブログ（59記事） | 動的ルーティング `/blog/[slug]` |
-| `/faq` | よくある質問 | — |
-| `/contact` | お問い合わせ | — |
-| `/privacy` | プライバシーポリシー | Meta CAPI 言及済み |
-| `/dashboard-demo` | オーナーポータル デモ | — |
-| `/diagnostic` | 旧・診断（→ /audit に統合） | レガシー |
+| `app/page.tsx` | `/` | **HPトップ** — Hero + 軽量 dynamic import 群 |
+| `app/layout.tsx` | — | グローバル layout（GA4 / Meta Pixel / Font） |
+| `app/globals.css` | — | グローバル CSS |
+| `app/opengraph-image.tsx` | — | OG画像生成 |
+| `app/sitemap.ts` | `/sitemap.xml` | 動的 sitemap |
+| `app/about/page.tsx` | `/about` | 会社案内 |
+| `app/company/page.tsx` | `/company` | 会社概要 |
+| `app/services/page.tsx` | `/services` | サービス詳細（3バケット・SwitchSimulator統合） |
+| `app/pricing/page.tsx` | `/pricing` | 料金プラン |
+| `app/portfolio/page.tsx` | `/portfolio` | 運営物件ポートフォリオ |
+| `app/case-studies/page.tsx` | `/case-studies` | 導入事例（7件） |
+| `app/area/page.tsx` | `/area` | エリア一覧 |
+| `app/area/[slug]/page.tsx` | `/area/<slug>` | エリア詳細（20地域・動的） |
+| `app/audit/layout.tsx` | — | /audit 専用 layout |
+| `app/audit/page.tsx` | `/audit` | 自己診断（7ステップ・18問・SwitchSimulator内蔵） |
+| `app/blog/page.tsx` | `/blog` | ブログ一覧 |
+| `app/blog/[slug]/page.tsx` | `/blog/<slug>` | ブログ記事（59本・動的） |
+| `app/faq/page.tsx` | `/faq` | よくある質問 |
+| `app/contact/layout.tsx` | — | /contact layout |
+| `app/contact/page.tsx` | `/contact` | お問い合わせ |
+| `app/privacy/page.tsx` | `/privacy` | プライバシーポリシー（Meta CAPI 言及済み） |
+| `app/dashboard-demo/page.tsx` | `/dashboard-demo` | オーナーポータル デモ |
+| `app/diagnostic/layout.tsx` | — | レガシー diagnostic layout |
+| `app/diagnostic/page.tsx` | `/diagnostic` | 旧・診断（/audit に統合済み・レガシー残置） |
+| `app/result/layout.tsx` | — | /result layout |
+| `app/result/page.tsx` | `/result` | 診断結果表示 |
+| `app/report-request/page.tsx` | `/report-request` | レポート申込ページ |
+| `app/admin/page.tsx` | `/admin` | 管理画面 |
 
-### 3-2. LP（switch family）
+#### LP（switch ファミリー）
 
-| URL | variant | 役割 | コンポーネント |
+| ファイル | URL | variant | 役割 |
 |---|---|---|---|
-| `/switch` | switch | Control・価格主導 | SwitchHero + SwitchServices + SwitchComparison + SwitchFAQ |
-| `/switch/founder` | switch-founder | 信頼主導・創業者前面 | SwitchHeroFounder + 共通 |
-| `/switch/portal` | switch-portal | ポータル主導 | SwitchHeroPortal + 共通 |
-| `/switch/results` | — | LP内・実績ページ | — |
-| `/switch/thanks` | — | フォーム送信後 thanks | — |
+| `app/switch/layout.tsx` | — | 共通 | LP 共通 layout（metadata 共通） |
+| `app/switch/page.tsx` | `/switch` | switch | **LP A（Control・価格主導）** |
+| `app/switch/founder/page.tsx` | `/switch/founder` | switch-founder | **LP B（信頼主導・創業者前面）** |
+| `app/switch/portal/page.tsx` | `/switch/portal` | switch-portal | **LP C（ポータル主導・24h可視化）** |
+| `app/switch/results/page.tsx` | `/switch/results` | — | LP内・実績ページ |
+| `app/switch/thanks/page.tsx` | `/switch/thanks` | — | フォーム送信後 thanks ページ |
+| `app/switch/_archive/kotekote/page.tsx` | — | （アーカイブ） | コテコテ variant |
+| `app/switch/_archive/simple/page.tsx` | — | （アーカイブ） | シンプル variant |
 
-### 3-3. アーカイブ済 LP（`app/switch/_archive/`）
+#### API ルート
 
-| variant | 状態 | アーカイブ理由 |
+| ファイル | エンドポイント | 役割 |
 |---|---|---|
-| `kotekote` | アーカイブ | 3variants 集約で「コテコテ」パターンを停止 |
-| `simple` | アーカイブ | シンプル思想の追求から外して整理 |
+| `app/api/report-requests/submit/route.ts` | POST `/api/report-requests/submit` | フォーム送信本体（→ Supabase + 吉蔵CRM + Meta CAPI + Slack + Discord） |
+| `app/api/lead-slack-delayed/route.ts` | GET `/api/lead-slack-delayed` | 10分遅延 Slack 通知（cron 毎分・TimeRex照合） |
+| `app/api/lead-forward-retry/route.ts` | POST `/api/lead-forward-retry` | 吉蔵CRM転送失敗時のリトライ |
+| `app/api/contact/route.ts` | POST `/api/contact` | お問い合わせフォーム送信 |
+| `app/api/property-search/route.ts` | GET `/api/property-search` | 物件検索（Brave Search 連携） |
+| `app/api/track/page-view/route.ts` | POST `/api/track/page-view` | ページビュー計測 |
+| `app/go/[slug]/route.ts` | GET `/go/<slug>` | 自社ドメイン短縮URLリダイレクト（2026-05-20実装） |
 
-> **archive_unused_variants ポリシー**: 削除せず `_archive/` に保存。再開可能。
+### 3-3. `components/` ディレクトリ（全55ファイル）
 
-### 3-4. API ルート（`app/api/`）
+#### 共通コンポーネント（ルート直下）
 
-| エンドポイント | 用途 |
+| ファイル | 用途 |
 |---|---|
-| `/api/report-requests/submit` | フォーム送信本体（→ Supabase + 吉蔵CRM + Meta CAPI） |
-| `/api/lead-slack-delayed` | 10分遅延 Slack 通知（TimeRex照合付き） |
-| `/api/lead-intake` | webhook ブリッジ |
+| `Header.tsx` | グローバルヘッダー |
+| `Footer.tsx` | グローバルフッター |
+| `Breadcrumb.tsx` | パンくず |
+| `JP.tsx` | 日本語タイポ用ラッパー |
+| `Icons.tsx` | SVG アイコンセット |
+| `ScrollFade.tsx` | スクロール時 fade-in |
+| `FloatingCTA.tsx` | 追従CTA（HPで使用・dynamic） |
+| `EditorialSimulator.tsx` | 計算機（編集系） |
+| `EngagementTracker.tsx` | スクロール深度・滞在時間計測 |
+| `AnalyticsRouteTracker.tsx` | ルート変更追跡（GA4 pageview） |
 
-### 3-5. その他
+#### `components/home/` — HP セクション
 
-| 項目 | 場所 |
+| ファイル | 役割 |
 |---|---|
-| 短縮URL | `/go/<slug>` で自社内リダイレクト |
-| sitemap | `app/sitemap.ts` で動的生成（blog + area + static） |
-| OG画像 | `app/opengraph-image.tsx` |
-| 構造化データ | JSON-LD (ProfessionalService) |
+| `Hero.tsx` | HP Hero（category eyebrow + 数字3つ + 軽CTA） |
+| `AuthorityBar.tsx` | 数字パッド（現状 page.tsx から外され Hero に統合済） |
+| `Credentials.tsx` | 受賞・認定 |
+| `Dashboard.tsx` | ダッシュボード紹介 |
+| `Ecosystem.tsx` | エコシステム図 |
+| `EntryPoints.tsx` | 入口セクション |
+| `FAQ.tsx` | HP FAQ |
+| `FinalCTA.tsx` | 最終CTA |
+| `Flow.tsx` | 利用フロー |
+| `FooterCatch.tsx` | フッター上キャッチコピー |
+| `MidCTA.tsx` | 中間CTA |
+| `NavCards.tsx` | 3段ファンネル NavCards（軽/中/重） |
+| `PainPoints.tsx` | 悩み訴求 |
+| `Pricing.tsx` | 料金表示 |
+| `Results.tsx` | 事例カード（効果ファースト見出し） |
+| `Simulation.tsx` | 試算 |
+| `ValueProp.tsx` | 価値提案 |
+
+#### `components/switch/` — LP セクション
+
+| ファイル | 用途 | LP variant |
+|---|---|---|
+| `SwitchHeader.tsx` | LP共通ヘッダー | 全 |
+| `SwitchHero.tsx` | Control LP Hero | switch |
+| `SwitchHeroFounder.tsx` | 創業者前面 Hero | founder |
+| `SwitchHeroPortal.tsx` | ポータル前面 Hero | portal |
+| `SwitchHeroKotekote.tsx` | コテコテ Hero | （archive） |
+| `SwitchHeroSimple.tsx` | シンプル Hero | （archive） |
+| `SwitchSimulator.tsx` | 料金計算機（コア機能） | 全 + /audit + /services |
+| `SwitchPainPoints.tsx` | 悩み訴求 | switch |
+| `SwitchServices.tsx` | サービス紹介 | 全 |
+| `SwitchComparison.tsx` | 競合比較 | 全 |
+| `SwitchResults.tsx` | 実績数値 | 全 |
+| `SwitchTestimonials.tsx` | お客様の声 | switch, founder |
+| `PortalTestimonials.tsx` | ポータル特化 testimonials | portal |
+| `SwitchPricing.tsx` | 料金表 | 全 |
+| `SwitchFlow.tsx` | 流れ | 全 |
+| `SwitchFAQ.tsx` | LP FAQ | 全 |
+| `SwitchFounderStory.tsx` | 創業者ストーリー | founder |
+| `SwitchPrimaryCTA.tsx` | プライマリCTA | switch, portal |
+| `SwitchStickyCTA.tsx` | 追従CTA | 全 |
+| `SwitchMidCTA.tsx` | 中間CTA | switch（archive 含む） |
+| `SwitchBeforeAfter.tsx` | ビフォーアフター比較 | （未使用？） |
+| `SwitchFailurePatterns.tsx` | 失敗パターン | （未使用？） |
+| `SwitchSolution.tsx` | 解決策訴求 | （未使用？） |
+| `SwitchTrustBar.tsx` | 信頼バー | （未使用？） |
+| `LpVariantForm.tsx` | LPフォームラッパー（lp_variant を ReportRequestForm に渡す） | 全 |
+| `SimpleContactForm.tsx` | シンプル問い合わせフォーム | — |
+| `DashboardDemo.tsx` | ダッシュボードデモ表示 | portal等 |
+| `PageViewTracker.tsx` | LP pageview 計測（lp_variant 付き） | 全 |
+
+#### `components/switch/_shared/` — LP 共通要素
+
+| ファイル | 用途 |
+|---|---|
+| `LpFooter.tsx` | LP 専用フッター（HP の Footer とは別） |
+| `LpCompanyInfo.tsx` | LP 用会社情報 |
+| `LegalModal.tsx` | 利用規約モーダル |
+
+#### `components/switch/deco/` — LP デコレーション
+
+| ファイル | 用途 |
+|---|---|
+| `WaveDivider.tsx` | 波線区切り |
+| `SectionHead.tsx` | セクション見出し装飾 |
+| `BounceArrow.tsx` | バウンス矢印 |
+| `BeforeAfterBar.tsx` | ビフォーアフターバー |
+| `CountUp.tsx` | カウントアップアニメ |
+| `CountdownTimer.tsx` | カウントダウンタイマー |
+| `DotPattern.tsx` | ドットパターン背景 |
+| `HighlightMarker.tsx` | ハイライト蛍光ペン |
+| `deadline.ts` | 締切日定数 |
+
+#### `components/audit/` — 診断ページ
+
+| ファイル | 用途 |
+|---|---|
+| `AuditReportRequestForm.tsx` | 診断結果から派生するレポート申込フォーム |
+
+#### `components/blog/`, `components/faq/`, `components/services/`, `components/report-request/`
+
+| ファイル | 用途 |
+|---|---|
+| `blog/BlogGrid.tsx` | ブログ一覧グリッド |
+| `faq/FAQClient.tsx` | FAQ クライアントコンポーネント |
+| `services/ServiceBucketsInteractive.tsx` | サービス3バケット（クリックでモーダル展開） |
+| `report-request/ReportRequestForm.tsx` | **フォーム本体**（全フォームの最下層） |
+
+#### `components/switch/_tanaka.ts`
+
+田中氏（架空ペルソナ？）関連の定数。詳細要確認。
+
+### 3-4. `lib/` ディレクトリ（全14ファイル）
+
+| ファイル | 役割 |
+|---|---|
+| `lib/supabase.ts` | Supabase クライアント初期化 |
+| `lib/lead-submissions.ts` | Supabase `lead_submissions` テーブル書き込み |
+| `lib/lead-forward.ts` | 吉蔵 CRM 転送（forwardLead） |
+| `lib/meta-capi.ts` | Meta Conversions API 送信（hashed PII） |
+| `lib/sheets-backup.ts` | Google Sheets バックアップ書き込み |
+| `lib/blog.ts` | `content/blog/*.json` 起動時読込 |
+| `lib/areas.ts` | 20地域データ |
+| `lib/case-studies.ts` | 7導入事例データ |
+| `lib/offices.ts` | オフィス情報 |
+| `lib/scoring.ts` | 診断スコアリングロジック |
+| `lib/test-classifier.ts` | テスト/本番リード判別 |
+| `lib/engagement-tracking.ts` | スクロール深度・滞在時間ロジック |
+| `lib/images.ts` | 画像パス定数 |
+| `lib/media.ts` | メディア（プレス）データ |
+| `lib/storage.ts` | localStorage ラッパー |
+
+### 3-5. `data/` ディレクトリ
+
+| ファイル | 役割 |
+|---|---|
+| `data/questions.ts` | 診断設問（7ステップ・18問・カテゴリ別） |
+| `data/resultCopy.ts` | 診断結果コピー |
+
+### 3-6. `content/` ディレクトリ
+
+| ディレクトリ | 内容 |
+|---|---|
+| `content/blog/` | ブログ記事（59本の JSON ファイル） |
+| `content/home/` | HP 用コンテンツ JSON |
+
+### 3-7. `public/` ディレクトリ
+
+| ファイル/ディレクトリ | 用途 |
+|---|---|
+| `public/favicon.ico` / `apple-icon.png` / `icon-192.png` / `icon-512.png` | ファビコン群 |
+| `public/og-image-v2.png` | 「SEKAI STAY 8%」OG画像（2026-05-22 差替） |
+| `public/manifest.json` | PWA manifest |
+| `public/robots.txt` | robots |
+| `public/sitemap_note_articles.xml` | note記事用 sitemap |
+| `public/images/` | サイト全体の画像 |
+| `public/illust-inbound.svg` / `illust-quality.svg` / `illust-support.svg` | イラスト |
+| `public/sekai_stay_01_03.png` ~ `03_03.png` | LP用画像 |
+| `public/SEKAISTAY営業資料完成版.pptx` | 営業資料 |
 
 ---
 
-## 4. LP 3 variants — 差別化と訴求設計
+## 4. ★ ページ別の構成詳細
 
-### 4-1. 訴求パターン × LP マッピング
+### 4-1. HP トップ（`app/page.tsx`）
 
-| variant | 訴求軸 | Hero メッセージ | 想定ターゲット |
-|---|---|---|---|
-| **switch**（Control） | 価格主導 | 業界半額・手数料8% | コスト意識の高い既存代行ユーザー |
-| **switch/founder** | 信頼主導 | スーパーホスト多数認定・受賞実績 | 初心者・大口投資家・顔の見える運営代行を求める層 |
-| **switch/portal** | ポータル主導 | 24h可視化・データドリブン運営 | 複数物件オーナー・データ重視層 |
+**構成**:
+```typescript
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+import Hero from '@/components/home/Hero'
 
-### 4-2. 共通コンポーネント vs variant 固有
-
-| 共通（全variantで使用） | 場所 |
-|---|---|
-| `SwitchServices` | components/switch/ |
-| `SwitchComparison` | components/switch/ |
-| `SwitchFAQ` | components/switch/ |
-| `SwitchSimulator` | components/switch/（料金計算機） |
-| `LpVariantForm` | components/switch/（フォームラッパー） |
-| `ReportRequestForm` | components/report-request/（フォーム本体） |
-
-| variant 固有 | 場所 |
-|---|---|
-| `SwitchHero` | components/switch/（Control） |
-| `SwitchHeroFounder` | components/switch/ |
-| `SwitchHeroPortal` | components/switch/ |
-
-### 4-3. レイアウト・metadata
-
-LP3 variantsは共通 layout (`app/switch/layout.tsx`) を使用。metadata（タイトル・OGP）も共通。variant 固有の差分は Hero と一部セクションの順序のみ。
-
-### 4-4. LP A/Bテストの仕組み
-
-`lp_variant` パラメータが LP → フォーム → Supabase → HubSpot/CRM へ全レイヤー伝播する設計（`ab_test_approach`）:
-
-```
-ユーザー → /switch* 着地（lp_variant = switch | switch-founder | switch-portal）
-  ↓
-LpVariantForm → ReportRequestForm に lp_variant を埋め込み
-  ↓
-POST /api/report-requests/submit （body に lp_variant）
-  ↓ 3系統並列転送
-  ├─ Supabase lead_submissions（lp_variant カラム保存）
-  ├─ 吉蔵 CRM（forwardLead に lp_variant）
-  └─ Meta CAPI（custom_data.lp_variant）
-  ↓
-GA4 generate_lead event（custom parameter: lp_variant）
+// 以下は dynamic import（初期ロード軽量化）
+const FloatingCTA = dynamic(() => import('@/components/FloatingCTA'), { ssr: false })
+const Simulation = dynamic(() => import('@/components/home/Simulation'))
+const PainPoints = dynamic(() => import('@/components/home/PainPoints'))
+const MidCTA = dynamic(() => import('@/components/home/MidCTA'))
+const Flow = dynamic(() => import('@/components/home/Flow'))
+const Results = dynamic(() => import('@/components/home/Results'))
+const NavCards = dynamic(() => import('@/components/home/NavCards'))
+const FinalCTA = dynamic(() => import('@/components/home/FinalCTA'))
 ```
 
-→ 媒体別 × LP variant 別の CVR が Supabase で集計可能。
+→ **Header → Hero → Simulation → PainPoints → MidCTA → Flow → Results → NavCards → FinalCTA → Footer + FloatingCTA**
 
-### 4-5. A/Bテスト判定ルール
+### 4-2. LP A: `/switch`（`app/switch/page.tsx`）
 
-- 統計有意性: **Z-score ≥ 1.96**（95%有意）
-- 計測期間: **1週間単位**
-- メトリクス: CVR + Δ vs control
-- 詳細: `ab_test_measurement` 設定参照
+**Import 一覧（22 components）**:
+```
+LpFooter, LpCompanyInfo, SwitchHeader, SwitchHero, SwitchSimulator,
+SwitchPainPoints, SwitchServices, SwitchComparison, SwitchResults,
+SwitchTestimonials, SwitchPricing, SwitchFlow, SwitchFAQ,
+LpVariantForm, SwitchPrimaryCTA, SwitchStickyCTA,
+WaveDivider, PageViewTracker, EngagementTracker
+```
+
+**構成順**: SwitchHeader → SwitchHero → SwitchSimulator → SwitchPainPoints → SwitchServices → SwitchComparison → SwitchResults → SwitchTestimonials → SwitchPricing → SwitchFlow → SwitchFAQ → SwitchPrimaryCTA → LpVariantForm → LpFooter + LpCompanyInfo + SwitchStickyCTA
+
+### 4-3. LP B: `/switch/founder`（`app/switch/founder/page.tsx`）
+
+**Import 一覧**:
+```
+LpFooter, LpCompanyInfo, SwitchHeader, SwitchHeroFounder, SwitchFounderStory,
+SwitchServices, SwitchResults, SwitchTestimonials, SwitchComparison,
+SwitchSimulator, SwitchPricing, SwitchFlow, SwitchFAQ,
+LpVariantForm, PageViewTracker, EngagementTracker, SwitchStickyCTA
+```
+
+**Control との差分**:
+- ❌ SwitchHero → ✅ **SwitchHeroFounder**
+- ❌ SwitchPainPoints
+- ✅ **SwitchFounderStory** 追加（創業者ストーリー）
+- セクション順序が「信頼訴求 → 比較」に並べ替え
+
+### 4-4. LP C: `/switch/portal`（`app/switch/portal/page.tsx`）
+
+**Import 一覧**:
+```
+LpFooter, LpCompanyInfo, SwitchHeader, SwitchHeroPortal,
+SwitchServices, SwitchComparison, SwitchResults,
+SwitchPricing, SwitchFlow, SwitchFAQ,
+SwitchPrimaryCTA, SwitchStickyCTA, LpVariantForm,
+PortalTestimonials, PageViewTracker, EngagementTracker, WaveDivider
+```
+
+**Control との差分**:
+- ❌ SwitchHero → ✅ **SwitchHeroPortal**
+- ❌ SwitchTestimonials → ✅ **PortalTestimonials**（ポータル特化）
+- ❌ SwitchPainPoints
+- ❌ SwitchSimulator
+
+### 4-5. アーカイブ LP（`app/switch/_archive/`）
+
+**`kotekote/`** — Control 構成に SwitchHeroKotekote を載せる
+**`simple/`** — Control 構成に SwitchHeroSimple を載せる
+
+> 再開時は `_archive/<variant>/page.tsx` を `app/switch/<variant>/page.tsx` に移動するだけ。
+
+### 4-6. `/services`（サービス詳細）
+
+- 9サービスを **3バケット**（集客 / 運営 / 開業成長）に整理（2026-05-15）
+- 縦割りカラム + クリックでモーダル表示
+- Chapter Ⅴ Clear Pricing に SwitchSimulator 統合（旧 /simulate は削除）
+
+### 4-7. `/audit`（自己診断）
+
+- 7ステップ・18問（`data/questions.ts`）
+- Step 02 に SwitchSimulator 統合
+- スコアリングは `lib/scoring.ts`
+- 結果は `/result` に表示
+
+### 4-8. `/blog`, `/area`, `/case-studies`
+
+| ページ | データソース | 件数 |
+|---|---|---|
+| `/blog` | `content/blog/*.json`（lib/blog.ts で読込） | 59記事 |
+| `/area/[slug]` | `lib/areas.ts` | 20地域 |
+| `/case-studies` | `lib/case-studies.ts` | 7件 |
 
 ---
 
@@ -326,10 +560,7 @@ GA4 generate_lead event（custom parameter: lp_variant）
 ### 5-5. シンプル variant 思想（simple_variant_philosophy）
 
 「シンプル」を選んだら全セクション一貫してミニマル。以下は **シンプル思想に反するので削除**:
-- 追従CTA
-- 波線アニメ
-- 中間CTA挿入
-- dark-gradient block
+- 追従CTA / 波線アニメ / 中間CTA挿入 / dark-gradient block
 
 ### 5-6. AI メッセージング（lp_design_ai_mention）
 
@@ -353,7 +584,8 @@ POST /api/report-requests/submit （app/api/report-requests/submit/route.ts）
   ├─ sekaistay-sales-portal webhook
   ├─ Discord lead webhook
   ├─ Slack lead webhook（即時送信）
-  └─ Meta CAPI sendMetaCapiLead（lib/meta-capi.ts・hashed PII）
+  ├─ Meta CAPI sendMetaCapiLead（lib/meta-capi.ts・hashed PII）
+  └─ Google Sheets backup（lib/sheets-backup.ts）
   ↓
 client → fbq('Lead', {eventID}) + gtag('generate_lead')
   ↓
@@ -367,13 +599,19 @@ client → fbq('Lead', {eventID}) + gtag('generate_lead')
 
 | ファイル | 役割 |
 |---|---|
-| `components/report-request/ReportRequestForm.tsx` | フォーム本体 |
-| `components/switch/LpVariantForm.tsx` | LP variant ラッパー |
+| `components/report-request/ReportRequestForm.tsx` | フォーム本体（全フォームの最下層） |
+| `components/switch/LpVariantForm.tsx` | LP variant ラッパー（lp_variant を埋め込み） |
+| `components/audit/AuditReportRequestForm.tsx` | /audit 専用フォーム |
+| `components/switch/SimpleContactForm.tsx` | シンプル問い合わせフォーム |
 | `app/api/report-requests/submit/route.ts` | サブミット受信エンドポイント |
+| `app/api/lead-slack-delayed/route.ts` | 10分遅延 Slack 通知 |
+| `app/api/lead-forward-retry/route.ts` | 吉蔵CRM転送失敗時のリトライ |
+| `app/api/contact/route.ts` | /contact 問い合わせ送信 |
 | `lib/lead-submissions.ts` | Supabase 書き込み |
 | `lib/lead-forward.ts` | 吉蔵 CRM 転送 |
 | `lib/meta-capi.ts` | Meta CAPI 送信 |
-| `app/api/lead-slack-delayed/route.ts` | 10分遅延 Slack 通知 |
+| `lib/sheets-backup.ts` | Google Sheets バックアップ |
+| `lib/test-classifier.ts` | テスト/本番リード判別 |
 
 ### 6-3. フォーム文言の最新状態
 
@@ -403,17 +641,28 @@ CTA ボタン文言（`lp_button_language` / `lp_button_text_style`）:
 | X Ads UWT | （X Pixel） | env で有効化（未設定） |
 | Google Ads Conversion | `NEXT_PUBLIC_GOOGLE_ADS_ID` | env |
 
-### 7-2. SEO 設定
+### 7-2. 計測コンポーネント
+
+| ファイル | 役割 |
+|---|---|
+| `components/AnalyticsRouteTracker.tsx` | ルート変更時の GA4 pageview |
+| `components/EngagementTracker.tsx` | スクロール深度・滞在時間 |
+| `components/switch/PageViewTracker.tsx` | LP pageview（lp_variant 付き） |
+| `app/api/track/page-view/route.ts` | サーバーサイド pageview 計測 |
+| `lib/engagement-tracking.ts` | engagement イベント定義 |
+
+### 7-3. SEO 設定
 
 | 項目 | 設定 |
 |---|---|
 | sitemap | `app/sitemap.ts`（動的生成・blog + area + static） |
-| robots.txt | `app/robots.ts` |
-| OGP / Twitter Card | `app/opengraph-image.tsx`（2026-05-22 「SEKAI STAY 8% hero banner」に差替） |
+| robots.txt | `public/robots.txt` |
+| OGP / Twitter Card | `app/opengraph-image.tsx` + `public/og-image-v2.png`（2026-05-22 「SEKAI STAY 8% hero banner」に差替） |
 | 構造化データ | JSON-LD (ProfessionalService) |
 | Canonical | 自動付与 |
+| note sitemap | `public/sitemap_note_articles.xml` |
 
-### 7-3. SEO 監査
+### 7-4. SEO 監査
 
 - `SEO_AUDIT_REPORT.md` に監査結果保存
 
@@ -428,7 +677,8 @@ CTA ボタン文言（`lp_button_language` / `lp_button_text_style`）:
 | 形式 | JSON（1ファイル 1 記事） |
 | 配置 | `content/blog/*.json` |
 | 読込 | `lib/blog.ts`（起動時） |
-| ルーティング | `/blog/[slug]` 動的 |
+| ルーティング | `app/blog/[slug]/page.tsx` 動的 |
+| 一覧コンポーネント | `components/blog/BlogGrid.tsx` |
 | 戦略 | PR配信前に自社HP記事10本を5月中に蓄積（hp_article_strategy） |
 
 ### 8-2. エリア（20地域）
@@ -436,22 +686,32 @@ CTA ボタン文言（`lp_button_language` / `lp_button_text_style`）:
 | 項目 | 設定 |
 |---|---|
 | データ | `lib/areas.ts` |
-| 表示 | `/area/[slug]` 動的 |
+| 表示 | `app/area/[slug]/page.tsx` 動的 |
+| 一覧 | `app/area/page.tsx` |
 
 ### 8-3. 導入事例（7件）
 
 | 項目 | 設定 |
 |---|---|
 | データ | `lib/case-studies.ts` |
-| 表示 | `/case-studies` |
+| 表示 | `app/case-studies/page.tsx` |
 
 ### 8-4. 診断・スコアリング
 
 | 項目 | 場所 |
 |---|---|
 | 設問 | `data/questions.ts`（7ステップ・18問） |
+| 結果コピー | `data/resultCopy.ts` |
 | スコアリング | `lib/scoring.ts` |
-| 表示 | `/audit` |
+| 表示 | `app/audit/page.tsx` → `app/result/page.tsx` |
+| カスタムフォーム | `components/audit/AuditReportRequestForm.tsx` |
+
+### 8-5. 物件検索
+
+| 項目 | 場所 |
+|---|---|
+| API | `app/api/property-search/route.ts`（Brave Search連携） |
+| 注意 | サジェスト経由のAirbnb URLは404になる可能性（airbnb_url_validation） |
 
 ---
 
@@ -512,8 +772,9 @@ CTA ボタン文言（`lp_button_language` / `lp_button_text_style`）:
 | 1 | Meta Pixel 2つ並存 | 🟡 中 | `1658477098524563` と `989839370242915` のどちらに寄せるか統合判断要 |
 | 2 | X Pixel 未取得 | 🟡 中 | `NEXT_PUBLIC_X_PIXEL_ID` env 未登録・X Ads CV最適化が機能しない |
 | 3 | LP A/Bテストの勝者未確定 | 🟡 中 | 3 variants の CVR Z-score ≥ 1.96 達成判定要 |
-| 4 | `/diagnostic` レガシー残置 | 🟢 低 | `/audit` に統合済みだがレガシー URL がリンク残ってる可能性 |
+| 4 | `/diagnostic` レガシー残置 | 🟢 低 | `/audit` に統合済みだがレガシー URL が残ってる |
 | 5 | ブログ59記事の運用ペース | 🟡 中 | PR配信前に10本蓄積戦略あり・継続運用方針要確認 |
+| 6 | 未使用 Switch components | 🟢 低 | SwitchBeforeAfter / SwitchFailurePatterns / SwitchSolution / SwitchTrustBar が現役 LP で未使用 |
 
 ---
 
@@ -559,9 +820,7 @@ CTA ボタン文言（`lp_button_language` / `lp_button_text_style`）:
 
 ---
 
-## 13. 主要ドキュメント・ファイル参照先
-
-### ドキュメント
+## 13. 主要ドキュメント
 
 | ファイル | 内容 |
 |---|---|
@@ -572,40 +831,9 @@ CTA ボタン文言（`lp_button_language` / `lp_button_text_style`）:
 | `IMAGES_MANIFEST.md` | 画像アセット目録 |
 | `SEO_AUDIT_REPORT.md` | SEO 監査結果 |
 | `ad-ops/HANDOVER_YOSHITO_2026-05-31.md` | 広告運用引き継ぎ（姉妹資料） |
-
-### LP / HP 主要コード
-
-| ファイル | 内容 |
-|---|---|
-| `app/layout.tsx` | GA4 / Meta Pixel / グローバル設定 |
-| `app/page.tsx` | HP トップページ |
-| `app/switch/layout.tsx` | LP 共通レイアウト |
-| `app/switch/page.tsx` | LP A（switch / Control / 価格主導） |
-| `app/switch/founder/page.tsx` | LP B（信頼主導） |
-| `app/switch/portal/page.tsx` | LP C（ポータル主導） |
-| `app/switch/_archive/` | アーカイブ済 LP（kotekote / simple） |
-| `components/switch/` | LP 専用コンポーネント |
-| `components/report-request/ReportRequestForm.tsx` | フォーム本体 |
-| `components/home/` | HP セクション |
-| `components/services/` | /services セクション |
-| `components/audit/` | /audit 診断 |
 | `tailwind.config.js` | ブランドトークン |
 | `next.config.js` | リダイレクト・画像最適化 |
-| `vercel.json` | リダイレクト・cron |
-
-### API / Lib
-
-| ファイル | 内容 |
-|---|---|
-| `app/api/report-requests/submit/route.ts` | フォーム送信本体 |
-| `app/api/lead-slack-delayed/route.ts` | 10分遅延 Slack 通知 |
-| `lib/lead-submissions.ts` | Supabase 書き込み |
-| `lib/lead-forward.ts` | 吉蔵 CRM 転送 |
-| `lib/meta-capi.ts` | Meta CAPI 送信 |
-| `lib/blog.ts` | ブログ JSON 読込 |
-| `lib/areas.ts` | エリアデータ |
-| `lib/case-studies.ts` | 導入事例データ |
-| `lib/scoring.ts` | 診断スコアリング |
+| `vercel.json` | Vercel 設定（redirect・cron） |
 
 ---
 
