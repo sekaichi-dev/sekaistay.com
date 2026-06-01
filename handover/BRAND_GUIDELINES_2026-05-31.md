@@ -8,13 +8,7 @@
 
 ## ⚡ サマリー
 
-### 必読ファイル
-
-| ファイル | 内容 |
-|---|---|
-| `SEKAI_STAY_Creative_Guide.md` | ブランドガイドライン本体 |
-| `IMAGES_MANIFEST.md` | 画像アセット目録 |
-| `shared/docs/japanese-business-sns-copywriting.md` | 日本語 SNS コピー規約 |
+**必読ファイル**: `SEKAI_STAY_Creative_Guide.md`（ブランドガイドライン本体）/ `IMAGES_MANIFEST.md`（画像アセット目録）/ `shared/docs/japanese-business-sns-copywriting.md`（日本語 SNS コピー規約）/ `tailwind.config.js`（ブランドトークン定義）/ `lib/media.ts`（受賞バッジ・メディア実績データ）
 
 ### 即知っておいてほしい5点
 
@@ -334,19 +328,7 @@
 
 ---
 
-## 11. 主要ファイル
-
-| ファイル | 内容 |
-|---|---|
-| `SEKAI_STAY_Creative_Guide.md` | ブランドガイドライン本体 |
-| `IMAGES_MANIFEST.md` | 画像アセット目録 |
-| `tailwind.config.js` | ブランドトークン定義 |
-| `shared/docs/japanese-business-sns-copywriting.md` | SNS コピー規約（全媒体共通） |
-| `lib/media.ts` | 受賞バッジ・メディア実績データ |
-
----
-
-## 12. 関連ドキュメント
+## 11. 関連ドキュメント
 
 - [LP/HP §5 デザインシステム](../HANDOVER_YOSHITO_LP_HP_2026-05-31.md)
 - [SNS §5 コピー規約](SNS_2026-05-31.md)
