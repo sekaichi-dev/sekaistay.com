@@ -22,20 +22,17 @@ POST /api/report-requests/submit
   ├─ Slack lead webhook（即時送信）
   └─ Meta CAPI（hashed PII で Lead event 送信）
   ↓ さらに Google Sheets backup（同期スクリプト）
-  
-10分後（cron 毎分）
-  ↓
-GET /api/lead-slack-delayed
-  ↓ TimeRex照合
-  ├─ 予約あり → Slack #402 スレッド返信
-  └─ 予約なし → 「⚠️ TimeRex予約なし」マーカー付き通知
+
+[並行] Slack #402-sekaistay面談申込
+  ├─ TimeRex ネイティブアプリ: 予約完了をメイン投稿
+  └─ Jennie (cron `/api/lead-slack-delayed` 毎分): 該当フォーム内容をスレッドに補完
 ```
 
 ### 即知っておいてほしい3点
 
 1. 🔴 **6系統並列転送** — 1つ落ちても他は転送される（fire-and-forget 設計）
 2. 🟡 **吉蔵 CRM がメイン**・HubSpot 移行検討中
-3. 🟡 **TimeRex 予約なしリードのみ Slack 通知** — ダブル通知を回避
+3. 🟡 **Slack `#402` 通知の主役は TimeRex のネイティブアプリ**、Jennie がフォーム内容をスレッドで補完する役割
 
 ---
 
@@ -119,7 +116,7 @@ GET /api/lead-slack-delayed
 |---|---|
 | 環境変数 | `SLACK_LEAD_WEBHOOK` |
 | チャネル | `#402-sekaistay面談申込` 関連 |
-| 役割 | 即時通知（後段で 10分遅延通知も別途実行） |
+| 役割 | フォーム送信即時転送（Jennie が後段で TimeRex 予約スレッドに補完投稿） |
 
 ### 2-6. Meta CAPI
 
@@ -142,46 +139,27 @@ GET /api/lead-slack-delayed
 
 ---
 
-## 3. TimeRex 照合・Slack 遅延通知
+## 3. Slack `#402-sekaistay面談申込` — TimeRex + Jennie 補完
 
-### 3-1. エンドポイント
+### 3-1. 通知の主役: TimeRex ネイティブアプリ
 
-**`GET /api/lead-slack-delayed`** （cron 毎分実行）
+`#402-sekaistay面談申込` には **TimeRex のネイティブアプリが予約完了を直接投稿** する。これが営業が見るメイン通知。
 
-ファイル: `app/api/lead-slack-delayed/route.ts`
+### 3-2. 補完: Jennie がフォーム内容をスレッドに付ける
+
+`/api/lead-slack-delayed`（cron 毎分・`app/api/lead-slack-delayed/route.ts`） が TimeRex 投稿と対応する Supabase リードを照合し、**TimeRex 投稿のスレッドにフォーム内容を補完投稿** する。
 
 cron 設定（`vercel.json`）:
 ```json
-{
-  "crons": [
-    { "path": "/api/lead-slack-delayed", "schedule": "* * * * *" }
-  ]
-}
+{ "crons": [{ "path": "/api/lead-slack-delayed", "schedule": "* * * * *" }] }
 ```
 
-### 3-2. ロジック
+### 3-3. マッチング設計
 
-```
-毎分実行
-  ↓
-過去10分のリードを Supabase から取得
-  ↓
-各リードについて Slack #402-sekaistay面談申込 の TimeRex bot 投稿をチェック
-  ↓ 名前マッチング
-  ├─ 漢字↔かなフォールバック
-  ├─ 姓2文字フォールバック（2026-05-27 実装）
-  └─ 時間窓フォールバック
-  ↓
-予約あり → Slack スレッド返信「フォーム送信あり」
-予約なし → 既存通知に「⚠️ TimeRex予約なし」マーカー付与
-```
-
-### 3-3. 通知設計の意図
-
-> slack_notification_dedup: フォーム送信 + TimeRex予約のダブル通知を避けたい
-> 「TimeRex予約なし（離脱）のみ Slack 通知」を流す設計を好む
-
-→ 営業が「TimeRex で既に予約済み」の人に重複対応せず、フォーム送信したが TimeRex 予約していない離脱リードに集中できる。
+TimeRex の予約氏名と Supabase フォーム送信氏名を照合:
+- 漢字↔かなフォールバック
+- 姓2文字フォールバック（2026-05-27 実装）
+- 時間窓フォールバック
 
 ---
 
@@ -321,7 +299,7 @@ LEAD_BACKUP_SHEET_ID
 | ファイル | 内容 |
 |---|---|
 | `app/api/report-requests/submit/route.ts` | フォーム送信本体 |
-| `app/api/lead-slack-delayed/route.ts` | 10分遅延 Slack 通知 + TimeRex 照合 |
+| `app/api/lead-slack-delayed/route.ts` | Jennie 補完投稿（TimeRex 予約スレッドにフォーム内容を付加・cron 毎分） |
 | `app/api/lead-forward-retry/route.ts` | 吉蔵 CRM 転送失敗時のリトライ |
 | `app/api/contact/route.ts` | /contact お問い合わせ送信 |
 | `lib/lead-submissions.ts` | Supabase 書き込み |
