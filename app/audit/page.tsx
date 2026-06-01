@@ -4,6 +4,7 @@ import Header from '@/components/Header'
 import Breadcrumb from '@/components/Breadcrumb'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
+import EngagementTracker from '@/components/EngagementTracker'
 import { AuditReportRequestForm } from '@/components/audit/AuditReportRequestForm'
 
 /* ─────────────────────────────────────────────────────────────
@@ -28,11 +29,14 @@ export default function AuditPage() {
     <>
       <Header />
       <FloatingCTA />
+      {/* GA4 計測(scroll_depth/section_view/cta_click)を lp_variant="audit" で送る。
+          page_view は layout の config が、フォームの funnel イベントは AuditReportRequestForm が既に送信済み。 */}
+      <EngagementTracker lpVariant="audit" />
       <main className="bg-ivory">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: '無料物件診断' }]} />
 
         {/* Hero / Masthead */}
-        <section className="bg-paper border-b border-rule">
+        <section data-track-section="hero" className="bg-paper border-b border-rule">
           <div className="container-edit section-hero">
             <div className="chapter-marker">
               <span className="rule-teal-sm" />
@@ -52,7 +56,7 @@ export default function AuditPage() {
         </section>
 
         {/* Form */}
-        <section className="section-xl">
+        <section data-track-section="form" className="section-xl">
           <div className="container-edit max-w-2xl mx-auto px-5 md:px-8">
             <AuditReportRequestForm />
           </div>
