@@ -25,6 +25,11 @@
 
 セクション横断で「初日にミスする / ブランド毀損する / 数字を誤読する」レベルだけに絞った。
 
+### 📊 マスター運用 Sheets（毎日 / 毎週見る場所）
+
+- **[SEKAI STAY Marketing Roadmap](https://docs.google.com/spreadsheets/d/1eK0fJk0hQyFM2mRumbah2nVe-IgH87cKcAeeFPC0C4E/edit?gid=1066059999#gid=1066059999)** — 全体戦略・施策の月次タイムライン・KPI（マーケ運用のマスター資料）
+- **[SEKAI STAY SNSコンテンツ](https://docs.google.com/spreadsheets/d/19qsHLdmIex59mj-xABMbF4jCatHoy6SN7LE8x4EzWVY/edit?gid=1990050856#gid=1990050856)** — X/note/LinkedIn 投稿ドラフトとステータス（SNS handover §3-7 X Cascade Tracker と同一）
+
 ### 戦略の中核
 
 1. 🔴 **Price 主導 LP の仮説検証中**（広告 × LP/HP）— Google Ads で **SS-Generic-Trust / SS-Generic-Portal を 5/29 停止**（3週間 CV ゼロのため）。**SS-Generic-Price (¥10K/日・予算の67%)** に絞り込み。LP も `/switch`（価格主導）が一番コンバージョンする仮説で 3バリアント A/B 検証中。広告運用 §3 + LP/HP §3
