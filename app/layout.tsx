@@ -168,8 +168,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           strategy="afterInteractive"
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
         />
+        {/* 初回 page_view は config 時に lp_variant を付与して自動発火させる(config 直後・gtag 定義済みで
+            確実に発火する=レースなし)。sekaiLpVariant() の分岐は lib/lp-variant.ts と一致させること。
+            SPA 遷移分は AnalyticsRouteTracker が lp_variant 付きで再発火する。 */}
         <Script id="ga4-init" strategy="afterInteractive">
-          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());gtag('config','${GA_MEASUREMENT_ID}');${GOOGLE_ADS_ID ? `gtag('config','${GOOGLE_ADS_ID}');` : ''}`}
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;function sekaiLpVariant(){var p=location.pathname;if(p.length>1&&p.charAt(p.length-1)==='/')p=p.slice(0,-1);if(p==='/switch/founder')return'switch-founder';if(p==='/switch/portal')return'switch-portal';if(p==='/switch')return'switch';if(p==='/audit')return'audit';if(p==='/contact')return'contact';return'direct';}gtag('js',new Date());gtag('config','${GA_MEASUREMENT_ID}',{lp_variant:sekaiLpVariant()});${GOOGLE_ADS_ID ? `gtag('config','${GOOGLE_ADS_ID}');` : ''}`}
         </Script>
         {CLARITY_PROJECT_ID && (
           <Script id="microsoft-clarity" strategy="afterInteractive">

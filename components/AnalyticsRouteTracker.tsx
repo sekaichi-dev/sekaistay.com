@@ -2,12 +2,15 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { resolveLpVariant } from '@/lib/lp-variant'
 
 // Next.js の App Router はクライアント遷移で layout が再マウントされないため、
 // Meta Pixel と GA4 の PageView は明示的に再発火する必要がある。
 //
-// 初回ロード: layout.tsx のインラインスクリプトが完全な URL (UTM 含む) で既に PageView 発火済み。
-// 当コンポーネントは「pathname が変わったとき」だけ追加発火する。
+// 初回ロード: layout.tsx のインラインスクリプトが lp_variant 付きで GA4 page_view を発火済み
+//   (config で send_page_view を有効のまま lp_variant を付与)。Meta/X も初回発火済み。
+// 当コンポーネントは「pathname が変わったとき」だけ追加発火する。SPA 遷移の GA4 page_view には
+//   lp_variant(path から解決)を付与する — これがないと variant 別計測が (not set) になる。
 //
 // 依存配列に searchParams を含めない理由:
 //   useSearchParams() はハイドレーションで値が遅延してくるため、UTM 付きランディング URL では
@@ -33,16 +36,17 @@ export default function AnalyticsRouteTracker() {
     if (lastTrackedPath.current === pathname) return
     const isInitial = lastTrackedPath.current === null
     lastTrackedPath.current = pathname
-    if (isInitial) return // 初回は layout.tsx が UTM 込みで既に発火済み
+    if (isInitial) return // 初回は layout.tsx が lp_variant 込みで既に発火済み
 
     const query = searchParams?.toString()
     const fullPath = query ? `${pathname}?${query}` : pathname
+    const lpVariant = resolveLpVariant(pathname)
 
     if (!w.dataLayer) w.dataLayer = []
     if (typeof w.gtag === 'function') {
-      w.gtag('event', 'page_view', { page_path: fullPath })
+      w.gtag('event', 'page_view', { page_path: fullPath, lp_variant: lpVariant })
     } else {
-      w.dataLayer.push(['event', 'page_view', { page_path: fullPath }])
+      w.dataLayer.push(['event', 'page_view', { page_path: fullPath, lp_variant: lpVariant }])
     }
 
     if (typeof w.fbq === 'function') {
