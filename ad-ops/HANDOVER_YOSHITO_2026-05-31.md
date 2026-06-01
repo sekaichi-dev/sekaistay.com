@@ -1,10 +1,29 @@
 # SEKAI STAY 広告運用 引き継ぎ資料 — 本間ヨシト様
 
-> **作成日**: 2026-05-31
-> **作成者**: テンイチ
+> **作成日**: 2026-05-31 / **作成者**: テンイチ
 > **引き継ぎ先**: 本間ヨシト（リード獲得・マーケ責任者 / `design.7247@gmail.com`）
 > **対象**: Google Ads / Meta Ads / X Ads の運用全権
 > **目的**: テンイチが個別運用していた広告アカウントと運用知見をヨシトに完全移譲し、6月以降の運用責任者として独立稼働できる状態にする
+> **戻る**: [HANDOVER_YOSHITO.md](../HANDOVER_YOSHITO.md)
+> **姉妹資料**: [`../HANDOVER_YOSHITO_LP_HP_2026-05-31.md`](../HANDOVER_YOSHITO_LP_HP_2026-05-31.md)（LP/HP 引き継ぎ）
+
+---
+
+## 🔗 外部リンク（よく使うもの・トップ固定）
+
+| 種別 | URL / 場所 |
+|---|---|
+| 📊 **広告統合ダッシュボード** | https://sekaichi-dashboard.vercel.app/marketing （Spend/Impressions/Clicks/CPC/CPM/CV 6軸・媒体横断） |
+| 📈 **LP A/Bテスト分析** | https://sekaichi-dashboard.vercel.app/lp-analytics （CVR・Δ・Z-score） |
+| 📥 **SEKAI STAY Lead Submissions Log** | Google Drive「SEKAI STAY Lead Submissions Log」（全リード一次保管） |
+| 🎯 **Google Ads** | https://ads.google.com/aw/overview?ocid=8614414795 （Customer ID `861-441-4795`・MCC 経由 `311-728-0923`） |
+| 📘 **Meta Ads Manager** | https://business.facebook.com/adsmanager/manage/campaigns （現在は 🔴 停止中） |
+| 🐦 **X Ads** | https://ads.x.com （現状オーガニック優先・Promoted 未稼働） |
+| 📂 **SEKAI_STAY_Marketing_Roadmap** | Google Drive「SEKAI_STAY_Marketing_Roadmap」（マーケ戦略レポート 3 本同梱） |
+| 🧾 **戦略レポート（リポ内）** | `ad-ops/STRATEGY_REPORT_GOOGLE_ADS_2026-05-14.md` / `STRATEGY_REPORT_META_ADS_2026-05-14.md` / `STRATEGY_REPORT_X_ADS_2026-05-14.md` |
+| 🗺️ **広告運用ロードマップ** | `ROADMAP.md`（リポ直下） |
+| 🛠️ **Vercel プロジェクト** | https://vercel.com/sekaichi/sekaistay-com （`prj_qfaTcxdt6mQ18ARDg046q5febS0d`） |
+| 📦 **GitHub リポ** | https://github.com/sekaichi-dev/sekaistay.com |
 
 ---
 

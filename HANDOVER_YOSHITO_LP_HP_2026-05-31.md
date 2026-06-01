@@ -1,10 +1,30 @@
 # SEKAI STAY LP/HP 引き継ぎ資料 — 本間ヨシト様
 
-> **作成日**: 2026-05-31
-> **作成者**: テンイチ
+> **作成日**: 2026-05-31 / **作成者**: テンイチ
 > **引き継ぎ先**: 本間ヨシト（リード獲得・マーケ責任者 / `design.7247@gmail.com`）
 > **対象**: sekaistay.com（HP + LP 3 variants）の設計・改善・運用
+> **戻る**: [HANDOVER_YOSHITO.md](HANDOVER_YOSHITO.md)
 > **姉妹資料**: [`ad-ops/HANDOVER_YOSHITO_2026-05-31.md`](ad-ops/HANDOVER_YOSHITO_2026-05-31.md)（広告運用引き継ぎ）
+
+---
+
+## 🔗 外部リンク（よく使うもの・トップ固定）
+
+| 種別 | URL / 場所 |
+|---|---|
+| 🌐 **本番 HP** | https://sekaistay.com |
+| 🅰️ **LP A — Control（価格主導）** | https://sekaistay.com/switch |
+| 🅱️ **LP B — Founder（信頼主導）** | https://sekaistay.com/switch/founder |
+| 🅲 **LP C — Portal（24h可視化）** | https://sekaistay.com/switch/portal |
+| 🔗 **短縮URL（GA計測付き）** | https://sekaistay.com/go/pr （PR用） |
+| 🛠️ **Vercel プロジェクト** | https://vercel.com/sekaichi/sekaistay-com （`prj_qfaTcxdt6mQ18ARDg046q5febS0d`） |
+| 📦 **GitHub リポ** | https://github.com/sekaichi-dev/sekaistay.com |
+| 📈 **LP A/Bテスト分析** | https://sekaichi-dashboard.vercel.app/lp-analytics （CVR・Δ・Z-score） |
+| 📊 **広告統合ダッシュボード** | https://sekaichi-dashboard.vercel.app/marketing |
+| 📥 **SEKAI STAY Lead Submissions Log** | Google Drive「SEKAI STAY Lead Submissions Log」 |
+| 🎨 **Brand / Creative Guide** | `SEKAI_STAY_Creative_Guide.md`（リポ直下） / `IMAGES_MANIFEST.md` |
+| 🔎 **SEO 監査レポート** | `SEO_AUDIT_REPORT.md`（リポ直下） |
+| 🗄️ **Supabase（lead_submissions）** | https://supabase.com/dashboard/project/_ （プロジェクト名は env を参照） |
 
 ---
 
