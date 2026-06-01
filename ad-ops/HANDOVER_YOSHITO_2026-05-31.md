@@ -15,13 +15,13 @@
 |---|---|
 | 📊 **広告統合ダッシュボード** | https://sekaichi-dashboard.vercel.app/marketing （Spend/Impressions/Clicks/CPC/CPM/CV 6軸・媒体横断） |
 | 📈 **LP A/Bテスト分析** | https://sekaichi-dashboard.vercel.app/lp-analytics （CVR・Δ・Z-score） |
-| 📥 **SEKAI STAY Lead Submissions Log** | Google Drive「SEKAI STAY Lead Submissions Log」（全リード一次保管） |
+| 📥 **SEKAI STAY Lead Submissions Log** | [Google Sheet](https://docs.google.com/spreadsheets/d/1CWTHJyHrjpfg6voaiAZabMkKv21or1BbrGF9e6aBKh4/edit)（全リード一次保管） |
 | 🎯 **Google Ads** | https://ads.google.com/aw/overview?ocid=8614414795 （Customer ID `861-441-4795`・MCC 経由 `311-728-0923`） |
 | 📘 **Meta Ads Manager** | https://business.facebook.com/adsmanager/manage/campaigns （現在は 🔴 停止中） |
 | 🐦 **X Ads** | https://ads.x.com （現状オーガニック優先・Promoted 未稼働） |
-| 📂 **SEKAI_STAY_Marketing_Roadmap** | Google Drive「SEKAI_STAY_Marketing_Roadmap」（マーケ戦略レポート 3 本同梱） |
-| 🧾 **戦略レポート（リポ内）** | `ad-ops/STRATEGY_REPORT_GOOGLE_ADS_2026-05-14.md` / `STRATEGY_REPORT_META_ADS_2026-05-14.md` / `STRATEGY_REPORT_X_ADS_2026-05-14.md` |
-| 🗺️ **広告運用ロードマップ** | `ROADMAP.md`（リポ直下） |
+| 📂 **SEKAI_STAY_Marketing_Roadmap** | [Google Sheet](https://docs.google.com/spreadsheets/d/1eK0fJk0hQyFM2mRumbah2nVe-IgH87cKcAeeFPC0C4E/edit?gid=1066059999#gid=1066059999)（マーケ戦略・月次タイムライン・KPI） |
+| 🧾 **戦略レポート（リポ内）** | [Google Ads](STRATEGY_REPORT_2026-05-12.md) / [Meta Ads](STRATEGY_REPORT_META_2026-05-14.md) / [X Ads](STRATEGY_REPORT_X_2026-05-17.md) |
+| 🗺️ **広告運用ロードマップ** | [`ROADMAP.md`](../ROADMAP.md)（リポ直下） |
 | 🛠️ **Vercel プロジェクト** | https://vercel.com/sekaichi/sekaistay-com （`prj_qfaTcxdt6mQ18ARDg046q5febS0d`） |
 | 📦 **GitHub リポ** | https://github.com/sekaichi-dev/sekaistay.com |
 
@@ -599,9 +599,8 @@ ad-ops/STRATEGY_REPORT_*.md は配信データが揃ったタイミングで週�
 | **吉田（事業責任者）** | SEKAI STAY 全体統括・予算承認 | `hikaru@sekaichi.org` | 月予算±20%超変更・KGI改訂・新規媒体追加 |
 | **テンイチ（代表）** | プロダクト統括・LP実装・計測タグ | `tenichi@sekaichi.org` | LP構造変更・計測タグ追加・新規ドメイン追加 |
 | **小川（営業）** | クロージング・CRM | `contact@sekaichi.org` | リード品質フィードバック・成約率連携 |
-| **明神（独立営業）** | 営業 | `kojiro@sekaichi.org` | 営業導線の確認 |
+| **明神 洸次郎（ジロー）** | 独立営業 / コンテンツ・メディア出演パートナー | `kojiro@sekaichi.org` | 営業導線の確認・X長文投稿スケジュール調整 |
 | **Toyo（法務）** | 契約・法務 | — | 比較広告・最上級表現・受賞表記の審査確認 |
-| **ジロー（X運用パートナー）** | コンテンツ運用 | — | X長文投稿スケジュール調整 |
 
 組織図全体: `projects/sekai-stay-ops/data/info/org-chart.json`（ops.sekaistay.com で閲覧可能）
 

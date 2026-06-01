@@ -132,7 +132,7 @@ POST /api/report-requests/submit
 | 項目 | 値 |
 |---|---|
 | ファイル | `scripts/sync-leads-to-sheet.mjs`（5分毎 cron 推奨） |
-| シート | 「SEKAI STAY Lead Submissions Log」 |
+| シート | [SEKAI STAY Lead Submissions Log](https://docs.google.com/spreadsheets/d/1CWTHJyHrjpfg6voaiAZabMkKv21or1BbrGF9e6aBKh4/edit) |
 | 環境変数 | `LEAD_BACKUP_SHEET_ID` |
 | ヘッダー | `lead_id / created_at / kind / name / email` + 他24列 |
 | 視聴権 | `hikaru@sekaichi.org` |
@@ -165,7 +165,7 @@ TimeRex の予約氏名と Supabase フォーム送信氏名を照合:
 
 ## 4. リードログ・分析
 
-### 4-1. Google Sheets 「SEKAI STAY Lead Submissions Log」
+### 4-1. Google Sheets [「SEKAI STAY Lead Submissions Log」](https://docs.google.com/spreadsheets/d/1CWTHJyHrjpfg6voaiAZabMkKv21or1BbrGF9e6aBKh4/edit)
 
 - 最終更新: 2026-05-31
 - 視聴権: `hikaru@sekaichi.org`
@@ -283,7 +283,7 @@ LEAD_BACKUP_SHEET_ID
 ### 🟡 Week 1
 
 - [ ] テストリードを 1件流して 6系統転送が動作することを確認
-- [ ] Google Sheets「SEKAI STAY Lead Submissions Log」を週次レビュー
+- [ ] [Google Sheets「SEKAI STAY Lead Submissions Log」](https://docs.google.com/spreadsheets/d/1CWTHJyHrjpfg6voaiAZabMkKv21or1BbrGF9e6aBKh4/edit)を週次レビュー
 - [ ] 小川との週次振り返り（リード品質）
 
 ### 🟢 Week 2-4
