@@ -88,9 +88,8 @@
 | **吉田 hikaru** | 事業責任者（SEKAI STAY 全体統括） | `hikaru@sekaichi.org` |
 | **テンイチ 劉添毅** | 代表（プロダクト・LP実装・計測タグ） | `tenichi@sekaichi.org` |
 | **小川** | 営業（クロージング・CRM） | `contact@sekaichi.org` |
-| **明神 洸次郎** | 独立営業 | `kojiro@sekaichi.org` |
+| **明神 洸次郎（ジロー）** | 独立営業 / コンテンツ・メディア出演パートナー | `kojiro@sekaichi.org` |
 | **Toyo** | 法務・契約 | — |
-| **ジロー** | コンテンツ・メディア出演パートナー | — |
 
 組織図全体: `projects/sekai-stay-ops/data/info/org-chart.json`
 

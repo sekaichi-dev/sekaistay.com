@@ -21,7 +21,7 @@
 | 📦 **GitHub リポ** | https://github.com/sekaichi-dev/sekaistay.com |
 | 📈 **LP A/Bテスト分析** | https://sekaichi-dashboard.vercel.app/lp-analytics （CVR・Δ・Z-score） |
 | 📊 **広告統合ダッシュボード** | https://sekaichi-dashboard.vercel.app/marketing |
-| 📥 **SEKAI STAY Lead Submissions Log** | Google Drive「SEKAI STAY Lead Submissions Log」 |
+| 📥 **SEKAI STAY Lead Submissions Log** | [Google Sheet](https://docs.google.com/spreadsheets/d/1CWTHJyHrjpfg6voaiAZabMkKv21or1BbrGF9e6aBKh4/edit) |
 | 🎨 **Brand / Creative Guide** | `SEKAI_STAY_Creative_Guide.md`（リポ直下） / `IMAGES_MANIFEST.md` |
 | 🔎 **SEO 監査レポート** | `SEO_AUDIT_REPORT.md`（リポ直下） |
 | 🗄️ **Supabase（lead_submissions）** | https://supabase.com/dashboard/project/_ （プロジェクト名は env を参照） |
