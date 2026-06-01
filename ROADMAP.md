@@ -103,7 +103,7 @@
 
 - [ ] (人間) @tenichiliu プロフィール統一（bio + ヘッダー + 固定ツイート） @impact:8 @urgency:10 @effort:1
 - [ ] (人間) ジローと X 運用方針確認・週次工数合意（Unplugged との両立判断） @impact:9 @urgency:10 @effort:1
-- [ ] (人間) @jirosan アカウント開設 + プロフィール設定（ジロー合意取得後） @impact:9 @urgency:10 @effort:1
+- [x] ~~(人間) @jirosan アカウント開設 + プロフィール設定~~ → **不要**: ジローは既存アカウント [@jiroisagame](https://x.com/jiroisagame)（約 4 万人フォロワー）を使用。新規開設せず既存資産を活用する方針
 - [ ] (人間) @ss_unei_chan 架空社員アカウント開設 + bio で「SEKAI STAY 運営チームメンバー」明記 @impact:8 @urgency:10 @effort:1
 - [ ] (人間) 3 アカウントの X Premium+ 課金（長文 4000 字解禁・明日からの投稿に必須） @impact:9 @urgency:10 @effort:1
 - [ ] X Pixel ID 取得 → `NEXT_PUBLIC_X_PIXEL_ID` Vercel env 登録 → layout.tsx 実装 @impact:8 @urgency:9 @effort:2
