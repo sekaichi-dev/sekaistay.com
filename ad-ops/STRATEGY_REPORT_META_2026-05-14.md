@@ -1,10 +1,11 @@
 # SEKAI STAY Meta 広告 戦略レポート
 
 > **作成日**: 2026-05-14
-> **作成者**: テンイチ（広告戦略・全体設計）
-> **レビュー対象**: 義人さん（SEKAI STAY 事業責任者）
-> **目的**: Meta（Facebook + Instagram）広告の戦略・オーディエンス設計・クリエイティブ設計・計測体制を共有し、事業視点でのレビューを受ける
-> **姉妹レポート**: [`STRATEGY_REPORT_2026-05-12.md`](STRATEGY_REPORT_2026-05-12.md)（Google 広告戦略・2026-05-12）
+> **作成者**: テンイチ
+> **目的**: Meta（Facebook + Instagram）広告の戦略・オーディエンス・クリエイティブ・計測の合意
+> **姉妹**: [Google 広告](STRATEGY_REPORT_2026-05-12.md) / [X 広告](STRATEGY_REPORT_X_2026-05-17.md)
+>
+> ⚠️ **現況スナップショット（2026-06-01）**: Meta Ads は **🔴 停止中**。Phase 1 計画は実態と乖離。再開条件・改善方針はテンイチ承認待ち。最新状況は [HANDOVER_YOSHITO §4](HANDOVER_YOSHITO_2026-05-31.md) 参照。
 
 ---
 
