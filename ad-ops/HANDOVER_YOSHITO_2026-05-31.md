@@ -160,10 +160,36 @@
 |---|---|
 | アカウント名 | SEKAI STAY |
 | Customer ID | `861-441-4795` (8614414795) |
-| MCC経由 | `311-728-0923` (3117280923) |
+| MCC経由 | `311-728-0923` (3117280923) — SEKAICHI MCC |
 | 通貨 / TZ | JPY / Asia/Tokyo |
 | 管理者（現状） | テンイチ（`tenichi@sekaichi.org`） |
 | アクセス追加 | Google Ads UI → ツール → アクセスとセキュリティ → ヨシトの Google アカウントを招待 |
+
+#### 🏢 SEKAICHI MCC ↔ SEKAI STAY の関係
+
+Google Ads は **MCC（Manager Account） + 子アカウント** の 2 層構造で管理:
+
+- **SEKAICHI MCC** (`311-728-0923`) = セカイチHD の親管理アカウント。全事業の広告アカウントを統括する hub
+- **SEKAI STAY** (`861-441-4795`) = 子アカウント。広告配信・課金・キャンペーン運用はここで実施
+
+**なぜ MCC 構造か**:
+- 1 つのログインで複数事業（SEKAI STAY / 将来の他事業）の広告を横断管理
+- 課金・予算・CV データは子アカウント単位なので会計上もクリーン
+- アクセス権を MCC レベルで一括管理 → 子アカウント単位での権限分離も可能
+
+**ヨシトのアクセス権付与方針**:
+- **SEKAI STAY 子アカウントの管理者権限のみ** で運用に必要十分
+- MCC レベルの権限は **付与しない**（MCC 経由で他事業の広告アカウントまで見えてしまうため）
+- ヨシトが触るのは `sekaichi/Google Ads/SEKAI STAY (861-441-4795)` だけ
+
+**API / CLI でのアクセス（コード経由）**:
+```
+GOOGLE_ADS_CUSTOMER_ID=8614414795        # 子 = SEKAI STAY (操作対象)
+GOOGLE_ADS_LOGIN_CUSTOMER_ID=3117280923  # MCC = SEKAICHI (API ログイン経由)
+```
+`sekaichi-dashboard/scripts/snapshot-google-ads.mjs` 等は両方を使い分けて API 呼び出し。
+
+> **確信度**: 🟢 Customer ID / MCC ID は API スナップショットで確認済み。🟡 SEKAICHI MCC 配下の他子アカウント構成（buzz-gacha 等）の正確な一覧は要本人確認
 
 ### 3-2. キャンペーン構造（5/31 snapshot・直近30日実績）
 
