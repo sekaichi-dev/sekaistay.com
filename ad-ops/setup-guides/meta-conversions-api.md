@@ -25,7 +25,7 @@ Step 7: 本番 Live・Event Match Quality 確認
 ## 前提条件
 
 - [ ] Meta Business Manager アカウント開設済み・課金方法紐付け済み（テンイチ確認済み）
-- [ ] Meta Pixel が sekaistay.com に実装済み（既に layout.tsx に実装: `989839370242915`）
+- [ ] Meta Pixel が sekaistay.com に実装済み（既に layout.tsx に実装: `1658477098524563`）
 - [ ] Pixel ID にアクセス権限のある管理者権限保持（テンイチ）
 - [ ] Privacy Policy に CAPI 言及済み（既に `app/privacy/page.tsx` に記載済み確認）
 
@@ -35,12 +35,12 @@ Step 7: 本番 Live・Event Match Quality 確認
 
 > このトークンが**最重要・厳秘扱い**。GitHub 公開コミットには絶対入れない。Vercel 環境変数で管理。
 >
-> **2026-05-09 確認**: テンイチが Meta Events Manager で取得 → 私に共有 → 私が `vercel env add META_CAPI_ACCESS_TOKEN production` で Vercel 本番環境変数に登録済み（Encrypted）。Pixel ID（`META_PIXEL_ID = 989839370242915`）も同時に env 登録済み。以下の手順は将来的にトークンを再発行する場合の参照用。
+> **2026-05-09 確認**: テンイチが Meta Events Manager で取得 → 私に共有 → 私が `vercel env add META_CAPI_ACCESS_TOKEN production` で Vercel 本番環境変数に登録済み（Encrypted）。Pixel ID（`META_PIXEL_ID = 1658477098524563`）も同時に env 登録済み。以下の手順は将来的にトークンを再発行する場合の参照用。
 
 ### 操作手順
 
 1. **Meta Events Manager** にログイン: https://business.facebook.com/events_manager
-2. 左サイドバーから **対象の Pixel**（Pixel ID: `989839370242915`）を選択
+2. 左サイドバーから **対象の Pixel**（Pixel ID: `1658477098524563`）を選択
 3. 上部タブ **「設定」** をクリック
 4. **「コンバージョン API」** セクションまでスクロール
 5. **「手動でアクセストークンを生成」** をクリック
@@ -91,7 +91,7 @@ Step 7: 本番 Live・Event Match Quality 確認
 
 | 変数名 | 値 | 用途 |
 |---|---|---|
-| `META_PIXEL_ID` | `989839370242915` | Pixel 識別子（layout.tsx でも参照） |
+| `META_PIXEL_ID` | `1658477098524563` | Pixel 識別子（layout.tsx でも参照） |
 | `META_CAPI_ACCESS_TOKEN` | Step 1 で取得したトークン | サーバーから Meta API 呼び出し |
 | `META_CAPI_TEST_EVENT_CODE` | Step 3 で取得したコード（テスト中のみ） | 本番 Live 時は空 |
 

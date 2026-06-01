@@ -16,7 +16,7 @@
 ## Phase 0: 基盤構築 ✅
 
 - [x] GA4 (`G-B7M920RCGR`) layout.tsx 実装済み
-- [x] Meta Pixel (`989839370242915`) layout.tsx 実装済み（2026-05-10 切替）
+- [x] Meta Pixel (`1658477098524563`) layout.tsx 実装済み（2026-05-10 切替・2026-06-01 env 設定で CAPI 有効化）
 - [x] Meta CAPI アクセストークン → Vercel env 登録済み (2026-05-09)
 - [x] X Ads アカウント @tenichiliu 開通済み・Campaign 画面到達確認 (2026-05-09)
 - [x] LP variants 3 種（switch / switch/portal / switch/founder）実装済み

@@ -636,9 +636,8 @@ CTA ボタン文言（`lp_button_language` / `lp_button_text_style`）:
 |---|---|---|
 | GA4 | `G-B7M920RCGR` | `app/layout.tsx` ハードコード |
 | Google Tag | `GT-WVRTJXNR` | layout.tsx |
-| Meta Pixel（メイン） | `1658477098524563` | layout.tsx |
-| Meta Pixel（追加） | `989839370242915` | layout.tsx（統合検討中） |
-| Meta CAPI | env: `META_CAPI_TOKEN` | サーバー側 |
+| Meta Pixel | `1658477098524563` | layout.tsx（client `fbq`） + `META_PIXEL_ID` env（server CAPI） |
+| Meta CAPI | env: `META_CAPI_TOKEN` | サーバー側（`lib/meta-capi.ts`） |
 | Microsoft Clarity | （ヒートマップ） | env で有効化 |
 | X Ads UWT | （X Pixel） | env で有効化（未設定） |
 | Google Ads Conversion | `NEXT_PUBLIC_GOOGLE_ADS_ID` | env |
@@ -771,12 +770,11 @@ CTA ボタン文言（`lp_button_language` / `lp_button_text_style`）:
 
 | # | 課題 | 緊急度 | 詳細 |
 |---|---|---|---|
-| 1 | Meta Pixel 2つ並存 | 🟡 中 | `1658477098524563` と `989839370242915` のどちらに寄せるか統合判断要 |
-| 2 | X Pixel 未取得 | 🟡 中 | `NEXT_PUBLIC_X_PIXEL_ID` env 未登録・X Ads CV最適化が機能しない |
-| 3 | LP A/Bテストの勝者未確定 | 🟡 中 | 3 variants の CVR Z-score ≥ 1.96 達成判定要 |
-| 4 | `/diagnostic` レガシー残置 | 🟢 低 | `/audit` に統合済みだがレガシー URL が残ってる |
-| 5 | ブログ59記事の運用ペース | 🟡 中 | PR配信前に10本蓄積戦略あり・継続運用方針要確認 |
-| 6 | 未使用 Switch components | 🟢 低 | SwitchBeforeAfter / SwitchFailurePatterns / SwitchSolution / SwitchTrustBar が現役 LP で未使用 |
+| 1 | X Pixel 未取得 | 🟡 中 | `NEXT_PUBLIC_X_PIXEL_ID` env 未登録・X Ads CV最適化が機能しない |
+| 2 | LP A/Bテストの勝者未確定 | 🟡 中 | 3 variants の CVR Z-score ≥ 1.96 達成判定要 |
+| 3 | `/diagnostic` レガシー残置 | 🟢 低 | `/audit` に統合済みだがレガシー URL が残ってる |
+| 4 | ブログ59記事の運用ペース | 🟡 中 | PR配信前に10本蓄積戦略あり・継続運用方針要確認 |
+| 5 | 未使用 Switch components | 🟢 低 | SwitchBeforeAfter / SwitchFailurePatterns / SwitchSolution / SwitchTrustBar が現役 LP で未使用 |
 
 ---
 

@@ -167,7 +167,7 @@ X Ads CV「Website Conversion」（X Pixel + URL ベース）
 
 - **X Pixel**: ROADMAP Phase 3 で取得予定（env: `NEXT_PUBLIC_X_PIXEL_ID`）
 - **GA4**: `G-B7M920RCGR`（既存・全媒体共通）
-- **Meta Pixel / CAPI**: `1658477098524563` / `989839370242915`（既存）
+- **Meta Pixel / CAPI**: `1658477098524563`（client `fbq` + server CAPI 共通・2026-06-01 env 修正）
 
 ### 6-3. CV 設計
 
