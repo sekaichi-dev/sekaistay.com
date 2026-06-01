@@ -98,10 +98,13 @@
 
 - 🟡 競合社名の除外KW再構築判断（5/28に担当者判断で削除済・データが揃ってから再検討）
 - 🔴 Meta Ads 再開判断（停止理由・改善方針）
-- 🟡 GA4 (`G-B7M920RCGR`) 管理者権限がジロー所有のまま → 強化CV有効化がブロック中
-- 🟡 Meta Pixel 2つ（`1658477098524563` + `989839370242915`）の統合判断
+- 🟡 GA4 (`G-B7M920RCGR`) 管理者権限がジロー所有のまま → 強化CV有効化がブロック中（**修正手順は §3-7 参照**・ジロー本人の Google Workspace 操作が必要なため自動修正不可）
 - 🟡 X Pixel 未取得・Promoted Post 配信開始判断
 - 🟡 SS-Demand-Generation 効果検証（5/29立ち上げの新キャンペーン）
+
+### ✅ 引き継ぎ前に解決済み（2026-06-01）
+
+- ✅ **Meta Pixel 2つの統合判断** — 実コード上は元々 1 Pixel (`1658477098524563`) のみ。ROADMAP.md の `989839370242915` 記述は誤記。`META_PIXEL_ID` env が空で Meta CAPI が静かに skip されていた問題と合わせて Vercel env に `1658477098524563` を設定し、CAPI 発火を有効化
 
 ---
 
@@ -300,7 +303,20 @@ GOOGLE_ADS_LOGIN_CUSTOMER_ID=3117280923  # MCC = SEKAICHI (API ログイン経�
 
 > 主CV = `SEKAI STAY (web) generate_lead`（GA4 import）
 
-### 3-7. 戦略レポート参照
+### 3-7. ⚠️ GA4 管理者権限がジロー所有のまま（要解決）
+
+**問題**: GA4 (`G-B7M920RCGR`) と Google Tag (`GT-WVRTJXNR`) の管理者権限がジロー（`kojiro@sekaichi.org`）所有のまま。テンイチが Google Ads タグ設定時に「権限がありません」エラーで強化CV有効化がブロック中（配信自体には影響なし）。
+
+**自動修正不可の理由**: Google Workspace の admin 操作 / Google Analytics の owner 移譲はブラウザ操作必須。AI エージェントが自動実行できない領域（外部UI操作）。
+
+**解決ルート（推奨順）**:
+1. **ジロー本人に依頼**（推奨・最速）: `kojiro@sekaichi.org` で GA4 にログイン → 管理 → アカウントのアクセス管理 → `tenichi@sekaichi.org` を「管理者」で追加 → 既存のジロー権限を「閲覧者」にダウングレード（or 削除）。所要 5 分
+2. **Google Workspace admin 経由**: `tenichi@sekaichi.org` が Workspace 管理者なら `admin.google.com` から `kojiro@sekaichi.org` のオーナーシップ移行（10 分）
+3. **Google サポートに復元申請**（最終手段）: GA4 所有権の復元申請。証跡として組織所有のドメイン認証等が必要・1-2 週間
+
+**影響**: GA4 → Google Ads CV インポート連携は動作中なのでキャンペーン配信に影響なし。強化コンバージョン有効化のみブロック中。
+
+### 3-8. 戦略レポート参照
 
 - 詳細: [`STRATEGY_REPORT_2026-05-12.md`](STRATEGY_REPORT_2026-05-12.md)（259行・12章）
 - キーワード一覧: [`google-ads/keyword-list.md`](google-ads/keyword-list.md)
@@ -327,8 +343,7 @@ GOOGLE_ADS_LOGIN_CUSTOMER_ID=3117280923  # MCC = SEKAICHI (API ログイン経�
 | 項目 | 値 |
 |---|---|
 | Business Manager | SEKAI STAY |
-| Meta Pixel（メイン） | `1658477098524563` |
-| Meta Pixel（追加・統合検討中） | `989839370242915` |
+| Meta Pixel | `1658477098524563`（client `fbq` + server CAPI 共通・2026-06-01 統合確定） |
 | Meta CAPI | 実装完了（`lib/meta-capi.ts`） |
 | 環境変数（sekaistay-com） | `META_PIXEL_ID` / `META_CAPI_TOKEN` / `META_CAPI_TEST_EVENT_CODE` |
 | 環境変数（sekaichi-dashboard） | `META_ACCESS_TOKEN` / `META_AD_ACCOUNT_ID` |
@@ -488,9 +503,8 @@ ReportRequestForm 送信 → POST /api/report-requests/submit
 | GA4 | `G-B7M920RCGR`（layout.tsx ハードコード） |
 | Google Tag | `GT-WVRTJXNR` |
 | Google Ads Conversion | `SEKAI STAY (web) generate_lead`（GA4 import） |
-| Meta Pixel（メイン） | `1658477098524563` |
-| Meta Pixel（追加） | `989839370242915` |
-| Meta CAPI | env: `META_CAPI_TOKEN` + `META_CAPI_TEST_EVENT_CODE` |
+| Meta Pixel | `1658477098524563`（client `fbq` + server CAPI 共通） |
+| Meta CAPI | env: `META_PIXEL_ID` + `META_CAPI_TOKEN` + `META_CAPI_TEST_EVENT_CODE` |
 
 ### 6-4. UTM 規約
 
@@ -566,9 +580,8 @@ ad-ops/STRATEGY_REPORT_*.md は配信データが揃ったタイミングで週�
 
 ### 🟢 Week 2-4（6/8〜6/30）
 
-- [ ] **GA4 (G-B7M920RCGR) 権限移行**（ジロー → ヨシト・テンイチ）
+- [ ] **GA4 (G-B7M920RCGR) 権限移行**（ジロー → ヨシト・テンイチ・§3-3 末尾の手順参照）
 - [ ] **X Pixel 取得 + Vercel env 登録**（`NEXT_PUBLIC_X_PIXEL_ID`）
-- [ ] **Meta Pixel 統合判断**（`1658477098524563` と `989839370242915` のどちらに寄せるか）
 - [ ] **X Boost the Winners 開始**（オーガニック上位20%抽出 → Promoted化）
 - [ ] **LP A/Bテスト勝者判定**（Z≥1.96 達成 variant の選定）
 - [ ] **6月実績で7月の予算配分見直し**（CPA 最良チャネルへ傾斜配分）

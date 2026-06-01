@@ -156,7 +156,7 @@ Campaign 3: SS-Meta-Interest        日予算 ¥3,000  興味関心・新規発�
 
 ## 関連
 
-- 既存 Pixel: `META_PIXEL_ID = '989839370242915'` (layout.tsx)
+- 既存 Pixel: `1658477098524563`（`app/layout.tsx` ハードコード + `META_PIXEL_ID` env で server CAPI と統一）
 - リード受け先: 自社CRM ツール（HubSpot は不採用・2026-05-09 確定）
 - コピー素材: `meta-ads/copy-drafts.md`
 - セットアップ: `setup-guides/meta-conversions-api.md`
