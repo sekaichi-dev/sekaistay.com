@@ -54,22 +54,28 @@
 ```
 ad-ops/
 ├── README.md                          ← この文書
+├── HANDOVER_YOSHITO_2026-05-31.md    ← ヨシト向け広告運用引き継ぎ（現況スナップショット）
+├── STRATEGY_REPORT_2026-05-12.md     ← Google 広告戦略レポート
+├── STRATEGY_REPORT_META_2026-05-14.md ← Meta 広告戦略レポート
+├── STRATEGY_REPORT_X_2026-05-17.md   ← X 長文 × Boost the Winners 戦略レポート
 ├── learnings.md                       ← 学習ログ（仮説 → 試行 → 結果 → 学び）
 ├── google-ads/
-│   ├── keyword-list.md                ← キーワード一覧（指名 / 一般 / 地名 / 競合 / 除外）
-│   └── copy-drafts.md                 ← 検索広告コピー（見出し15 / 説明文4）
+│   ├── keyword-list.md                ← キーワード一覧
+│   └── copy-drafts.md                 ← 検索広告コピー
 ├── meta-ads/
 │   ├── audience-targeting.md          ← オーディエンス設計
-│   └── copy-drafts.md                 ← クリエイティブコピー（プライマリ/ヘッドライン/説明）
+│   ├── copy-drafts.md                 ← クリエイティブコピー
+│   └── setup-draft.md                 ← Ads Manager セットアップ手順（v2）
 ├── x-ads/
-│   ├── copy-drafts.md                 ← X広告コピー
-│   └── account-setup-guide.md         ← アカウント開設手順
-├── setup-guides/
-│   ├── google-ads-conversion.md       ← Google Ads コンバージョン計測セットアップ
-│   ├── meta-conversions-api.md        ← Meta CAPI セットアップ
-│   └── x-ads-account.md               ← X Ads アカウント開設
-└── reports/
-    └── (日次・週次レポート自動生成・後日)
+│   ├── copy-drafts.md                 ← X 広告コピー
+│   ├── audience-targeting.md          ← オーディエンス設計
+│   └── long-form-content-bank.md      ← 長文B ドラフト集
+├── note/
+│   └── note-content-bank.md           ← note 記事ドラフト
+└── setup-guides/
+    ├── google-ads-conversion.md       ← Google Ads CV 計測
+    ├── meta-conversions-api.md        ← Meta CAPI
+    └── x-ads-account.md               ← X Ads アカウント
 ```
 
 ---
