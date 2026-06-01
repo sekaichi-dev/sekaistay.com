@@ -35,6 +35,9 @@ export default function SwitchStickyCTA() {
     >
       <a
         href="#contact-form"
+        data-cta="contact-form"
+        data-cta-label="sticky"
+        data-cta-section="sticky"
         className="group relative flex items-center bg-switch-accent text-white font-bold text-sm sm:text-base px-5 sm:px-6 py-3.5 sm:py-4 rounded-md shadow-lg hover:shadow-xl hover:bg-switch-accent-hover hover:-translate-y-0.5 transition-all min-h-[44px]"
       >
         {/* 新着 ping ドット（要素削減後、視認性の核として残す） */}

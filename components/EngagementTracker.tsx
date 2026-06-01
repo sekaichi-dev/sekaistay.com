@@ -89,9 +89,14 @@ export default function EngagementTracker({ lpVariant }: Props) {
         .slice(0, 60);
       const ctaType = ctaEl.getAttribute("data-cta") || "scroll-to-form";
 
-      // 親 section を探して section context を付与
+      // section context: CTA 自身の data-cta-section を最優先(固定ヘッダー/sticky 等、
+      // viewport 観測される data-track-section を持たせたくない CTA 用)。
+      // 無ければ親の data-track-section、それも無ければ "unknown"。
       const sectionEl = ctaEl.closest<HTMLElement>("[data-track-section]");
-      const section = sectionEl?.dataset.trackSection || "unknown";
+      const section =
+        ctaEl.getAttribute("data-cta-section") ||
+        sectionEl?.dataset.trackSection ||
+        "unknown";
 
       trackEvent("cta_click", {
         cta_label: ctaLabel,
