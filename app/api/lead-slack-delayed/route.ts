@@ -4,11 +4,11 @@
  * 背景:
  *   フォーム送信時に即時 Slack 通知すると、TimeRex の予約完了通知も #402-sekaistay面談申込 に
  *   独立して流れるためダブル通知になる。実際に営業が拾いたいのは「フォームを送信したが
- *   TimeRex の予約には進まなかった離脱リード」なので、10 分遅延 + TimeRex 投稿の有無で抑制する。
+ *   TimeRex の予約には進まなかった離脱リード」なので、20 分遅延 + TimeRex 投稿の有無で抑制する。
  *
  * 動作 (1分毎の Vercel Cron で実行する想定):
- *   1. lead_submissions から slack_notified_at IS NULL かつ created_at < now - 10min の本番リードを取得
- *   2. Slack #402 の直近 25 分の会話を conversations.history で取得
+ *   1. lead_submissions から slack_notified_at IS NULL かつ created_at < now - 20min の本番リードを取得
+ *   2. Slack #402 の直近 35 分の会話を conversations.history で取得
  *   3. 各リードに対し:
  *        - 同期間に TimeRex bot の投稿（"よりご予約をいただきました" を含む）があり、本文に
  *          リード氏名が含まれていれば「予約済」と判定 → slack_suppressed_reason='timerex_booked' で確定
@@ -25,8 +25,8 @@ import { forwardLeadToSlack } from "@/lib/lead-forward";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const DELAY_MS = 10 * 60_000; // フォーム送信から 10 分後に処理対象になる
-const SLACK_LOOKBACK_MS = 25 * 60_000; // Slack #402 を直近 25 分まで遡って TimeRex 投稿をチェック
+const DELAY_MS = 20 * 60_000; // フォーム送信から 20 分後に処理対象になる
+const SLACK_LOOKBACK_MS = 35 * 60_000; // Slack #402 を直近 35 分まで遡って TimeRex 投稿をチェック（DELAY 20分 + 余裕窓 15分）
 const PROCESS_LIMIT = 20;
 const TIME_BUDGET_MS = 50_000;
 const MAX_ATTEMPTS = 5;
