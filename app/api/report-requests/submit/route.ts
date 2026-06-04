@@ -197,9 +197,9 @@ export async function POST(req: NextRequest) {
               value: 0,
             },
           });
-    // Slack 通知は同期で投げず、cron (/api/lead-slack-delayed) が created_at + 10 分後に処理する。
+    // Slack 通知は同期で投げず、cron (/api/lead-slack-delayed) が created_at + 20 分後に処理する。
     // 理由: TimeRex の予約完了が #402-sekaistay面談申込 に独立して投稿されるため、即時にフォーム通知も
-    // 流すとダブル通知になる。10 分遅延 → 同名の TimeRex bot 投稿があれば抑制 → なければ Slack 通知。
+    // 流すとダブル通知になる。20 分遅延 → 同名の TimeRex bot 投稿があれば抑制 → なければ Slack 通知。
     const [yoshizoOutcome, salesPortalOutcome, capiOutcome, sheetOutcome, discordOutcome] = await Promise.allSettled([
       forwardLead(row.id),
       forwardLeadToSalesPortal(row.id),
