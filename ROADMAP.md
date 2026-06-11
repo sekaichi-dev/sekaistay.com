@@ -33,21 +33,25 @@
 
 ## Phase 1: Google Ads 計測セットアップ [P1]
 
-- [ ] (人間) Google Ads アカウント開設・課金方法紐付け @impact:9 @urgency:9 @effort:2
-- [ ] (人間) GA4 ↔ Google Ads アカウント連携（管理画面でリンク設定） @impact:9 @urgency:9 @effort:1
-- [ ] (人間) フォーム送信 CV インポート設定（GA4 `lead` イベント → Google Ads・値 ¥5,000・カウント 1 回） @impact:9 @urgency:8 @effort:1
-- [ ] タグ ID・コンバージョン ラベルを Discord 共有 → NEXT_PUBLIC_GOOGLE_ADS_ID Vercel env 登録 @impact:8 @urgency:8 @effort:1
+- [x] (人間) Google Ads アカウント開設・課金方法紐付け（2026-05-12 稼働開始確認）
+- [x] (人間) GA4 ↔ Google Ads アカウント連携（generate_lead CV インポート稼働確認）
+- [x] (人間) フォーム送信 CV インポート設定（GA4 `generate_lead` → Google Ads・ENABLED 確認）
+- [x] タグ ID・コンバージョン ラベルを API 取得 → NEXT_PUBLIC_GOOGLE_ADS_ID=AW-18060993274 Vercel env 登録済み（2026-06-11）
 - [ ] (人間) Google Ads CV 動作確認（GA4 リアルタイム + Ads ステータス確認） @impact:7 @urgency:7 @effort:1
 
 ---
 
 ## Phase 2: Meta CAPI 実装 [P1]
 
-- [ ] (人間) テストイベント コード取得（Events Manager → テストイベント タブ）→ Discord 共有 → META_CAPI_TEST_EVENT_CODE Vercel env 登録 @impact:8 @urgency:8 @effort:1
 - [x] PR4: lib/meta-capi.ts 作成（SHA-256 ハッシュ + Meta Graph API 呼び出し helper） @impact:9 @urgency:8 @effort:3
 - [x] PR4: /api/report-requests/submit に CAPI 統合実装（event_id 生成・fire-and-forget） @impact:9 @urgency:8 @effort:2
 - [x] PR4: ReportRequestForm.tsx の fbq 呼び出しに eventID を渡す（重複除去のキー） @impact:8 @urgency:8 @effort:1
-- [ ] Test Events 動作確認（Pixel + CAPI 2 件確認・Meta が両方受信表示） @impact:7 @urgency:7 @effort:1
+- [ ] 🚨 (人間) **META_CAPI_TOKEN 再発行**（現在 400 エラー中・2026-06-11 確認）@impact:9 @urgency:9 @effort:1
+  - エラー: `GraphMethodException code:100/33 - Object '1658477098524563' missing permissions`
+  - 原因推定: トークンが旧 Pixel `989839370242915` 用に発行されたまま Pixel を切り替えた
+  - 修正: Events Manager → Pixel `1658477098524563` → 設定 → CAPI → トークン再生成 → Discord DM で共有 → AI が `vercel env add META_CAPI_TOKEN production` で更新
+- [ ] (人間) テストイベント コード取得（Events Manager → テストイベント タブ）→ Discord 共有 → META_CAPI_TEST_EVENT_CODE Vercel env 登録 @impact:8 @urgency:8 @effort:1
+- [ ] Test Events 動作確認（Pixel + CAPI 2 件確認・Meta が両方受信表示）— 上 2 件の人間タスク完了後に `node --env-file=.env.local scripts/test-meta-capi.mjs` で先行確認可 @impact:7 @urgency:7 @effort:1
 - [ ] EMQ スコア 8 点以上確認 @impact:7 @urgency:6 @effort:1
 - [ ] (人間) 本番 Live（META_CAPI_TEST_EVENT_CODE を空に → Redeploy） @impact:8 @urgency:7 @effort:1
 
@@ -106,7 +110,7 @@
 - [ ] (人間) @jirosan アカウント開設 + プロフィール設定（ジロー合意取得後） @impact:9 @urgency:10 @effort:1
 - [ ] (人間) @ss_unei_chan 架空社員アカウント開設 + bio で「SEKAI STAY 運営チームメンバー」明記 @impact:8 @urgency:10 @effort:1
 - [ ] (人間) 3 アカウントの X Premium+ 課金（長文 4000 字解禁・明日からの投稿に必須） @impact:9 @urgency:10 @effort:1
-- [ ] X Pixel ID 取得 → `NEXT_PUBLIC_X_PIXEL_ID` Vercel env 登録 → layout.tsx 実装 @impact:8 @urgency:9 @effort:2
+- [x] X Pixel ID 取得 → `NEXT_PUBLIC_X_PIXEL_ID` Vercel env 登録 → layout.tsx 実装（確認: env 27日前登録済み・layout.tsx 実装済み 2026-06-11）@impact:8 @urgency:9 @effort:2
 
 ### 🟠 W1: 5/18-21 — 助走期間（ローンチ前 4 日間で長文 4 本投下）
 
@@ -119,9 +123,9 @@
 
 ### 🚀 5/22(金) — プロダクトローンチ + PR TIMES 配信日
 
-- [ ] (人間) PR TIMES 配信実行 @impact:10 @urgency:10 @effort:2
-- [ ] 5/22 ローンチ長文B 作成（@tenichiliu 経営者視点版・@jirosan 現場実証版）→ long-form-content-bank.md に追記 @impact:10 @urgency:10 @effort:3
-- [ ] 5/22 10:00: @tenichiliu + @jirosan で同時砲火（人間最終チェック後） @impact:10 @urgency:10 @effort:1
+- [x] (人間) PR TIMES 配信実行 @impact:10 @urgency:10 @effort:2
+- [x] 5/22 ローンチ長文B 作成（@tenichiliu 経営者視点版・@jirosan 現場実証版）→ long-form-content-bank.md に追記 @impact:10 @urgency:10 @effort:3
+- [x] 5/22 10:00: @tenichiliu + @jirosan で同時砲火（人間最終チェック後） @impact:10 @urgency:10 @effort:1
 - [ ] 5/22 11:00: @ss_unei_chan 通常ツイート（中の人歓喜・短文） @impact:7 @urgency:10 @effort:1
 - [ ] 全アカウントで PR TIMES 記事リンクの引用 RT + リプ強化 @impact:8 @urgency:10 @effort:1
 

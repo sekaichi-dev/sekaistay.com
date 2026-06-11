@@ -87,9 +87,7 @@
 
 - 🟡 競合社名の除外KW再構築判断（5/28に担当者判断で削除済・データが揃ってから再検討）
 - 🔴 Meta Ads 再開判断（停止理由・改善方針）
-- 🟡 GA4 (`G-B7M920RCGR`) 管理者権限がジロー所有のまま → 強化CV有効化がブロック中
-- 🟡 Meta Pixel 2つ（`1658477098524563` + `989839370242915`）の統合判断
-- 🟡 X Pixel 未取得・Promoted Post 配信開始判断
+- 🟡 Promoted Post（X Ads）配信開始判断
 - 🟡 SS-Demand-Generation 効果検証（5/29立ち上げの新キャンペーン）
 
 ---
@@ -290,10 +288,9 @@
 | 項目 | 値 |
 |---|---|
 | Business Manager | SEKAI STAY |
-| Meta Pixel（メイン） | `1658477098524563` |
-| Meta Pixel（追加・統合検討中） | `989839370242915` |
+| Meta Pixel | `1658477098524563`（`layout.tsx` ハードコード） |
 | Meta CAPI | 実装完了（`lib/meta-capi.ts`） |
-| 環境変数（sekaistay-com） | `META_PIXEL_ID` / `META_CAPI_TOKEN` / `META_CAPI_TEST_EVENT_CODE` |
+| 環境変数（sekaistay-com） | `META_PIXEL_ID` / `META_CAPI_TOKEN` |
 | 環境変数（sekaichi-dashboard） | `META_ACCESS_TOKEN` / `META_AD_ACCOUNT_ID` |
 
 ### 4-3. 直近の配信履歴（戦略レポート時点の計画）
@@ -350,11 +347,11 @@
 | アカウント | 担当 | 開設状況 | X Premium+ |
 |---|---|---|---|
 | **@tenichiliu** | テンイチ（本人） | ✅ 開設済 | ✅ 課金済（長文4000字解禁） |
-| **@jirosan**（仮置きハンドル） | ジロー（本人） | 要確認 | 開設後課金 |
+| **@jiroisagame** | ジロー（本人） | ✅ 開設済（既存・約4万人） | 課金状況要確認 |
 | **@ss_unei_chan**（架空社員） | アバター運用 | ⚠️ 未作成 | 作成後にOAuth実行で自動投稿即有効化可能 |
 
 > 透明性: 架空社員 bio に「SEKAI STAY 運営チームメンバー」と明記（虚構ではなく実在運用チームのペルソナ化）
-> @jirosan は自動投稿せず手動投稿運用
+> @jiroisagame は自動投稿せず手動投稿運用
 
 ### 5-2. 投稿フォーマット
 
@@ -387,7 +384,6 @@ Day 7: 勝者継続・敗者停止判定
 
 ### 5-5. 未完了の準備項目
 
-- ⚠️ X Pixel 未取得（`NEXT_PUBLIC_X_PIXEL_ID` env 未登録）
 - ⚠️ Promoted Post 配信未開始
 - ⚠️ @ss_unei_chan アカウント未作成
 
@@ -445,9 +441,9 @@ ReportRequestForm 送信 → POST /api/report-requests/submit
 | GA4 | `G-B7M920RCGR`（layout.tsx ハードコード） |
 | Google Tag | `GT-WVRTJXNR` |
 | Google Ads Conversion | `SEKAI STAY (web) generate_lead`（GA4 import） |
-| Meta Pixel（メイン） | `1658477098524563` |
-| Meta Pixel（追加） | `989839370242915` |
-| Meta CAPI | env: `META_CAPI_TOKEN` + `META_CAPI_TEST_EVENT_CODE` |
+| Meta Pixel | `1658477098524563` |
+| Meta CAPI | env: `META_CAPI_TOKEN` |
+| X Pixel | env: `NEXT_PUBLIC_X_PIXEL_ID` + `NEXT_PUBLIC_X_LEAD_EVENT_ID`（共に Vercel 登録済） |
 
 ### 6-4. UTM 規約
 
@@ -523,9 +519,6 @@ ad-ops/STRATEGY_REPORT_*.md は配信データが揃ったタイミングで週�
 
 ### 🟢 Week 2-4（6/8〜6/30）
 
-- [ ] **GA4 (G-B7M920RCGR) 権限移行**（ジロー → ヨシト・テンイチ）
-- [ ] **X Pixel 取得 + Vercel env 登録**（`NEXT_PUBLIC_X_PIXEL_ID`）
-- [ ] **Meta Pixel 統合判断**（`1658477098524563` と `989839370242915` のどちらに寄せるか）
 - [ ] **X Boost the Winners 開始**（オーガニック上位20%抽出 → Promoted化）
 - [ ] **LP A/Bテスト勝者判定**（Z≥1.96 達成 variant の選定）
 - [ ] **6月実績で7月の予算配分見直し**（CPA 最良チャネルへ傾斜配分）
@@ -539,11 +532,8 @@ ad-ops/STRATEGY_REPORT_*.md は配信データが揃ったタイミングで週�
 | 1 | 競合社名の負KW未設定 | 🟡 中 | 5/25 追加 → 5/28 全削除（Google Ads 担当者と「データ蓄積前に増やすのは早い」と合意）。共有リスト「SS共通-オフターゲット」(19件) のみ稼働。データ溜まり次第再検討 |
 | 2 | Meta 広告 停止中 | 🔴 高 | 戦略レポート時点の計画と実態が乖離。再開判断要 |
 | 3 | SS-Brand CV ゼロ | 🟠 中 | 指名検索 27 click あって CV ゼロは異常。計測タグ or LP着地後の挙動要調査 |
-| 4 | GA4 管理者権限がジロー所有 | 🟡 低 | 強化CV有効化のみブロック中。配信には影響なし |
-| 5 | Meta Pixel 2つ並存 | 🟡 低 | layout.tsx に追加Pixelハードコード。統合判断要 |
-| 6 | X Pixel 未取得 | 🟡 低 | X Ads CV最適化が機能しない。早期取得推奨 |
-| 7 | SS-Demand-Generation 効果未検証 | 🟡 低 | 5/29 立ち上げ・¥7K消化・CV ゼロ。継続/停止判断要 |
-| 8 | 5月のリード目標（75件）未達 | — | 戦略レポート §8 で「5月は実証期」に再定義済み。6-7月達成パスに移行 |
+| 4 | SS-Demand-Generation 効果未検証 | 🟡 低 | 5/29 立ち上げ・¥7K消化・CV ゼロ。継続/停止判断要 |
+| 5 | 5月のリード目標（75件）未達 | — | 戦略レポート §8 で「5月は実証期」に再定義済み。6-7月達成パスに移行 |
 
 ---
 
@@ -608,8 +598,8 @@ ad-ops/STRATEGY_REPORT_*.md は配信データが揃ったタイミングで週�
 |---|---|---|
 | sekaistay-com | `META_PIXEL_ID` | Meta Pixel ID |
 | sekaistay-com | `META_CAPI_TOKEN` | Meta CAPI トークン |
-| sekaistay-com | `META_CAPI_TEST_EVENT_CODE` | Meta CAPI テストコード |
-| sekaistay-com | `NEXT_PUBLIC_GOOGLE_ADS_ID` | GA4/Google Ads クライアント側 ID |
+| sekaistay-com | `NEXT_PUBLIC_X_PIXEL_ID` | X Pixel ID |
+| sekaistay-com | `NEXT_PUBLIC_X_LEAD_EVENT_ID` | X Pixel lead イベント ID |
 | sekaichi-dashboard | `GOOGLE_ADS_DEVELOPER_TOKEN` | Google Ads API |
 | sekaichi-dashboard | `GOOGLE_ADS_CUSTOMER_ID` | 8614414795 |
 | sekaichi-dashboard | `GOOGLE_REFRESH_TOKEN_SEKAICHI` | Google Ads API OAuth |

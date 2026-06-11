@@ -22,25 +22,45 @@ Step 7: 本番 Live・Event Match Quality 確認
 
 ---
 
+## ⚠️ 現状ステータス（2026-06-11 時点）
+
+| 項目 | 状態 |
+|------|------|
+| CAPI 実装コード | ✅ 完成（lib/meta-capi.ts + submit API） |
+| META_PIXEL_ID env | ✅ 設定済み (`1658477098524563`) |
+| META_CAPI_TOKEN env | ❌ 400 エラー発生中（権限不足疑い） |
+| META_CAPI_TEST_EVENT_CODE env | ❌ 未設定 |
+| Test Events 動作確認 | ❌ ブロック中 |
+
+**エラー内容**: `GraphMethodException code:100 / error_subcode:33 - Object with ID '1658477098524563' does not exist, cannot be loaded due to missing permissions`
+
+**根本原因（推定）**: `META_CAPI_TOKEN` が Pixel `989839370242915`（旧・誤Pixel ID）用に発行されたまま、`META_PIXEL_ID` を正しい `1658477098524563` に更新した。トークンと Pixel の組み合わせが一致していない。
+
+**修正手順**: Pixel `1658477098524563` から新しいトークンを再発行 → Vercel env 更新 → テストコード取得。Step 1 〜 Step 3 を順番に実施。
+
+---
+
 ## 前提条件
 
 - [ ] Meta Business Manager アカウント開設済み・課金方法紐付け済み（テンイチ確認済み）
-- [ ] Meta Pixel が sekaistay.com に実装済み（既に layout.tsx に実装: `989839370242915`）
+- [ ] Meta Pixel が sekaistay.com に実装済み（既に layout.tsx に実装: `1658477098524563`）
 - [ ] Pixel ID にアクセス権限のある管理者権限保持（テンイチ）
 - [ ] Privacy Policy に CAPI 言及済み（既に `app/privacy/page.tsx` に記載済み確認）
 
 ---
 
-## Step 1: Conversions API トークン取得 ✅ 完了 (2026-05-09)
+## Step 1: Conversions API トークン取得 ⚠️ 再発行が必要 (2026-06-11)
 
 > このトークンが**最重要・厳秘扱い**。GitHub 公開コミットには絶対入れない。Vercel 環境変数で管理。
 >
-> **2026-05-09 確認**: テンイチが Meta Events Manager で取得 → 私に共有 → 私が `vercel env add META_CAPI_ACCESS_TOKEN production` で Vercel 本番環境変数に登録済み（Encrypted）。Pixel ID（`META_PIXEL_ID = 989839370242915`）も同時に env 登録済み。以下の手順は将来的にトークンを再発行する場合の参照用。
+> **2026-06-11 更新**: 現在の `META_CAPI_TOKEN` は Pixel `989839370242915`（誤）用に発行されたと推定。Pixel `1658477098524563`（正）から再発行が必要。テンイチが Meta Events Manager で取得 → Discord DM 経由で AI 共有 → `vercel env add META_CAPI_TOKEN production` で上書き登録。
+>
+> **Vercel env 変数名**: `META_CAPI_TOKEN`（旧ドキュメントの `META_CAPI_ACCESS_TOKEN` は誤り）
 
 ### 操作手順
 
 1. **Meta Events Manager** にログイン: https://business.facebook.com/events_manager
-2. 左サイドバーから **対象の Pixel**（Pixel ID: `989839370242915`）を選択
+2. 左サイドバーから **対象の Pixel**（Pixel ID: `1658477098524563`）を選択
 3. 上部タブ **「設定」** をクリック
 4. **「コンバージョン API」** セクションまでスクロール
 5. **「手動でアクセストークンを生成」** をクリック
@@ -91,8 +111,8 @@ Step 7: 本番 Live・Event Match Quality 確認
 
 | 変数名 | 値 | 用途 |
 |---|---|---|
-| `META_PIXEL_ID` | `989839370242915` | Pixel 識別子（layout.tsx でも参照） |
-| `META_CAPI_ACCESS_TOKEN` | Step 1 で取得したトークン | サーバーから Meta API 呼び出し |
+| `META_PIXEL_ID` | `1658477098524563` | Pixel 識別子（layout.tsx でも参照） |
+| `META_CAPI_TOKEN` | Step 1 で取得したトークン | サーバーから Meta API 呼び出し |
 | `META_CAPI_TEST_EVENT_CODE` | Step 3 で取得したコード（テスト中のみ） | 本番 Live 時は空 |
 
 ### 操作手順
@@ -115,8 +135,9 @@ Step 7: 本番 Live・Event Match Quality 確認
 1. テンイチが Discord DM でトークンとテストコードを共有
 2. 私が CLI で登録:
    ```bash
-   echo "$TOKEN" | vercel env add META_CAPI_ACCESS_TOKEN production
+   echo "$TOKEN" | vercel env add META_CAPI_TOKEN production
    echo "$TEST_CODE" | vercel env add META_CAPI_TEST_EVENT_CODE production
+   vercel deploy --prod  # env 反映のため再デプロイ
    ```
 3. 私が登録結果を確認・トークンの記録は即破棄
 
@@ -167,10 +188,22 @@ ReportRequestForm (client)
 
 ## Step 6: Test Events で動作確認
 
-### PR4 マージ後の確認
+### Step 1-4 完了後の確認
+
+#### A. 診断スクリプトで CAPI 単体を先にテスト（推奨）
+
+```bash
+# .env.local に META_PIXEL_ID / META_CAPI_TOKEN / META_CAPI_TEST_EVENT_CODE を記述してから
+node --env-file=.env.local scripts/test-meta-capi.mjs
+```
+
+- ✅ 成功なら「Meta が CAPI イベントを受信しました」と表示
+- ❌ 失敗なら具体的な修正手順がターミナルに出力される
+
+#### B. フルエンド・ツー・エンドテスト
 
 1. **Events Manager → テストイベント** を開いておく
-2. ブラウザで `https://sekaistay.com/switch` に Step 3 と同じテストモードでアクセス（テストコードが URL に付いている状態）
+2. ブラウザで `https://sekaistay.com/switch` にアクセス（通常アクセスで OK）
 3. フォームを送信
 4. テストイベント画面に **2件の `Lead` イベント**が表示される（Pixel 1件 + CAPI 1件）
 5. Meta が自動重複除去すると **「Browser」+「Server」両方を受信** と表示される（理想）
