@@ -491,7 +491,7 @@ export default function DashboardDemoPage() {
                 { t: '予約カレンダー', d: '全OTAの予約を統合表示。ゲスト国籍・滞在日数まで把握できます。' },
                 { t: 'レビュー集約', d: 'Airbnb / Booking / VRBO のレビューを横断的に確認。' },
                 { t: '改善アクション', d: '運用チームが提案する改善施策を、優先度付きで提示。' },
-                { t: 'エクスポート', d: '月次レポートをPDF/Excelで自動生成・ダウンロード可能。' },
+                { t: 'エクスポート', d: 'リアルタイムの売上・予約データを、いつでも出力・ダウンロード可能。' },
               ].map((f, i) => (
                 <div key={i} className="bg-paper p-7 md:p-8">
                   <p className="eyebrow-mono text-mid-gray mb-4">Feature № {String(i + 1).padStart(2, '0')}</p>

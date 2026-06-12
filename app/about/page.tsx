@@ -526,8 +526,8 @@ export default function AboutPage() {
               </Link>
             </div>
             <div className="pt-6 border-t border-ivory/10 flex flex-wrap items-center gap-x-6 gap-y-2 font-sans text-caption text-ivory/60">
-              <span className="inline-flex items-center gap-2"><IconCheck size={12} color="#54BEC3" /> 初期費用0円</span>
-              <span className="inline-flex items-center gap-2"><IconCheck size={12} color="#54BEC3" /> 手数料8%</span>
+              <span className="inline-flex items-center gap-2"><IconCheck size={12} color="#54BEC3" /> 基本料金 8%＋月1万円</span>
+              <span className="inline-flex items-center gap-2"><IconCheck size={12} color="#54BEC3" /> 費用は事前見積もりで全提示</span>
 
             </div>
           </div>
