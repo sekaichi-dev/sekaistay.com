@@ -33,10 +33,10 @@ export default function OGImage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '40px' }}>
           <span style={{ fontSize: '20px', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            ✓ 移行コスト0円
+            ✓ 移行作業は当社対応
           </span>
           <span style={{ fontSize: '20px', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            ✓ 解約金 ¥0
+            ✓ 7ヶ月目以降 解約金¥0
           </span>
           <span style={{ fontSize: '20px', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             ✓ 最短2週間

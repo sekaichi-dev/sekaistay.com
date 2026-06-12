@@ -297,7 +297,7 @@ export default function BlogPostPage({ params }: Props) {
                   <span className="block font-sans text-bright-teal mt-1">手数料8%で一括代行。</span>
                 </h2>
                 <p className="font-sans text-body-sm text-ivory/80 leading-[1.95] mb-8 max-w-lg">
-                  OTA掲載・プライシング・ゲスト対応・清掃まで。初期費用 ¥0・解約金 ¥0。
+                  OTA掲載・プライシング・ゲスト対応・清掃まで。基本料金は売上の8%＋月1万円/物件。かかりうる費用は事前にすべて提示します。
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link
@@ -316,7 +316,7 @@ export default function BlogPostPage({ params }: Props) {
                   </Link>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 pt-6 border-t border-ivory/10 font-sans text-caption text-ivory/60">
-                  <span className="inline-flex items-center gap-1.5"><IconCheck size={11} color="#54BEC3" /> 初期費用0円</span>
+                  <span className="inline-flex items-center gap-1.5"><IconCheck size={11} color="#54BEC3" /> 基本料金 8%＋月1万円</span>
                   <span className="inline-flex items-center gap-1.5"><IconCheck size={11} color="#54BEC3" /> 手数料8%</span>
                   <span className="inline-flex items-center gap-1.5"><IconCheck size={11} color="#54BEC3" /> 全国対応</span>
                 </div>

@@ -38,7 +38,7 @@ const SERVICE_BUCKETS = [
     services: [
       { title: 'マルチOTA掲載', desc: 'エリアや物件特性を活かし、Airbnb・Booking.com・Vrbo・Expedia等の複数OTAに最適な形で掲載。1つのOTAに留まらず、集客チャネルを最大化します。', details: ['物件特性に合ったOTA選定', 'エリア別の最適掲載戦略', '複数OTA間の在庫同期', '掲載コンテンツの継続最適化'], image: IMG.svcOta },
       { title: '画像技術・掲載最適化', desc: 'プロカメラマン不要。お手持ちのスマホで撮影いただいた写真を、弊社の画像加工システムでトンマナを統一し、プロ品質のリスティングに仕上げます。', details: ['スマホ写真をプロ品質に加工', 'ブランドトンマナの自動統一', 'OTA最適サイズへのリサイズ', '掲載写真の継続的な改善提案'], image: IMG.svcPhoto },
-      { title: 'ダイナミックプライシング', desc: '周辺の競合価格、季節変動、イベント情報、予約動向をリアルタイムに分析。最適な価格を自動設定し、稼働率と売上の最大化を図ります。', details: ['競合物件の価格モニタリング', '需要予測に基づく価格自動調整', '長期滞在・直前割引の最適化', '月次収益レポート'], image: IMG.svcPricing },
+      { title: 'ダイナミックプライシング', desc: '周辺の競合価格、季節変動、イベント情報、予約動向をリアルタイムに分析。最適な価格を自動設定し、稼働率と売上の最大化を図ります。', details: ['競合物件の価格モニタリング', '需要予測に基づく価格自動調整', '長期滞在・直前割引の最適化', '収益のリアルタイム確認'], image: IMG.svcPricing },
     ],
   },
   {
@@ -56,10 +56,10 @@ const SERVICE_BUCKETS = [
     id: 'growth',
     label: '開業・成長支援',
     sublabel: 'Launch & Growth',
-    description: '立ち上げから収益最大化まで、データと経験で伴走。透明なダッシュボードと月次レポート付き。',
+    description: '立ち上げから収益最大化まで、データと経験で伴走。リアルタイムダッシュボードと3ヶ月毎のオンライン定例ミーティング付き。',
     services: [
       { title: '開業支援', desc: '民泊開業に必要な集客戦略、インバウンド対応、オペレーション構築などを支援し最短で安定した運営を実現。初めての方でも安心してスタートできます。', details: ['事業計画・収益シミュレーション', 'オペレーション体制構築', 'OTA初期設定・掲載開始', '物件の差別化戦略立案'], image: IMG.svcStartup },
-      { title: 'オーナーダッシュボード', desc: '24時間いつでもどこでもアクセス可能なオーナー専用ダッシュボード。リアルタイムで収益・稼働状況・レビューを確認。さらに月次の詳細レポートで、データに基づいた改善提案を実施。', details: ['リアルタイム収支・稼働率表示', '24h / PC・スマホ対応', '月次詳細レポート配信', 'データに基づく改善提案'], image: IMG.svcDashboard },
+      { title: 'オーナーダッシュボード', desc: '24時間いつでもどこでもアクセス可能なオーナー専用ダッシュボード。リアルタイムで収益・稼働状況・レビューを確認。さらに3ヶ月毎のオンライン定例ミーティングで、データに基づいた改善提案を実施。', details: ['リアルタイム収支・稼働率表示', '24h / PC・スマホ対応', '3ヶ月毎のオンライン定例ミーティング', 'データに基づく改善提案'], image: IMG.svcDashboard },
       { title: 'コンサルティング', desc: '豊富な実績に基づき、開業前の事業コンセプトから成功を支援。物件の収益ポテンシャルを最大化するための戦略をご提案します。', details: ['物件診断・収益分析', '競合調査・エリア分析', '投資回収期間の試算', '運営改善提案'], image: IMG.svcConsulting },
     ],
   },
@@ -72,8 +72,8 @@ const REVENUE_CASES = [
 
 const TESTIMONIALS = [
   { name: 'S様', role: '湖畔ヴィラオーナー', text: '前の代行会社では手数料20%で月の手取りが少なく不満でした。SEKAI STAYに切り替えてから手数料8%で手取りが大幅アップ。ダッシュボードでいつでも収益が確認できるのも安心です。', rating: '4.9' },
-  { name: 'T様', role: 'トレーラーハウスオーナー', text: '自主運営に限界を感じていたところ、SEKAI STAYに相談。初期費用0円ですぐにスタートでき、スマホで撮った写真もプロ品質に仕上げてくれました。月次レポートも丁寧で信頼しています。', rating: '5.0' },
-  { name: 'K様', role: '都心マンションオーナー', text: '他社から乗り換えました。移行コスト0円で、OTAアカウントの引き継ぎもスムーズ。ゲスト対応の質が上がりレビューも改善。8%の手数料は本当に革命的です。', rating: '4.8' },
+  { name: 'T様', role: 'トレーラーハウスオーナー', text: '自主運営に限界を感じていたところ、SEKAI STAYに相談。手続きから掲載まで任せてすぐにスタートでき、スマホで撮った写真もプロ品質に仕上げてくれました。ダッシュボードで運用状況がいつでも見えるので信頼しています。', rating: '5.0' },
+  { name: 'K様', role: '都心マンションオーナー', text: '他社から乗り換えました。移行作業を全部任せられて、OTAアカウントの引き継ぎ中も営業が止まりませんでした。ゲスト対応の質が上がりレビューも改善。8%の手数料は本当に革命的です。', rating: '4.8' },
 ]
 
 export default function ServicesPage() {
@@ -129,10 +129,10 @@ export default function ServicesPage() {
               <div className="hidden md:block w-px self-stretch bg-ivory/15" />
               <div>
                 <p className="font-sans text-[18px] md:text-[22px] text-ivory mb-3 leading-snug">
-                  これだけのサービスが、すべて含まれています。
+                  標準サービスは、すべてこの基本料金に含まれています。
                 </p>
                 <p className="text-body-sm text-ivory/90">
-                  他社平均 15〜25%、初期費用は今なら 0円。
+                  基本料金は 8%＋月額¥10,000/物件（他社平均 15〜25%）。オプションは事前見積もりです。
                 </p>
               </div>
             </div>
@@ -331,14 +331,13 @@ export default function ServicesPage() {
               <div className="grid grid-rows-2 gap-px bg-ivory/10">
                 <div className="bg-ink p-8 md:p-10">
                   <p className="eyebrow-mono text-bright-teal mb-5">01 — Initial Cost</p>
-                  <p className="font-sans text-[14px] text-ivory/85 line-through mb-2">通常 ¥100,000</p>
                   <div className="flex items-baseline gap-2 mb-4">
-                    <span className="font-sans font-light text-[88px] md:text-[96px] text-ivory leading-none tabular-nums">0</span>
-                    <span className="font-sans text-[24px] text-bright-teal">円</span>
+                    <span className="font-sans font-light text-[88px] md:text-[96px] text-ivory leading-none tabular-nums">10</span>
+                    <span className="font-sans text-[24px] text-bright-teal">万円</span>
                   </div>
-                  <p className="eyebrow-mono text-bright-teal mb-3">Campaign 実施中</p>
+                  <p className="eyebrow-mono text-bright-teal mb-3">乗り換え / 1物件</p>
                   <p className="text-body-sm text-ivory/90">
-                    OTA初期設定・画像加工・掲載開始まで含む。
+                    移行作業・AI画像加工・リスティング最適化まで含む。新規立ち上げは ¥200,000〜。
                   </p>
                 </div>
                 <div className="bg-ink p-8 md:p-10">
@@ -387,10 +386,11 @@ export default function ServicesPage() {
               </div>
               {[
                 ['運営手数料', '8%', '15〜25%'],
-                ['初期費用', '0円（キャンペーン）', '10〜30万円'],
-                ['解約金', '¥0 ※', '1〜3ヶ月分'],
-                ['縛り', '長期縛りなし', '6〜12ヶ月'],
-                ['オーナーダッシュボード', '24h対応', '月次報告のみ'],
+                ['初期費用', '10万円（乗り換え）', '10〜30万円'],
+                ['解約金', '7ヶ月目以降 ¥0', '1〜3ヶ月分'],
+                ['最低契約期間', '6ヶ月', '6〜12ヶ月'],
+                ['オーナーダッシュボード', 'リアルタイム表示', '月次報告のみ'],
+                ['定例ミーティング', '3ヶ月毎（オンライン）', 'なし〜不定期'],
                 ['画像加工', 'スマホ写真OK', 'カメラマン手配別料金'],
                 ['マルチOTA掲載', '標準対応', 'オプション料金'],
                 ['清掃管理', '標準対応', '別途清掃費'],

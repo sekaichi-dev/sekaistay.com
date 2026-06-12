@@ -6,20 +6,21 @@ import FloatingCTA from '@/components/FloatingCTA'
 import Breadcrumb from '@/components/Breadcrumb'
 import { getAllAreas } from '@/lib/areas'
 import { IconArrowRight } from '@/components/Icons'
+import { JP } from '@/components/JP'
+import JapanAreaMap from '@/components/area/JapanAreaMap'
 
 const SITE_URL = 'https://sekaistay.com'
+const AREA_COUNT = getAllAreas().length
 
 export const metadata: Metadata = {
-  title: '対応エリア | SEKAI STAY',
-  description:
-    'SEKAI STAYは全国20エリアで民泊運用代行に対応しています。京都・大阪・東京など主要観光地から地方リゾートまで、それぞれのエリアに最適化した運営戦略をご提案します。',
+  title: `対応エリア（全国${AREA_COUNT}エリア以上）| SEKAI STAY`,
+  description: `SEKAI STAYは全国${AREA_COUNT}エリア以上で民泊運用代行に対応。清掃パートナー確保済みエリアを順次拡大し、国内の民泊エリアの約85%をカバー。京都・大阪・東京など主要観光地から地方リゾートまで全国対応でご提案します。`,
   alternates: {
     canonical: `${SITE_URL}/area`,
   },
   openGraph: {
-    title: '対応エリア | SEKAI STAY',
-    description:
-      '京都・大阪・東京・福岡など全国20エリアで民泊運用代行に対応。各エリアの特性に合わせた最適な運営プランをご提案します。',
+    title: `対応エリア（全国${AREA_COUNT}エリア以上）| SEKAI STAY`,
+    description: `京都・大阪・東京・福岡など全国${AREA_COUNT}エリア以上で民泊運用代行に対応。清掃パートナー確保済みエリアで全国対応、各エリアの特性に合わせた最適な運営プランをご提案します。`,
     type: 'website',
     url: `${SITE_URL}/area`,
     siteName: 'SEKAI STAY',
@@ -41,10 +42,30 @@ export const metadata: Metadata = {
 export default function AreaPage() {
   const areas = getAllAreas()
 
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'SEKAI STAY 対応エリア',
+    numberOfItems: areas.length,
+    itemListElement: areas.map((area, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: `${area.name}の民泊運用代行`,
+      url: `${SITE_URL}/area/${area.slug}`,
+    })),
+  }
+
   return (
     <>
       <Header />
       <Breadcrumb items={[{ label: '対応エリア' }]} />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(itemListJsonLd).replace(/</g, '\\u003c'),
+        }}
+      />
 
       <main className="bg-ivory pb-20">
         {/* Chapter Ⅰ — masthead */}
@@ -55,30 +76,43 @@ export default function AreaPage() {
               <p className="eyebrow text-sekai-teal">Coverage</p>
             </div>
             <div className="grid md:grid-cols-[1.4fr_1fr] gap-10 md:gap-14 items-end">
-              <h1 className="heading-display text-ink">
-                全国<span className="font-sans text-sekai-teal">20</span>エリアで
+              <h1 className="heading-display text-ink jp-keep">
+                全国
+                <span className="font-sans text-sekai-teal tabular-nums">{areas.length}</span>
+                エリア<span className="font-sans text-sekai-teal">以上</span>で
                 <span className="block">民泊運用代行に対応。</span>
               </h1>
               <div className="md:text-right">
                 <p className="eyebrow-mono text-mid-gray mb-2">Regional Atlas · 2026</p>
                 <p className="font-sans font-light text-[64px] md:text-[96px] text-sekai-teal leading-none tabular-nums">
-                  {String(areas.length).padStart(2, '0')}
+                  {areas.length}
+                  <span className="text-[40px] md:text-[56px] align-top">+</span>
                 </p>
-                <p className="eyebrow-mono text-mid-gray mt-1">Areas Served</p>
+                <p className="eyebrow-mono text-mid-gray mt-1">Areas &amp; Growing</p>
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-8 mt-14 pt-10 border-t border-rule">
-              <p className="font-sans text-body md:text-[17px] text-dark-gray leading-[2]">
-                京都の町家から沖縄のリゾート、ニセコのスキーコンドミニアムまで。SEKAI STAYは各エリアの特性と市場動向に合わせた、最適な運営戦略をご提案します。
+              <p className="font-sans text-body md:text-[17px] text-dark-gray leading-[2] jp-break">
+                京都の町家から沖縄のリゾート、ニセコのスキーコンドミニアムまで。SEKAI
+                STAYは各エリアの特性と市場動向に合わせた、最適な運営戦略をご提案します。
               </p>
-              <p className="font-sans text-body md:text-[17px] text-dark-gray leading-[2]">
-                手数料8%で、OTA掲載管理・ゲスト対応・清掃手配・プライシング最適化を一括代行。あなたの物件のポテンシャルを最大限に引き出します。
-              </p>
+              <div>
+                <p className="font-sans text-body md:text-[17px] text-dark-gray leading-[2] jp-break">
+                  ここにないエリアも、清掃パートナーの確保でき次第対応します（現在、国内の民泊エリアの約85%をカバー）。まずはご相談ください。
+                </p>
+                <div className="mt-6 flex flex-wrap items-center gap-4">
+                  <Link href="/contact" className="btn btn-primary">
+                    無料で相談する
+                    <IconArrowRight size={14} />
+                  </Link>
+                  <span className="eyebrow-mono text-mid-gray">入力3分 · 無料 · 営業連絡なし</span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Chapter Ⅱ — area grid */}
+        {/* Chapter Ⅱ — interactive map + area atlas */}
         <section className="section-xl">
           <div className="container-edit px-5 md:px-8">
             <div className="chapter-marker">
@@ -87,50 +121,11 @@ export default function AreaPage() {
               <p className="eyebrow text-sekai-teal">Atlas of Areas</p>
             </div>
 
-            <div className="bg-rule grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px border border-rule">
-              {areas.map((area, i) => (
-                <Link
-                  key={area.slug}
-                  href={`/area/${area.slug}`}
-                  className="group block bg-paper p-7 md:p-8 transition hover:bg-mist relative"
-                >
-                  {/* Header band */}
-                  <div className="flex items-start justify-between mb-5 pb-4 border-b border-rule">
-                    <div>
-                      <p className="eyebrow-mono text-mid-gray mb-2">Area № {String(i + 1).padStart(2, '0')}</p>
-                      <h2 className="font-sans font-medium text-[22px] md:text-[26px] text-ink group-hover:text-sekai-teal transition leading-tight">
-                        {area.name}
-                      </h2>
-                      <p className="font-sans text-caption text-mid-gray mt-1">{area.prefecture}</p>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <p className="font-sans text-body-sm text-dark-gray leading-[1.95] mb-6 line-clamp-3">
-                    {area.description}
-                  </p>
-
-                  {/* Revenue Indicator — ledger */}
-                  <div className="bg-mist border-l-2 border-sekai-teal pl-4 pr-4 py-3 mb-5">
-                    <p className="eyebrow-mono text-mid-gray mb-1">Monthly Avg Revenue</p>
-                    <p className="font-sans font-light text-[26px] text-ink leading-none tabular-nums">
-                      ¥{(area.avgRevenue / 1000).toFixed(0)}
-                      <span className="font-sans text-[14px] text-mid-gray ml-1">k</span>
-                    </p>
-                  </div>
-
-                  {/* CTA Arrow */}
-                  <div className="flex items-center gap-2 text-sekai-teal font-sans font-medium text-[13px] pt-2">
-                    <span>詳しく見る</span>
-                    <span className="block w-6 h-px bg-sekai-teal group-hover:w-10 transition-[width]" />
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <JapanAreaMap areas={areas} />
           </div>
         </section>
 
-        {/* Chapter Ⅲ — bottom note */}
+        {/* Chapter Ⅲ — consultation CTA */}
         <section className="section-xl">
           <div className="container-narrow px-5 md:px-8 max-w-3xl">
             <div className="bg-ink text-ivory p-10 md:p-14 relative overflow-hidden">
@@ -143,20 +138,25 @@ export default function AreaPage() {
                   <span className="h-px w-10 bg-bright-teal" />
                   <p className="eyebrow text-bright-teal">Not Listed?</p>
                 </div>
-                <h2 className="font-sans font-medium text-[26px] md:text-[34px] leading-tight mb-6">
-                  お住まいのエリアについて、
-                  <span className="block font-sans text-bright-teal mt-1">お気軽にご相談ください。</span>
+                <h2 className="font-sans font-medium text-[26px] md:text-[34px] leading-tight mb-6 jp-keep">
+                  <JP>対応エリアにない場合も、</JP>
+                  <span className="block font-sans text-bright-teal mt-1">
+                    まずはご相談ください。
+                  </span>
                 </h2>
-                <p className="font-sans text-body-sm text-ivory/80 leading-[1.95] mb-8 max-w-lg">
-                  ご希望のエリアが上記にない場合でも対応可能です。全国各地での対応実績をもとに、最適なプランをご提案いたします。
+                <p className="font-sans text-body-sm text-ivory/80 leading-[1.95] mb-8 max-w-lg jp-break">
+                  清掃パートナーの確保でき次第、新しいエリアにも順次対応しています。全国各地での対応実績をもとに、あなたの物件に最適なプランをご提案いたします。
                 </p>
-                <Link
-                  href="/contact"
-                  className="group inline-flex items-center gap-3 bg-ivory text-ink px-7 py-4 transition hover:bg-bright-teal font-sans font-medium text-[14px]"
-                >
-                  無料相談する
-                  <IconArrowRight size={14} className="group-hover:translate-x-1 transition" />
-                </Link>
+                <div className="flex flex-wrap items-center gap-5">
+                  <Link
+                    href="/contact"
+                    className="group inline-flex items-center gap-3 bg-ivory text-ink px-7 py-4 transition hover:bg-bright-teal font-sans font-medium text-[14px]"
+                  >
+                    無料相談する
+                    <IconArrowRight size={14} className="group-hover:translate-x-1 transition" />
+                  </Link>
+                  <span className="eyebrow-mono !text-ivory/70">入力3分 · 無料 · 営業連絡なし</span>
+                </div>
               </div>
             </div>
           </div>
