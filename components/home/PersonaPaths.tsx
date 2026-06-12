@@ -5,7 +5,7 @@ import { JP } from '@/components/JP'
 
 export default function PersonaPaths() {
   return (
-    <section className="bg-ivory">
+    <section className="bg-white">
       <div className="container-edit section-xl">
         <div className="heading-mb">
           <div className="chapter-marker">
@@ -24,27 +24,27 @@ export default function PersonaPaths() {
               <Link
                 key={p.label}
                 href={p.cta.href}
-                className={`group flex flex-col p-8 md:p-10 transition ${
+                className={`group flex flex-col p-8 md:p-10 rounded-switch-lg transition ${
                   isPrimary
-                    ? 'bg-ink text-ivory border border-ink hover:bg-teal-ink'
-                    : 'bg-paper border border-rule hover:border-ink'
+                    ? 'bg-switch-teal-deep text-white border border-switch-teal-deep hover:bg-sekai-teal'
+                    : 'bg-white border border-switch-stone-border shadow-switch-card hover:border-ink'
                 }`}
               >
-                <h3 className={`font-sans font-medium text-[20px] md:text-[22px] leading-snug mb-3 jp-keep ${isPrimary ? 'text-ivory' : 'text-ink'}`}>
+                <h3 className={`font-sans font-medium text-[20px] md:text-[22px] leading-snug mb-3 jp-keep ${isPrimary ? 'text-white' : 'text-ink'}`}>
                   <JP>{p.label}</JP>
                 </h3>
-                <p className={`text-body-sm jp-break mb-6 ${isPrimary ? 'text-ivory/70' : 'text-dark-gray'}`}>
+                <p className={`text-body-sm jp-break mb-6 ${isPrimary ? 'text-white/70' : 'text-dark-gray'}`}>
                   {p.desc}
                 </p>
                 <ul className="space-y-2.5 mb-8 flex-1">
                   {p.points.map((pt) => (
                     <li key={pt} className="flex gap-2.5 min-w-0">
                       <span aria-hidden className={`text-[12px] leading-[1.8] shrink-0 ${isPrimary ? 'text-bright-teal' : 'text-sekai-teal'}`}>✓</span>
-                      <span className={`text-[13px] leading-relaxed jp-break ${isPrimary ? 'text-ivory/75' : 'text-dark-gray'}`}>{pt}</span>
+                      <span className={`text-[13px] leading-relaxed jp-break ${isPrimary ? 'text-white/75' : 'text-dark-gray'}`}>{pt}</span>
                     </li>
                   ))}
                 </ul>
-                <span className={`inline-flex items-center gap-2 text-[13.5px] transition ${isPrimary ? 'text-bright-teal group-hover:text-ivory' : 'text-ink group-hover:text-sekai-teal'}`}>
+                <span className={`inline-flex items-center gap-2 text-[13.5px] transition ${isPrimary ? 'text-bright-teal group-hover:text-white' : 'text-ink group-hover:text-sekai-teal'}`}>
                   {p.cta.label}
                   <IconArrowRight size={12} className="group-hover:translate-x-1 transition" />
                 </span>

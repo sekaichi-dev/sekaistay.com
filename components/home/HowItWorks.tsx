@@ -3,7 +3,7 @@ import { JP } from '@/components/JP'
 
 export default function HowItWorks() {
   return (
-    <section className="bg-ivory">
+    <section className="bg-white">
       <div className="container-edit section-xl">
         <div className="heading-mb">
           <div className="chapter-marker">
@@ -17,7 +17,7 @@ export default function HowItWorks() {
 
         <div className="grid md:grid-cols-3 gap-6 md:gap-8">
           {HOW_IT_WORKS.steps.map((s) => (
-            <div key={s.num} className="bg-paper border border-rule p-8 md:p-10 min-w-0">
+            <div key={s.num} className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card p-8 md:p-10 min-w-0">
               <div className="flex items-baseline justify-between gap-3 mb-6">
                 <span className="font-sans font-light text-[30px] text-sekai-teal leading-none tabular-nums">{s.num}</span>
                 <span className="eyebrow-mono text-mid-gray jp-keep">{s.duration}</span>

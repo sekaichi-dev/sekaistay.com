@@ -6,7 +6,7 @@ import { JP } from '@/components/JP'
 
 export default function ProductShowcase() {
   return (
-    <section className="bg-paper">
+    <section className="bg-white">
       <div className="container-edit section-xl">
         {/* Header */}
         <div className="heading-mb">
@@ -30,7 +30,7 @@ export default function ProductShowcase() {
         <p className="eyebrow-mono text-mid-gray mb-4">
           Plate No.02 — Upcoming Bookings & Recommended Actions
         </p>
-        <div className="figure-frame relative aspect-[2300/1000] w-full shadow-lift mb-12 md:mb-14">
+        <div className="figure-frame rounded-switch-lg overflow-hidden relative aspect-[2300/1000] w-full shadow-lift mb-12 md:mb-14">
           <Image
             src={PRODUCT_SHOWCASE.image.src}
             alt={PRODUCT_SHOWCASE.image.alt}
@@ -53,7 +53,7 @@ export default function ProductShowcase() {
           ))}
         </div>
         <div className="mb-16 md:mb-20">
-          <Link href={PRODUCT_SHOWCASE.cta.href} className="btn btn-primary group">
+          <Link href={PRODUCT_SHOWCASE.cta.href} className="inline-flex items-center justify-center gap-2.5 bg-switch-accent hover:bg-switch-accent-hover text-white font-bold text-[15px] px-8 py-4 rounded-switch-md transition shadow-switch-card group">
             {PRODUCT_SHOWCASE.cta.label}
             <IconArrowRight size={14} className="group-hover:translate-x-1 transition" />
           </Link>
@@ -61,9 +61,9 @@ export default function ProductShowcase() {
         </div>
 
         {/* Mini features — the engine behind the numbers */}
-        <div className="grid md:grid-cols-3 border-t border-l border-rule">
+        <div className="grid md:grid-cols-3 border-t border-l border-switch-stone-border">
           {PRODUCT_SHOWCASE.miniFeatures.map((f) => (
-            <div key={f.title} className="border-b border-r border-rule p-7 md:p-9 min-w-0 bg-ivory">
+            <div key={f.title} className="border-b border-r border-switch-stone-border p-7 md:p-9 min-w-0 bg-switch-cloud">
               <div className="flex items-baseline gap-2 mb-5">
                 <span className="font-sans font-light text-[26px] text-sekai-teal leading-none jp-keep">{f.stat}</span>
                 <span className="eyebrow-mono text-mid-gray">{f.statLabel}</span>

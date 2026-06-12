@@ -9,7 +9,7 @@ const CASE_IMGS = [IMG.caseNojiri, IMG.caseKyoto, IMG.caseNew]
 
 export default function ResultsProof() {
   return (
-    <section className="bg-bone">
+    <section className="bg-switch-cloud">
       <div className="container-edit section-xl">
         {/* Header */}
         <div className="heading-mb">
@@ -23,13 +23,13 @@ export default function ResultsProof() {
         </div>
 
         {/* Summary strip — ledger */}
-        <div className="bg-paper border border-rule mb-4">
+        <div className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card overflow-hidden mb-4">
           <div className="grid grid-cols-2 md:grid-cols-4">
             {RESULTS_PROOF.summary.map((s, i) => (
               <div
                 key={s.label}
                 className={`px-6 py-8 md:py-10 flex flex-col min-w-0 ${
-                  i > 0 ? 'md:border-l border-t md:border-t-0 border-rule' : ''
+                  i > 0 ? 'md:border-l border-t md:border-t-0 border-switch-stone-border' : ''
                 } ${i >= 2 ? 'border-t md:border-t-0' : ''}`}
               >
                 <div className="flex items-baseline gap-1 mb-3">
@@ -59,7 +59,7 @@ export default function ResultsProof() {
           {RESULTS_PROOF.cases.map((c, idx) => {
             const img = CASE_IMGS[idx]
             return (
-              <article key={idx} className="group flex flex-col bg-paper border border-rule hover:border-ink transition">
+              <article key={idx} className="group flex flex-col bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card overflow-hidden hover:border-ink transition">
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <Image
                     src={img.src}
@@ -73,21 +73,21 @@ export default function ResultsProof() {
                     className="absolute inset-0"
                     style={{ background: 'linear-gradient(180deg, rgba(26,26,26,0) 35%, rgba(26,26,26,0.7) 100%)' }}
                   />
-                  <div className="absolute top-5 left-5 right-5 flex items-center justify-between text-ivory">
+                  <div className="absolute top-5 left-5 right-5 flex items-center justify-between text-white">
                     <span className="font-sans text-[15px]">Case № {String(idx + 1).padStart(2, '0')}</span>
                   </div>
-                  <div className="absolute bottom-5 left-5 right-5 text-ivory">
+                  <div className="absolute bottom-5 left-5 right-5 text-white">
                     <p className="font-sans font-medium text-[20px] md:text-[24px] leading-tight mb-2 tabular-nums">
                       {c.effectHeadline}
                     </p>
-                    <h3 className="eyebrow-mono text-ivory/80 jp-keep leading-snug !text-[10.5px]">
+                    <h3 className="eyebrow-mono !text-white/80 jp-keep leading-snug !text-[10.5px]">
                       <JP>{c.title}</JP> · {c.tag}
                     </h3>
                   </div>
                 </div>
 
                 <div className="p-7 md:p-8 flex flex-col flex-1">
-                  <div className="space-y-5 mb-6 pb-6 border-b border-rule">
+                  <div className="space-y-5 mb-6 pb-6 border-b border-switch-stone-border">
                     {c.metrics.map((m, i) => (
                       <div key={i} className="min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-2">
@@ -126,7 +126,7 @@ export default function ResultsProof() {
         </p>
 
         <div className="mt-9">
-          <Link href={RESULTS_PROOF.cta.href} className="btn btn-primary group">
+          <Link href={RESULTS_PROOF.cta.href} className="inline-flex items-center justify-center gap-2.5 bg-switch-accent hover:bg-switch-accent-hover text-white font-bold text-[15px] px-8 py-4 rounded-switch-md transition shadow-switch-card group">
             {RESULTS_PROOF.cta.label}
             <IconArrowRight size={14} className="group-hover:translate-x-1 transition" />
           </Link>

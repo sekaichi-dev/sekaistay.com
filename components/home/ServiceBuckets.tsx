@@ -5,7 +5,7 @@ import { JP } from '@/components/JP'
 
 export default function ServiceBuckets() {
   return (
-    <section className="bg-mist">
+    <section className="bg-white">
       <div className="container-edit section-xl">
         <div className="heading-mb">
           <div className="chapter-marker">
@@ -22,7 +22,7 @@ export default function ServiceBuckets() {
 
         <div className="grid md:grid-cols-3 gap-6 md:gap-8 mb-10">
           {SERVICE_BUCKETS.buckets.map((b) => (
-            <div key={b.label} className="bg-paper border border-rule p-8 md:p-10 min-w-0 flex flex-col">
+            <div key={b.label} className="bg-switch-cloud border border-switch-stone-border rounded-switch-lg p-8 md:p-10 min-w-0 flex flex-col">
               <p className="eyebrow-mono text-sekai-teal mb-5">{b.label}</p>
               <h3 className="font-sans font-medium text-[19px] md:text-[21px] text-ink leading-snug mb-6 jp-keep">
                 <JP>{b.title}</JP>
