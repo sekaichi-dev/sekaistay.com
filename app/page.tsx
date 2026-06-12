@@ -4,14 +4,17 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
 /* ── Above-fold: static imports (critical path) ── */
-import HeroQuestions from '@/components/home/HeroQuestions'
+import HeroProduct from '@/components/home/HeroProduct'
 
 /* ── Below-fold: dynamic imports (reduce initial JS bundle) ── */
 const FloatingCTA = dynamic(() => import('@/components/FloatingCTA'), { ssr: false })
-const UsageNav = dynamic(() => import('@/components/home/UsageNav'))
-const TenQuestions = dynamic(() => import('@/components/home/TenQuestions'))
-const Promises = dynamic(() => import('@/components/home/Promises'))
+const ProductShowcase = dynamic(() => import('@/components/home/ProductShowcase'))
+const HowItWorks = dynamic(() => import('@/components/home/HowItWorks'))
+const ServiceBuckets = dynamic(() => import('@/components/home/ServiceBuckets'))
+const PricingBand = dynamic(() => import('@/components/home/PricingBand'))
 const ResultsProof = dynamic(() => import('@/components/home/ResultsProof'))
+const PersonaPaths = dynamic(() => import('@/components/home/PersonaPaths'))
+const TenQuestionsCompact = dynamic(() => import('@/components/home/TenQuestionsCompact'))
 const TrustBase = dynamic(() => import('@/components/home/TrustBase'))
 const FaqEleven = dynamic(() => import('@/components/home/FaqEleven'))
 const FinalCtaLadder = dynamic(() => import('@/components/home/FinalCtaLadder'))
@@ -42,11 +45,14 @@ export default function Home() {
       <Header />
       <FloatingCTA />
       <main>
-        <HeroQuestions />
-        <UsageNav />
-        <TenQuestions />
-        <Promises />
+        <HeroProduct />
+        <ProductShowcase />
+        <HowItWorks />
+        <ServiceBuckets />
+        <PricingBand />
         <ResultsProof />
+        <PersonaPaths />
+        <TenQuestionsCompact />
         <TrustBase />
         <FaqEleven />
         <FinalCtaLadder />
