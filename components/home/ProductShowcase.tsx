@@ -1,8 +1,6 @@
-import Link from 'next/link'
-import Image from 'next/image'
 import { PRODUCT_SHOWCASE } from '@/content/home/copy-v3'
-import { IconArrowRight } from '@/components/Icons'
 import { JP } from '@/components/JP'
+import DashboardDemo from '@/components/switch/DashboardDemo'
 
 export default function ProductShowcase() {
   return (
@@ -26,38 +24,28 @@ export default function ProductShowcase() {
           </div>
         </div>
 
-        {/* Wide product plate — upcoming bookings & recommended actions */}
-        <p className="eyebrow-mono text-mid-gray mb-4">
-          Plate No.02 — Upcoming Bookings & Recommended Actions
-        </p>
-        <div className="figure-frame rounded-switch-lg overflow-hidden relative aspect-[2300/1000] w-full shadow-lift mb-12 md:mb-14">
-          <Image
-            src={PRODUCT_SHOWCASE.image.src}
-            alt={PRODUCT_SHOWCASE.image.alt}
-            fill
-            sizes="(max-width: 1024px) 100vw, 1180px"
-            quality={85}
-            className="object-cover object-top"
-          />
-        </div>
-
-        {/* Bullets + CTA */}
-        <div className="grid md:grid-cols-3 gap-8 md:gap-10 mb-7">
-          {PRODUCT_SHOWCASE.bullets.map((b) => (
-            <div key={b.title} className="border-l-2 border-sekai-teal pl-5 min-w-0">
-              <p className="font-sans font-medium text-[16.5px] md:text-[17.5px] text-ink leading-snug mb-1.5 jp-keep">
-                <JP>{b.title}</JP>
-              </p>
-              <p className="text-body-sm text-dark-gray jp-break">{b.body}</p>
+        {/* Live interactive demo（/switch/portal と同一の DashboardDemo） + bullets */}
+        <div className="grid lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-14 items-start mb-16 md:mb-20">
+          <div className="min-w-0 order-2 lg:order-1">
+            <p className="eyebrow-mono text-sekai-teal mb-6">Owner App — Interactive Demo</p>
+            <div className="space-y-7">
+              {PRODUCT_SHOWCASE.bullets.map((b) => (
+                <div key={b.title} className="border-l-2 border-sekai-teal pl-5 min-w-0">
+                  <p className="font-sans font-medium text-[16.5px] md:text-[17.5px] text-ink leading-snug mb-1.5 jp-keep">
+                    <JP>{b.title}</JP>
+                  </p>
+                  <p className="text-body-sm text-dark-gray jp-break">{b.body}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div className="mb-16 md:mb-20">
-          <Link href={PRODUCT_SHOWCASE.cta.href} className="inline-flex items-center justify-center gap-2.5 bg-switch-accent hover:bg-switch-accent-hover text-white font-bold text-[15px] px-8 py-4 rounded-switch-md transition shadow-switch-card group">
-            {PRODUCT_SHOWCASE.cta.label}
-            <IconArrowRight size={14} className="group-hover:translate-x-1 transition" />
-          </Link>
-          <p className="text-caption text-mid-gray mt-3">{PRODUCT_SHOWCASE.ctaMicrocopy}</p>
+            <p className="text-caption text-mid-gray mt-8 jp-break">
+              下のデモはタブを切り替えて操作できます。実データを匿名化したサンプルです。
+            </p>
+          </div>
+
+          <div className="min-w-0 order-1 lg:order-2">
+            <DashboardDemo />
+          </div>
         </div>
 
         {/* Mini features — the engine behind the numbers */}
