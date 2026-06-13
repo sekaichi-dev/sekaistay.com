@@ -7,7 +7,7 @@ import FloatingCTA from '@/components/FloatingCTA'
 import { IconCheck, IconArrowRight } from '@/components/Icons'
 
 const inputCls =
-  'w-full bg-mist border border-rule px-5 py-4 text-[15px] font-sans text-ink placeholder:text-mid-gray/70 outline-none transition focus:border-sekai-teal focus:bg-paper'
+  'w-full bg-switch-cloud border border-switch-stone-border rounded-switch-md px-5 py-4 text-[15px] font-sans text-ink placeholder:text-mid-gray/70 outline-none transition focus:border-sekai-teal focus:bg-white'
 
 const MEETING_URL = 'https://timerex.net/s/sekai-stay/d61b424d'
 
@@ -87,17 +87,22 @@ export default function ContactPage() {
       <FloatingCTA />
       <main className="bg-ivory">
         {/* Chapter Ⅰ — masthead */}
-        <section className="bg-paper border-b border-rule">
-          <div className="container-edit section-hero">
+        <section className="relative bg-switch-charcoal text-white overflow-hidden">
+          <div
+            aria-hidden
+            className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }}
+          />
+          <div className="container-edit section-hero relative">
             <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Contact</p>
+              <span className="h-px w-6 bg-bright-teal" />
+              <p className="eyebrow !text-bright-teal">Contact</p>
             </div>
-            <h1 className="heading-display text-ink mb-5">
+            <h1 className="heading-display text-white mb-5">
               お問い合わせ
-              <span className="block font-sans font-light text-mid-gray text-[0.6em] mt-3">Correspondence</span>
+              <span className="block font-sans font-light text-white/60 text-[0.6em] mt-3">Correspondence</span>
             </h1>
-            <p className="lead text-dark-gray max-w-2xl">
+            <p className="lead !text-white/75 max-w-2xl">
               民泊運用に関するご質問・ご相談はお気軽にどうぞ。2営業日以内に担当より返信いたします。
             </p>
           </div>
@@ -107,15 +112,15 @@ export default function ContactPage() {
         <section className="section-xl">
           <div className="container-narrow px-5 md:px-8 max-w-2xl">
             {done ? (
-              <div className="bg-paper border border-rule">
-                <div className="bg-ink text-ivory px-8 py-10 text-center">
+              <div className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card overflow-hidden">
+                <div className="bg-switch-charcoal text-white px-8 py-10 text-center">
                   <div className="w-14 h-14 border-[3px] border-bright-teal flex items-center justify-center mx-auto mb-5">
                     <IconCheck size={22} className="text-bright-teal" />
                   </div>
                   <p className="eyebrow-mono text-bright-teal mb-3">Dispatched</p>
                   <h2 className="font-sans text-[22px] md:text-[26px] mb-3">送信が完了しました</h2>
                   <span className="block w-10 h-px bg-bright-teal mx-auto mb-4" />
-                  <p className="font-sans text-body-sm text-ivory/80 leading-[1.9]">
+                  <p className="font-sans text-body-sm text-white/75 leading-[1.9]">
                     お問い合わせいただきありがとうございます。<br />
                     2営業日以内に担当より返信いたします。
                   </p>
@@ -128,7 +133,7 @@ export default function ContactPage() {
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <a
                       href="/audit"
-                      className="btn btn-primary text-[14px]"
+                      className="group inline-flex items-center justify-center gap-2.5 bg-switch-accent hover:bg-switch-accent-hover text-white font-bold text-[15px] px-8 py-4 rounded-switch-md transition shadow-switch-card"
                     >
                       無料物件診断へ
                       <IconArrowRight size={14} />
@@ -157,7 +162,7 @@ export default function ContactPage() {
                     {error}
                   </div>
                 )}
-                <form onSubmit={handleSubmit} className="bg-paper border border-rule p-6 md:p-10 space-y-7">
+                <form onSubmit={handleSubmit} className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card p-6 md:p-10 space-y-7">
                   <Field number="01" label="お名前" required>
                     <input
                       type="text" name="name" required
@@ -191,7 +196,7 @@ export default function ContactPage() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="btn btn-primary w-full justify-center text-[15px] py-4 disabled:opacity-50"
+                      className="group inline-flex w-full items-center justify-center gap-2.5 bg-switch-accent hover:bg-switch-accent-hover text-white font-bold text-[15px] px-8 py-4 rounded-switch-md transition shadow-switch-card disabled:opacity-50"
                     >
                       {submitting ? '送信中...' : (
                         <>
@@ -207,7 +212,7 @@ export default function ContactPage() {
                 </form>
 
                 {/* Alt lead-in — audit / simulate */}
-                <div className="mt-10 bg-bone border border-rule p-8 md:p-10">
+                <div className="mt-10 bg-switch-cloud border border-switch-stone-border rounded-switch-lg p-8 md:p-10">
                   <div className="flex items-center gap-3 mb-4">
                     <span className="rule-teal-sm" />
                     <p className="eyebrow text-sekai-teal">Alternative Path</p>

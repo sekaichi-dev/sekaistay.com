@@ -214,26 +214,31 @@ export default function AreaDetailPage({ params }: Props) {
 
       <main className="bg-ivory pb-20">
         {/* Chapter Ⅰ — masthead */}
-        <section className="bg-paper border-b border-rule">
-          <div className="container-edit section-hero">
+        <section className="relative bg-switch-charcoal text-white overflow-hidden">
+          <div
+            aria-hidden
+            className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }}
+          />
+          <div className="container-edit section-hero relative">
             <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Area Guide · {area.prefecture}</p>
+              <span className="h-px w-6 bg-bright-teal" />
+              <p className="eyebrow !text-bright-teal">Area Guide · {area.prefecture}</p>
             </div>
-            <h1 className="heading-display text-ink mb-4">
+            <h1 className="heading-display text-white mb-4">
               {area.name}
-              <span className="block font-sans text-sekai-teal text-[0.65em] mt-3">民泊運用代行ならSEKAI STAY</span>
+              <span className="block font-sans text-bright-teal text-[0.65em] mt-3">民泊運用代行ならSEKAI STAY</span>
             </h1>
-            <p className="lead text-dark-gray mt-8 max-w-2xl">
+            <p className="lead !text-white/75 mt-8 max-w-2xl">
               {area.prefecture}でのOTA運営・ゲスト対応・清掃手配・プライシング最適化を、手数料8%で一括代行します。
             </p>
 
             {/* Comparison pill — editorial */}
-            <div className="mt-10 bg-mist border border-rule px-6 py-5 max-w-2xl">
-              <p className="eyebrow-mono text-mid-gray mb-2">Market Comparison</p>
-              <p className="font-sans text-body-sm md:text-[15px] text-dark-gray leading-[1.9]">
-                一般的な運用代行の手数料 <span className="font-sans text-mid-gray">15〜25%</span> に対し、SEKAI STAYは
-                <span className="font-sans text-sekai-teal mx-1">8%＋月10,000円/物件</span>。{area.name}では住宅宿泊事業法・旅館業法いずれにも対応します。
+            <div className="mt-10 bg-white/5 border border-white/15 rounded-switch-md px-6 py-5 max-w-2xl">
+              <p className="eyebrow-mono text-white/60 mb-2">Market Comparison</p>
+              <p className="font-sans text-body-sm md:text-[15px] text-white/75 leading-[1.9]">
+                一般的な運用代行の手数料 <span className="font-sans text-white/55">15〜25%</span> に対し、SEKAI STAYは
+                <span className="font-sans text-bright-teal mx-1">8%＋月10,000円/物件</span>。{area.name}では住宅宿泊事業法・旅館業法いずれにも対応します。
               </p>
             </div>
           </div>
@@ -255,7 +260,7 @@ export default function AreaDetailPage({ params }: Props) {
               {area.highlights.map((highlight, i) => (
                 <div
                   key={i}
-                  className="bg-paper p-7 md:p-9"
+                  className="bg-white p-7 md:p-9"
                 >
                   <div className="flex items-start gap-6">
                     <span className="font-sans font-light text-[56px] md:text-[72px] text-sekai-teal leading-none tabular-nums flex-shrink-0">
@@ -276,10 +281,11 @@ export default function AreaDetailPage({ params }: Props) {
         </section>
 
         {/* Chapter Ⅲ — Revenue simulation */}
-        <section className="bg-ink text-ivory relative overflow-hidden">
+        <section className="bg-switch-charcoal text-white relative overflow-hidden">
           <div
             aria-hidden
-            className="absolute top-0 right-0 w-[36rem] h-[36rem] bg-bright-teal/10 rounded-full blur-3xl pointer-events-none"
+            className="absolute top-0 right-0 w-[36rem] h-[36rem] rounded-full opacity-25 blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }}
           />
           <div className="container-edit px-5 md:px-8 section-xl relative">
             <div className="chapter-marker">
@@ -291,17 +297,17 @@ export default function AreaDetailPage({ params }: Props) {
               <span className="block font-sans text-bright-teal">収益シミュレーション</span>
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-ivory/10 border border-ivory/10">
-              <div className="bg-ink p-7 md:p-9">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/10 border border-white/10">
+              <div className="bg-switch-charcoal p-7 md:p-9">
                 <p className="eyebrow-mono text-bright-teal mb-3">Monthly Avg Revenue</p>
-                <p className="font-sans font-light text-[44px] md:text-[56px] text-ivory leading-none tabular-nums">
+                <p className="font-sans font-light text-[44px] md:text-[56px] text-white leading-none tabular-nums">
                   ¥{(monthlyRevenue / 10000).toFixed(1)}
-                  <span className="font-sans text-[20px] text-ivory/70 ml-2">万</span>
+                  <span className="font-sans text-[20px] text-white/70 ml-2">万</span>
                 </p>
               </div>
-              <div className="bg-ink p-7 md:p-9">
-                <p className="eyebrow-mono text-mid-gray mb-3">Industry 20% / Annual</p>
-                <p className="font-sans font-light text-[36px] md:text-[44px] text-ivory/60 leading-none tabular-nums line-through">
+              <div className="bg-switch-charcoal p-7 md:p-9">
+                <p className="eyebrow-mono text-white/55 mb-3">Industry 20% / Annual</p>
+                <p className="font-sans font-light text-[36px] md:text-[44px] text-white/60 leading-none tabular-nums line-through">
                   ¥{(competitorAnnualFee / 10000).toFixed(1)}
                   <span className="font-sans text-[16px] ml-2">万</span>
                 </p>
@@ -358,7 +364,7 @@ export default function AreaDetailPage({ params }: Props) {
               {services.map((service, i) => (
                 <div
                   key={i}
-                  className="bg-paper p-7 md:p-9"
+                  className="bg-white p-7 md:p-9"
                 >
                   <div className="flex items-center justify-between mb-5 pb-4 border-b border-rule">
                     <p className="eyebrow-mono text-mid-gray">Service № {String(i + 1).padStart(2, '0')}</p>
@@ -373,7 +379,7 @@ export default function AreaDetailPage({ params }: Props) {
         </section>
 
         {/* Chapter Ⅴ — FAQ */}
-        <section className="section-xl bg-bone border-y border-rule">
+        <section className="section-xl bg-switch-cloud border-y border-rule">
           <div className="container-narrow px-5 md:px-8 max-w-3xl">
             <div className="chapter-marker">
               <span className="rule-teal-sm" />
@@ -420,13 +426,13 @@ export default function AreaDetailPage({ params }: Props) {
         {office && (
           <section className="section-xl">
             <div className="container-narrow px-5 md:px-8 max-w-3xl">
-              <div className="bg-paper border border-rule p-8 md:p-10">
+              <div className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card p-8 md:p-10">
                 <div className="flex items-center justify-between mb-6 pb-5 border-b border-rule">
                   <p className="eyebrow-mono text-mid-gray">Local Office</p>
                   <p className="eyebrow text-sekai-teal"></p>
                 </div>
                 <div className="flex items-start gap-6">
-                  <div className="w-14 h-14 bg-ink text-ivory flex items-center justify-center flex-shrink-0">
+                  <div className="w-14 h-14 bg-switch-teal-deep text-white rounded-switch-md flex items-center justify-center flex-shrink-0">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                       <circle cx="12" cy="10" r="3"/>
@@ -450,7 +456,7 @@ export default function AreaDetailPage({ params }: Props) {
         {/* Chapter Ⅶ — CTA */}
         <section className="section-xl">
           <div className="container-narrow px-5 md:px-8 max-w-4xl">
-            <div className="bg-ink text-ivory p-10 md:p-14 relative overflow-hidden">
+            <div className="bg-switch-charcoal text-white rounded-switch-lg p-10 md:p-14 relative overflow-hidden">
               <div
                 aria-hidden
                 className="absolute inset-0 opacity-40 pointer-events-none"
@@ -462,7 +468,7 @@ export default function AreaDetailPage({ params }: Props) {
               <div className="relative">
                 <div className="chapter-marker">
                   <span className="h-px w-10 bg-bright-teal" />
-                  <p className="eyebrow text-bright-teal">Begin</p>
+                  <p className="eyebrow !text-bright-teal">Begin</p>
                 </div>
                 <h2 className="font-sans font-bold text-[28px] md:text-[40px] leading-[1.3] mb-8">
                   {area.name}での民泊運営を

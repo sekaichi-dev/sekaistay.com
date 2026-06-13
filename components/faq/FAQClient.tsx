@@ -144,17 +144,18 @@ export default function FAQClient() {
       <FloatingCTA />
       <main className="bg-ivory">
         {/* Chapter Ⅰ — masthead */}
-        <section className="bg-paper border-b border-rule">
-          <div className="container-edit section-hero">
+        <section className="relative bg-switch-charcoal text-white overflow-hidden">
+          <div aria-hidden className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }} />
+          <div className="relative container-edit section-hero">
             <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Frequently Asked</p>
+              <span className="w-6 h-px bg-bright-teal" />
+              <p className="eyebrow !text-bright-teal">Frequently Asked</p>
             </div>
-            <h1 className="heading-display text-ink mb-5">
+            <h1 className="heading-display text-white mb-5">
               よくあるご質問
-              <span className="block font-sans font-light text-mid-gray text-[0.55em] mt-3">Questions &amp; Answers</span>
+              <span className="block font-sans font-light text-white/60 text-[0.55em] mt-3">Questions &amp; Answers</span>
             </h1>
-            <p className="lead text-dark-gray max-w-2xl">
+            <p className="lead text-white/75 max-w-2xl">
               SEKAI STAYの民泊運営代行サービスに関して、オーナー様からよくいただくご質問をまとめました。
             </p>
           </div>

@@ -69,43 +69,48 @@ export default function AreaPage() {
 
       <main className="bg-ivory pb-20">
         {/* Chapter Ⅰ — masthead */}
-        <section className="bg-paper border-b border-rule">
-          <div className="container-edit section-hero">
+        <section className="relative bg-switch-charcoal text-white overflow-hidden">
+          <div
+            aria-hidden
+            className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }}
+          />
+          <div className="container-edit section-hero relative">
             <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Coverage</p>
+              <span className="h-px w-6 bg-bright-teal" />
+              <p className="eyebrow !text-bright-teal">Coverage</p>
             </div>
             <div className="grid md:grid-cols-[1.4fr_1fr] gap-10 md:gap-14 items-end">
-              <h1 className="heading-display text-ink jp-keep">
+              <h1 className="heading-display text-white jp-keep">
                 全国
-                <span className="font-sans text-sekai-teal tabular-nums">{areas.length}</span>
-                エリア<span className="font-sans text-sekai-teal">以上</span>で
+                <span className="font-sans text-bright-teal tabular-nums">{areas.length}</span>
+                エリア<span className="font-sans text-bright-teal">以上</span>で
                 <span className="block">民泊運用代行に対応。</span>
               </h1>
               <div className="md:text-right">
-                <p className="eyebrow-mono text-mid-gray mb-2">Regional Atlas · 2026</p>
-                <p className="font-sans font-light text-[64px] md:text-[96px] text-sekai-teal leading-none tabular-nums">
+                <p className="eyebrow-mono text-white/60 mb-2">Regional Atlas · 2026</p>
+                <p className="font-sans font-light text-[64px] md:text-[96px] text-bright-teal leading-none tabular-nums">
                   {areas.length}
                   <span className="text-[40px] md:text-[56px] align-top">+</span>
                 </p>
-                <p className="eyebrow-mono text-mid-gray mt-1">Areas &amp; Growing</p>
+                <p className="eyebrow-mono text-white/60 mt-1">Areas &amp; Growing</p>
               </div>
             </div>
-            <div className="grid md:grid-cols-2 gap-8 mt-14 pt-10 border-t border-rule">
-              <p className="font-sans text-body md:text-[17px] text-dark-gray leading-[2] jp-break">
+            <div className="grid md:grid-cols-2 gap-8 mt-14 pt-10 border-t border-white/15">
+              <p className="font-sans text-body md:text-[17px] text-white/75 leading-[2] jp-break">
                 京都の町家から沖縄のリゾート、ニセコのスキーコンドミニアムまで。SEKAI
                 STAYは各エリアの特性と市場動向に合わせた、最適な運営戦略をご提案します。
               </p>
               <div>
-                <p className="font-sans text-body md:text-[17px] text-dark-gray leading-[2] jp-break">
+                <p className="font-sans text-body md:text-[17px] text-white/75 leading-[2] jp-break">
                   ここにないエリアも、清掃パートナーの確保でき次第対応します（現在、国内の民泊エリアの約85%をカバー）。まずはご相談ください。
                 </p>
                 <div className="mt-6 flex flex-wrap items-center gap-4">
-                  <Link href="/contact" className="btn btn-primary">
+                  <Link href="/contact" className="group inline-flex items-center justify-center gap-2.5 bg-switch-accent hover:bg-switch-accent-hover text-white font-bold text-[15px] px-8 py-4 rounded-switch-md transition shadow-switch-card">
                     無料で相談する
                     <IconArrowRight size={14} />
                   </Link>
-                  <span className="eyebrow-mono text-mid-gray">入力3分 · 無料 · 営業連絡なし</span>
+                  <span className="eyebrow-mono text-white/60">入力3分 · 無料 · 営業連絡なし</span>
                 </div>
               </div>
             </div>
@@ -128,15 +133,16 @@ export default function AreaPage() {
         {/* Chapter Ⅲ — consultation CTA */}
         <section className="section-xl">
           <div className="container-narrow px-5 md:px-8 max-w-3xl">
-            <div className="bg-ink text-ivory p-10 md:p-14 relative overflow-hidden">
+            <div className="bg-switch-charcoal text-white rounded-switch-lg p-10 md:p-14 relative overflow-hidden">
               <div
                 aria-hidden
-                className="absolute -top-24 -right-24 w-96 h-96 bg-bright-teal/10 rounded-full blur-3xl pointer-events-none"
+                className="absolute -top-24 -right-24 w-96 h-96 rounded-full opacity-25 blur-3xl pointer-events-none"
+                style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }}
               />
               <div className="relative">
                 <div className="chapter-marker">
                   <span className="h-px w-10 bg-bright-teal" />
-                  <p className="eyebrow text-bright-teal">Not Listed?</p>
+                  <p className="eyebrow !text-bright-teal">Not Listed?</p>
                 </div>
                 <h2 className="font-sans font-medium text-[26px] md:text-[34px] leading-tight mb-6 jp-keep">
                   <JP>対応エリアにない場合も、</JP>

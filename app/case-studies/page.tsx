@@ -56,17 +56,18 @@ export default function CaseStudiesPage() {
 
       <main className="bg-ivory">
         {/* Chapter Ⅰ — dark editorial masthead */}
-        <section className="relative bg-ink text-ivory overflow-hidden">
+        <section className="relative bg-switch-charcoal text-white overflow-hidden">
           <div
             aria-hidden
-            className="absolute -top-32 -right-32 w-[32rem] h-[32rem] rounded-full bg-bright-teal/15 blur-3xl pointer-events-none"
+            className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }}
           />
           <div className="container-edit relative section-hero">
             <div className="chapter-marker">
               <span className="h-px w-10 bg-bright-teal" />
-              <p className="eyebrow text-bright-teal">Success Stories</p>
+              <p className="eyebrow !text-bright-teal">Success Stories</p>
             </div>
-            <h1 className="heading-display heading-mb-lg jp-keep">
+            <h1 className="heading-display heading-mb-lg jp-keep text-white">
               導入事例
               <span className="block text-bright-teal mt-2 text-[0.6em]">Case Studies</span>
             </h1>
@@ -74,7 +75,7 @@ export default function CaseStudiesPage() {
               <p className="font-sans text-[17px] md:text-[19px] text-bright-teal/90 leading-[1.85]">
                 —&nbsp;From Kyoto&#39;s machiya to urban flats.
               </p>
-              <p className="text-body text-ivory/80 leading-[1.95] max-w-2xl jp-break">
+              <p className="text-body text-white/75 leading-[1.95] max-w-2xl jp-break">
                 SEKAI STAYの運営ノウハウで実現した、オーナー様の成功事例をご紹介します。京都古民家から高級ヴィラ、都心アパートまで、多様な物件での実績をご確認ください。
               </p>
             </div>
@@ -94,10 +95,10 @@ export default function CaseStudiesPage() {
               {caseStudies.map((caseStudy, i) => (
                 <article
                   key={caseStudy.id}
-                  className="bg-paper group"
+                  className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card group"
                 >
                   {/* Image */}
-                  <div className="relative aspect-[16/10] overflow-hidden bg-mist">
+                  <div className="relative aspect-[16/10] overflow-hidden rounded-switch-lg bg-switch-cloud">
                     <Image
                       src={caseStudy.image}
                       alt={caseStudy.name}
@@ -213,21 +214,22 @@ export default function CaseStudiesPage() {
         </section>
 
         {/* Chapter Ⅲ — CTA */}
-        <section className="relative bg-ink text-ivory overflow-hidden">
+        <section className="relative bg-switch-charcoal text-white overflow-hidden">
           <div
             aria-hidden
-            className="absolute -bottom-32 -left-32 w-[32rem] h-[32rem] rounded-full bg-bright-teal/15 blur-3xl pointer-events-none"
+            className="absolute -bottom-32 -left-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }}
           />
           <div className="container-narrow relative px-5 md:px-8 section-xl max-w-4xl">
             <div className="chapter-marker">
               <span className="h-px w-10 bg-bright-teal" />
-              <p className="eyebrow text-bright-teal">Start Growing</p>
+              <p className="eyebrow !text-bright-teal">Start Growing</p>
             </div>
-            <h2 className="font-sans font-bold text-[28px] md:text-[44px] leading-[1.3] mb-8">
+            <h2 className="font-sans font-bold text-[28px] md:text-[44px] leading-[1.3] mb-8 text-white">
               あなたの物件も同じように
               <span className="block font-sans text-bright-teal mt-1">成長させませんか？</span>
             </h2>
-            <p className="font-sans text-body md:text-[17px] text-ivory/80 leading-[1.95] mb-10 max-w-2xl">
+            <p className="font-sans text-body md:text-[17px] text-white/75 leading-[1.95] mb-10 max-w-2xl">
               SEKAI STAYの運営ノウハウは、すべてのオーナー様にご利用いただけます。京都古民家から都心アパート、高級ヴィラまで、多様な物件での実績があります。
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
@@ -256,7 +258,7 @@ export default function CaseStudiesPage() {
         </section>
 
         {/* Chapter Ⅳ — FAQ */}
-        <section className="section-xl bg-bone border-t border-rule">
+        <section className="section-xl bg-switch-cloud border-t border-rule">
           <div className="container-narrow px-5 md:px-8 max-w-3xl">
             <div className="chapter-marker">
               <span className="rule-teal-sm" />
