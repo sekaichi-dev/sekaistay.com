@@ -278,7 +278,7 @@ export default function AboutPage() {
 
             <div className="grid md:grid-cols-[auto_1fr] gap-6 md:gap-12">
               <div className="md:pt-2">
-                <p className="font-sans font-light text-[80px] md:text-[128px] text-sekai-teal leading-none tabular-nums">6</p>
+                <p className="font-sans font-light text-[56px] md:text-[88px] text-sekai-teal leading-none tabular-nums">6</p>
                 <p className="eyebrow-mono text-mid-gray mt-2">Years in the field</p>
               </div>
               <div className="space-y-7 font-sans text-body md:text-[17px] text-dark-gray leading-[2]">
@@ -478,7 +478,7 @@ export default function AboutPage() {
                   className="bg-paper p-8 md:p-10"
                 >
                   <div className="flex items-baseline gap-4 mb-6">
-                    <span className="font-sans font-light text-[56px] md:text-[72px] text-sekai-teal leading-none tabular-nums">
+                    <span className="font-sans font-light text-[44px] md:text-[56px] text-sekai-teal leading-none tabular-nums">
                       {c.num}
                     </span>
                     <div className="flex-1 h-px bg-rule" />

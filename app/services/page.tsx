@@ -119,10 +119,10 @@ export default function ServicesPage() {
               <div>
                 <p className="eyebrow-mono text-bright-teal mb-4">Flat Fee — Industry Reset</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-sans font-light text-[108px] md:text-[140px] text-ivory leading-none tracking-tight tabular-nums">
+                  <span className="font-sans font-light text-[64px] md:text-[88px] text-ivory leading-none tracking-tight tabular-nums">
                     8
                   </span>
-                  <span className="font-sans font-light text-[56px] md:text-[72px] text-bright-teal leading-none">
+                  <span className="font-sans font-light text-[36px] md:text-[48px] text-bright-teal leading-none">
                     %
                   </span>
                 </div>
@@ -449,7 +449,7 @@ export default function ServicesPage() {
                     key={i}
                     className={`relative grid md:grid-cols-[180px_1fr] gap-4 md:gap-12 items-start py-8 md:py-10 ${!isLast ? 'border-b border-rule' : ''}`}
                   >
-                    <span className="font-sans font-light text-[64px] md:text-[72px] text-sekai-teal leading-none tabular-nums">
+                    <span className="font-sans font-light text-[44px] md:text-[56px] text-sekai-teal leading-none tabular-nums">
                       {f.step}
                     </span>
                     <div className="relative">
