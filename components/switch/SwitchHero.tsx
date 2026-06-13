@@ -9,10 +9,14 @@ export default function SwitchHero({
   showUrgencyStrip = true,
   ctaMode = "diagnose",
   badgeText = "他社で運営中のオーナー様へ",
+  showBadge = true,
+  showCta = true,
 }: {
   showUrgencyStrip?: boolean;
   ctaMode?: "diagnose" | "meeting" | "home";
   badgeText?: string;
+  showBadge?: boolean;
+  showCta?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
   useEffect(() => setVisible(true), []);
@@ -112,12 +116,14 @@ export default function SwitchHero({
               {/* 左カラム: コピー */}
               <div className="text-center lg:text-left">
                 {/* ターゲット宣言バッジ — 乗り換えLPの自分事化 */}
+                {showBadge && (
                 <div className="inline-flex items-center gap-2 bg-white/8 border border-switch-teal-bright/40 rounded-full px-3 py-1 mb-3 backdrop-blur-sm">
                   <span className="w-1.5 h-1.5 bg-switch-teal-bright rounded-full" aria-hidden />
                   <span className="text-[12px] sm:text-xs font-bold tracking-wider text-switch-teal-bright">
                     {badgeText}
                   </span>
                 </div>
+                )}
 
                 {/* H1 — モバイル: 1行「民泊運用のぜんぶを」/ sm+: 2行「民泊運用の / ぜんぶを、」 */}
                 <h1 className="font-bold leading-[1.2] mb-3 sm:mb-4 tracking-tight">
@@ -171,6 +177,7 @@ export default function SwitchHero({
                 </div>
 
                 {/* CTA */}
+                {showCta && (
                 <div className="flex flex-col lg:items-start items-center mb-2 sm:mb-3">
                   <a
                     href={ctaConfig.href}
@@ -209,6 +216,7 @@ export default function SwitchHero({
                     {ctaConfig.bridgeCopy}
                   </p>
                 </div>
+                )}
 
               </div>
 

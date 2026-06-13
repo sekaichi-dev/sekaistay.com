@@ -46,7 +46,7 @@ export default function Home() {
       <Header />
       <FloatingCTA />
       <main>
-        <SwitchHero showUrgencyStrip={false} ctaMode="home" badgeText="運用中の物件も、これから始める方も。" />
+        <SwitchHero showUrgencyStrip={false} showBadge={false} showCta={false} />
         <ProductShowcase />
         <HowItWorks />
         <ServiceBuckets />
