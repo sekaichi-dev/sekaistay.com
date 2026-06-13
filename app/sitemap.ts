@@ -27,7 +27,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/blog`,         lastModified: new Date('2026-04-12'), changeFrequency: 'daily',   priority: 0.9 },
     { url: `${baseUrl}/faq`,          lastModified: new Date('2026-03-15'), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/audit`,        lastModified: new Date('2026-04-18'), changeFrequency: 'monthly', priority: 0.9 },
-    { url: `${baseUrl}/area`,         lastModified: new Date('2026-03-25'), changeFrequency: 'weekly',  priority: 0.8 },
     { url: `${baseUrl}/portfolio`,    lastModified: new Date('2026-03-25'), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/dashboard-demo`, lastModified: new Date('2026-04-16'), changeFrequency: 'monthly', priority: 0.75 },
     { url: `${baseUrl}/about`,        lastModified: new Date('2026-04-15'), changeFrequency: 'monthly', priority: 0.85 },

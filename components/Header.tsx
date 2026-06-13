@@ -5,9 +5,8 @@ import Link from 'next/link'
 
 const NAV = [
   { href: '/services', label: 'Services', ja: '運営代行' },
-  { href: '/case-studies', label: 'Cases', ja: '導入事例' },
+  { href: '/case-studies', label: 'Proof', ja: '実績・エリア' },
   { href: '/pricing', label: 'Pricing', ja: '料金' },
-  { href: '/area', label: 'Area', ja: '対応エリア' },
   { href: '/about', label: 'About', ja: '私たちについて' },
   { href: '/blog', label: 'Journal', ja: 'コラム' },
   { href: '/faq', label: 'FAQ', ja: 'よくある質問' },

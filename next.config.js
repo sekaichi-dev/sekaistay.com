@@ -53,6 +53,8 @@ const nextConfig = {
       { source: '/diagnostic/:path*',  destination: '/audit', permanent: true },
       { source: '/result',             destination: '/audit', permanent: true },
       { source: '/result/:path*',      destination: '/audit', permanent: true },
+      // 対応エリア一覧は「実績」ページ(/case-studies)へ統合。個別エリア /area/:slug は温存。
+      { source: '/area',               destination: '/case-studies#area', permanent: true },
     ]
   },
 }
