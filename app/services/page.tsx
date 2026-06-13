@@ -325,42 +325,41 @@ export default function ServicesPage() {
               </p>
             </div>
 
-            {/* 2-col layout: cost cards (left, stacked) | simulator (right) */}
-            <div className="grid lg:grid-cols-2 gap-px bg-ivory/10 border border-ivory/10 mb-10">
-              {/* Left column: 01 + 02 stacked */}
-              <div className="grid grid-rows-2 gap-px bg-ivory/10">
-                <div className="bg-ink p-8 md:p-10">
-                  <p className="eyebrow-mono text-bright-teal mb-5">01 — Initial Cost</p>
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <span className="font-sans font-light text-[88px] md:text-[96px] text-ivory leading-none tabular-nums">10</span>
-                    <span className="font-sans text-[24px] text-bright-teal">万円</span>
-                  </div>
-                  <p className="eyebrow-mono text-bright-teal mb-3">乗り換え / 1物件</p>
-                  <p className="text-body-sm text-ivory/90">
-                    移行作業・AI画像加工・リスティング最適化まで含む。新規立ち上げは ¥200,000〜。
+            {/* Centered: compact cost strip on top, simulator below */}
+            <div className="max-w-3xl mx-auto mb-10">
+              {/* Compact cost summary — 3 cells above the simulator */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-ivory/10 border border-ivory/10">
+                <div className="bg-ink px-5 py-5 md:px-6">
+                  <p className="eyebrow-mono text-bright-teal mb-2.5 !text-[9.5px]">01 — Initial Cost</p>
+                  <p className="font-sans font-light text-ivory leading-none">
+                    <span className="text-[34px] tabular-nums">10</span>
+                    <span className="text-[15px] text-bright-teal ml-0.5">万円</span>
                   </p>
+                  <p className="text-[11px] text-ivory/70 mt-2 leading-snug jp-keep">乗り換え1物件・新規は¥20万〜</p>
                 </div>
-                <div className="bg-ink p-8 md:p-10">
-                  <p className="eyebrow-mono text-bright-teal mb-5">02 — Running Cost</p>
-                  <div className="pb-5 border-b border-ivory/10 mb-5">
-                    <p className="eyebrow-mono text-bright-teal mb-2">固定管理費</p>
-                    <p className="font-sans text-[20px] text-ivory">
-                      ¥10,000
-                      <span className="text-[14px] text-ivory/85 font-sans ml-2">/ 1部屋 / 月</span>
-                    </p>
-                  </div>
-                  <p className="eyebrow-mono text-bright-teal mb-3">変動運営委託費</p>
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="font-sans text-[14px] text-ivory">売上の</span>
-                    <span className="font-sans font-light text-[72px] md:text-[80px] text-ivory leading-none tabular-nums">8</span>
-                    <span className="font-sans font-light text-[32px] text-bright-teal">%</span>
-                  </div>
-                  <p className="font-sans text-[13px] text-ivory/85">他社平均: 15〜25%</p>
+                <div className="bg-ink px-5 py-5 md:px-6">
+                  <p className="eyebrow-mono text-bright-teal mb-2.5 !text-[9.5px]">02 — Running Cost</p>
+                  <p className="font-sans font-light text-ivory leading-none">
+                    <span className="text-[34px] tabular-nums">¥10,000</span>
+                  </p>
+                  <p className="text-[11px] text-ivory/70 mt-2 leading-snug jp-keep">固定管理費 / 1部屋 / 月</p>
+                </div>
+                <div className="bg-ink px-5 py-5 md:px-6">
+                  <p className="eyebrow-mono text-bright-teal mb-2.5 !text-[9.5px]">変動運営委託費</p>
+                  <p className="font-sans font-light text-ivory leading-none">
+                    <span className="text-[15px] text-ivory/80">売上の</span>
+                    <span className="text-[34px] tabular-nums ml-0.5">8</span>
+                    <span className="text-[18px] text-bright-teal">%</span>
+                  </p>
+                  <p className="text-[11px] text-ivory/70 mt-2 leading-snug jp-keep">他社平均 15〜25%</p>
                 </div>
               </div>
+              <p className="text-[11px] text-ivory/55 mt-3 leading-relaxed jp-break">
+                ※ 初期費用には移行作業・AI画像加工・リスティング最適化まで含みます。消耗品などの実費・希望制の有料オプションは別途（事前見積もり）。
+              </p>
 
-              {/* Right column: simulator (light panel inside dark section) */}
-              <div className="bg-paper text-ink p-8 md:p-10">
+              {/* Simulator (light panel inside dark section) */}
+              <div className="bg-paper text-ink p-8 md:p-10 border border-ivory/10 mt-px">
                 <div className="flex items-baseline justify-between mb-6">
                   <p className="eyebrow-mono text-sekai-teal">03 — Estimate</p>
                   <span className="font-sans text-[12px] text-dark-gray">10秒で完了</span>
