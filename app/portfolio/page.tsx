@@ -84,32 +84,37 @@ export default function PortfolioPage() {
       <FloatingCTA />
       <main className="bg-ivory">
         {/* Chapter Ⅰ — masthead */}
-        <section className="bg-paper border-b border-rule">
-          <div className="container-edit section-hero">
+        <section className="relative bg-switch-charcoal text-white overflow-hidden">
+          <div
+            aria-hidden
+            className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }}
+          />
+          <div className="container-edit section-hero relative">
             <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Track Record</p>
+              <span className="h-px w-6 bg-bright-teal" />
+              <p className="eyebrow !text-bright-teal">Track Record</p>
             </div>
-            <h1 className="heading-display text-ink mb-5">
+            <h1 className="heading-display text-white mb-5">
               民泊運営代行の実績
-              <span className="block font-sans font-light text-mid-gray text-[0.6em] mt-3">Portfolio</span>
+              <span className="block font-sans font-light text-white/60 text-[0.6em] mt-3">Portfolio</span>
             </h1>
-            <p className="lead text-dark-gray max-w-2xl">
+            <p className="lead !text-white/75 max-w-2xl">
               SEKAI STAYの運営代行で、収益が大幅に改善したオーナー様の実例をご紹介します。
             </p>
           </div>
         </section>
 
         {/* Chapter Ⅱ — Quality Stats dark band */}
-        <section className="bg-ink text-ivory">
+        <section className="bg-switch-charcoal text-white">
           <div className="container-edit px-5 md:px-8 section-lg">
             <div className="chapter-marker">
               <span className="h-px w-10 bg-bright-teal" />
-              <p className="eyebrow text-bright-teal">Quality Indicators</p>
+              <p className="eyebrow !text-bright-teal">Quality Indicators</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-ivory/10 border border-ivory/10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/10 border border-white/10">
               {STATS.map((s, i) => (
-                <div key={i} className="bg-ink p-6 md:p-8">
+                <div key={i} className="bg-switch-charcoal p-6 md:p-8">
                   <p className="eyebrow-mono text-bright-teal mb-3">№ {String(i + 1).padStart(2, '0')}</p>
                   <p className="font-sans font-light text-[44px] md:text-[64px] text-ivory leading-none tabular-nums">
                     {s.value}
@@ -136,7 +141,7 @@ export default function PortfolioPage() {
 
             <div className="space-y-10">
               {CASES.map((c, i) => (
-                <article key={i} className="bg-paper border border-rule">
+                <article key={i} className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card overflow-hidden">
                   <div className="grid md:grid-cols-[1fr_1.2fr]">
                     {/* Image */}
                     <div className="relative h-64 md:h-auto">
@@ -164,7 +169,7 @@ export default function PortfolioPage() {
                       </div>
 
                       {/* Big percentage — editorial feature */}
-                      <div className="bg-ink text-ivory p-6 md:p-7 mb-8 flex items-baseline justify-between">
+                      <div className="bg-switch-charcoal text-white p-6 md:p-7 mb-8 rounded-switch-md flex items-baseline justify-between">
                         <p className="eyebrow-mono text-bright-teal">Revenue Uplift</p>
                         <p className="font-sans font-light text-[56px] md:text-[72px] leading-none tabular-nums">
                           {c.pctUp}<span className="text-bright-teal text-[28px] ml-1">%</span>
@@ -207,7 +212,7 @@ export default function PortfolioPage() {
         </section>
 
         {/* Chapter Ⅳ — Credential badges */}
-        <section className="bg-bone border-y border-rule section-lg">
+        <section className="bg-switch-cloud border-y border-rule section-lg">
           <div className="container-edit px-5 md:px-8">
             <div className="flex items-center justify-center gap-4 mb-10">
               <span className="h-px w-10 bg-rule" />
@@ -218,7 +223,7 @@ export default function PortfolioPage() {
               {BADGES.map((text, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-2 bg-paper border border-rule px-5 py-3 font-sans text-[13px] text-ink"
+                  className="inline-flex items-center gap-2 bg-white border border-switch-stone-border rounded-switch-md px-5 py-3 font-sans text-[13px] text-ink"
                 >
                   <IconCheckCircle size={13} className="text-sekai-teal" />
                   {text}
@@ -241,10 +246,10 @@ export default function PortfolioPage() {
             </h2>
             <div className="bg-rule grid md:grid-cols-2 gap-px border border-rule">
               {TESTIMONIALS.map((t, i) => (
-                <div key={i} className="bg-paper p-8 md:p-10">
+                <div key={i} className="bg-white p-8 md:p-10">
                   <div className="flex items-center justify-between mb-6 pb-5 border-b border-rule">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-ink text-ivory flex items-center justify-center font-sans font-medium text-[18px]">
+                      <div className="w-12 h-12 bg-switch-teal-deep text-white rounded-switch-md flex items-center justify-center font-sans font-medium text-[18px]">
                         {t.name.charAt(0)}
                       </div>
                       <div>

@@ -100,31 +100,32 @@ export default function PricingPage() {
       <FloatingCTA />
       <main className="bg-ivory">
         {/* Hero */}
-        <section className="bg-ivory border-b border-rule">
-          <div className="container-edit section-xl">
+        <section className="relative bg-switch-charcoal text-white overflow-hidden">
+          <div aria-hidden className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }} />
+          <div className="relative container-edit section-xl">
             <div className="flex items-center gap-4 mb-10">
-              <span className="rule-teal-sm" />
-              <span className="eyebrow">Pricing · The Clean Math</span>
+              <span className="w-6 h-px bg-bright-teal" />
+              <span className="eyebrow !text-bright-teal">Pricing · The Clean Math</span>
             </div>
             <div className="grid lg:grid-cols-[0.6fr_0.4fr] gap-10 lg:gap-20 items-end">
-              <h1 className="heading-masthead text-ink jp-keep">
+              <h1 className="heading-masthead text-white jp-keep">
                 運営代行の料金、
                 <br />
-                <span className="font-sans font-light text-sekai-teal">
+                <span className="font-sans font-light text-bright-teal">
                   ぜんぶ出します。
                 </span>
               </h1>
-              <p className="lead text-dark-gray jp-break">
+              <p className="lead !text-white/75 jp-break">
                 毎月の基本料金は、売上の8%＋月1万円/物件。初期費用・実費・希望制の有料オプションまで、かかりうる費用をこのページですべて開示します。
               </p>
             </div>
 
             {/* Summary strip */}
-            <div className="mt-14 bg-paper border border-rule px-8 py-6">
-              <p className="text-body text-ink jp-break leading-relaxed">
-                一般的な運用代行の手数料 <span className="font-sans text-[20px] text-mid-gray">15〜25%</span> に対し、
-                SEKAI STAY は <span className="font-sans text-[24px] text-sekai-teal">8%</span> ＋
-                月 <span className="font-sans text-[20px] text-sekai-teal">¥10,000/物件</span>。
+            <div className="mt-14 bg-white/5 border border-white/15 rounded-switch-lg px-8 py-6">
+              <p className="text-body text-white/85 jp-break leading-relaxed">
+                一般的な運用代行の手数料 <span className="font-sans text-[20px] text-white/60">15〜25%</span> に対し、
+                SEKAI STAY は <span className="font-sans text-[24px] text-bright-teal">8%</span> ＋
+                月 <span className="font-sans text-[20px] text-bright-teal">¥10,000/物件</span>。
                 初期費用は乗り換え ¥100,000/物件・新規立ち上げ ¥200,000〜。
                 解約金は7ヶ月目以降 ¥0（最低契約期間6ヶ月・解約のご連絡は3ヶ月前まで）。
               </p>
@@ -256,7 +257,7 @@ export default function PricingPage() {
         </section>
 
         {/* Includes */}
-        <section className="bg-paper">
+        <section className="bg-switch-cloud">
           <div className="container-edit section-xl">
             <div className="flex items-center gap-4 mb-10">
               <span className="rule-teal-sm" />
@@ -267,9 +268,9 @@ export default function PricingPage() {
               <span className="font-sans font-light text-sekai-teal">サービス。</span>
             </h2>
 
-            <div className="grid sm:grid-cols-2 bg-rule gap-px border border-rule">
+            <div className="grid sm:grid-cols-2 bg-switch-stone-border gap-px border border-switch-stone-border rounded-switch-lg overflow-hidden shadow-switch-card">
               {INCLUDES.map((item, i) => (
-                <div key={i} className="bg-paper px-6 py-7 flex items-baseline gap-5">
+                <div key={i} className="bg-white px-6 py-7 flex items-baseline gap-5">
                   <span className="font-sans font-light text-[28px] text-sekai-teal leading-none tabular-nums flex-shrink-0">
                     {String(i + 1).padStart(2, '0')}
                   </span>
@@ -281,7 +282,7 @@ export default function PricingPage() {
         </section>
 
         {/* Comparison */}
-        <section className="bg-mist">
+        <section className="bg-switch-cloud">
           <div className="container-edit section-xl">
             <div className="flex items-center gap-4 mb-10">
               <span className="rule-teal-sm" />
@@ -292,13 +293,13 @@ export default function PricingPage() {
               <span className="font-sans font-light text-sekai-teal">比較。</span>
             </h2>
 
-            <div className="bg-paper border border-rule">
+            <div className="bg-white border border-switch-stone-border rounded-switch-lg overflow-hidden shadow-switch-card">
               <div className="grid grid-cols-3 border-b border-rule">
-                <div className="p-5 bg-mist" />
-                <div className="p-5 bg-ink text-center">
+                <div className="p-5 bg-switch-cloud" />
+                <div className="p-5 bg-switch-teal-deep text-center">
                   <p className="eyebrow !text-bright-teal">SEKAI STAY</p>
                 </div>
-                <div className="p-5 bg-mist text-center">
+                <div className="p-5 bg-switch-cloud text-center">
                   <p className="eyebrow text-mid-gray">業界平均</p>
                 </div>
               </div>
@@ -307,7 +308,7 @@ export default function PricingPage() {
                   key={i}
                   className={`grid grid-cols-3 items-center ${i !== arr.length - 1 ? 'border-b border-rule' : ''}`}
                 >
-                  <div className="p-5 bg-mist">
+                  <div className="p-5 bg-switch-cloud">
                     <p className="font-sans text-[14px] text-ink">{row.label}</p>
                   </div>
                   <div className={`p-5 text-center ${row.highlight ? 'bg-[rgba(22,123,129,0.05)]' : ''}`}>
@@ -326,7 +327,7 @@ export default function PricingPage() {
         </section>
 
         {/* Pricing FAQ */}
-        <section className="bg-bone">
+        <section className="bg-switch-cloud">
           <div className="container-narrow section-xl">
             <div className="flex items-center gap-4 mb-10">
               <span className="rule-teal-sm" />

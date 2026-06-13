@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import Header from '@/components/Header'
 import Breadcrumb from '@/components/Breadcrumb'
 import Footer from '@/components/Footer'
@@ -66,7 +67,7 @@ function AboutJsonLd() {
 /* ─── Founder card — editorial ─ */
 function FounderCard({
   number,
-  initial,
+  photo,
   name,
   kana,
   role,
@@ -74,7 +75,7 @@ function FounderCard({
   bio,
 }: {
   number: string
-  initial: string
+  photo: string
   name: string
   kana: string
   role: string
@@ -82,23 +83,35 @@ function FounderCard({
   bio: string[]
 }) {
   return (
-    <article className="bg-paper border border-rule p-8 md:p-10">
-      {/* Top meta strip */}
-      <div className="flex items-center justify-between mb-8 pb-6 border-b border-rule">
-        <p className="eyebrow-mono text-mid-gray">Portrait № {number}</p>
-        <p className="eyebrow text-sekai-teal">{role}</p>
+    <article className="bg-paper border border-switch-stone-border rounded-switch-lg shadow-switch-card overflow-hidden">
+      {/* Portrait photo */}
+      <div className="relative w-full aspect-[16/10] overflow-hidden">
+        <Image
+          src={photo}
+          alt={`${name} — ${role}`}
+          fill
+          sizes="(max-width: 768px) 100vw, 560px"
+          quality={85}
+          className="object-cover object-top"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(180deg, rgba(26,26,26,0) 55%, rgba(26,26,26,0.55) 100%)' }}
+        />
+        <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between text-ivory">
+          <div>
+            <p className="font-sans font-light text-[14px] text-ivory/80 mb-0.5">{kana}</p>
+            <h3 className="font-sans font-medium text-[22px] md:text-[26px] leading-tight">{name}</h3>
+          </div>
+          <p className="eyebrow-mono !text-[9px] text-ivory/70">№ {number}</p>
+        </div>
       </div>
 
-      {/* Initial panel */}
-      <div className="flex items-start gap-5 mb-8">
-        <div className="w-20 h-20 md:w-24 md:h-24 bg-ink text-ivory flex items-center justify-center font-sans font-medium text-[32px] md:text-[36px] flex-shrink-0">
-          {initial}
-        </div>
-        <div className="pt-1">
-          <p className="font-sans font-light text-[16px] md:text-[18px] text-sekai-teal mb-1">{kana}</p>
-          <h3 className="font-sans font-medium text-[22px] md:text-[26px] text-ink leading-tight">{name}</h3>
-          <span className="block w-10 h-px bg-sekai-teal mt-3" />
-        </div>
+      <div className="p-8 md:p-10">
+      {/* Role strip */}
+      <div className="flex items-center justify-between mb-7 pb-6 border-b border-rule">
+        <p className="eyebrow text-sekai-teal">{role}</p>
       </div>
 
       {/* Pull quote */}
@@ -115,6 +128,7 @@ function FounderCard({
             {line}
           </p>
         ))}
+      </div>
       </div>
     </article>
   )
@@ -308,7 +322,7 @@ export default function AboutPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <FounderCard
                 number="01"
-                initial="劉"
+                photo="/images/switch/founder-tenichi.png?v=2"
                 name="劉 添毅"
                 kana="Liu Tianyi"
                 role="Co-Founder · Ops & Systems"
@@ -321,7 +335,7 @@ export default function AboutPage() {
               />
               <FounderCard
                 number="02"
-                initial="明"
+                photo="/images/switch/founder-koji.png"
                 name="明神 洸次郎"
                 kana="Myojin Kojiro"
                 role="Co-Founder · Brand & Media"

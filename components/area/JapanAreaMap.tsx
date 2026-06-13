@@ -42,7 +42,7 @@ export default function JapanAreaMap({ areas }: { areas: Area[] }) {
   return (
     <div>
       {/* ── Tile-grid Japan map ── */}
-      <div className="bg-paper border border-rule p-5 md:p-8">
+      <div className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card p-5 md:p-8">
         <div className="flex items-baseline justify-between gap-4 mb-5">
           <p className="eyebrow-mono text-mid-gray">Japan — Tile Atlas</p>
           <p className="text-caption text-dark-gray hidden sm:block">
@@ -65,10 +65,10 @@ export default function JapanAreaMap({ areas }: { areas: Area[] }) {
                   type="button"
                   aria-pressed={active}
                   onClick={() => toggleRegion(region.id)}
-                  className={`${TILE_POS[region.id]} min-h-[84px] md:min-h-[108px] p-2.5 md:p-3.5 text-left flex flex-col justify-between transition ${
+                  className={`${TILE_POS[region.id]} min-h-[84px] md:min-h-[108px] p-2.5 md:p-3.5 rounded-switch-md text-left flex flex-col justify-between transition ${
                     active
                       ? 'bg-sekai-teal border border-sekai-teal text-ivory'
-                      : 'bg-mist border border-rule hover:border-sekai-teal hover:bg-paper'
+                      : 'bg-switch-cloud border border-switch-stone-border hover:border-sekai-teal hover:bg-white'
                   }`}
                 >
                   <span>
@@ -86,8 +86,8 @@ export default function JapanAreaMap({ areas }: { areas: Area[] }) {
                     </span>
                   </span>
                   <span
-                    className={`inline-flex items-baseline gap-1 self-start px-1.5 py-0.5 ${
-                      active ? 'bg-ivory/20 text-ivory' : 'bg-paper border border-rule text-sekai-teal'
+                    className={`inline-flex items-baseline gap-1 self-start px-1.5 py-0.5 rounded-switch-sm ${
+                      active ? 'bg-ivory/20 text-ivory' : 'bg-white border border-switch-stone-border text-sekai-teal'
                     }`}
                   >
                     <span className="font-sans font-bold text-[13px] md:text-[15px] leading-none tabular-nums">
@@ -109,10 +109,10 @@ export default function JapanAreaMap({ areas }: { areas: Area[] }) {
             type="button"
             aria-pressed={selected === 'all'}
             onClick={() => setSelected('all')}
-            className={`px-3.5 py-2 font-sans font-bold text-[12.5px] transition ${
+            className={`px-3.5 py-2 rounded-switch-sm font-sans font-bold text-[12.5px] transition ${
               selected === 'all'
-                ? 'bg-ink text-ivory border border-ink'
-                : 'bg-paper text-dark-gray border border-rule hover:border-ink hover:text-ink'
+                ? 'bg-switch-charcoal text-white border border-switch-charcoal'
+                : 'bg-white text-dark-gray border border-switch-stone-border hover:border-ink hover:text-ink'
             }`}
           >
             すべて <span className="tabular-nums ml-0.5">{areas.length}</span>
@@ -125,10 +125,10 @@ export default function JapanAreaMap({ areas }: { areas: Area[] }) {
                 type="button"
                 aria-pressed={active}
                 onClick={() => toggleRegion(region.id)}
-                className={`px-3.5 py-2 font-sans font-bold text-[12.5px] transition ${
+                className={`px-3.5 py-2 rounded-switch-sm font-sans font-bold text-[12.5px] transition ${
                   active
                     ? 'bg-sekai-teal text-ivory border border-sekai-teal'
-                    : 'bg-paper text-dark-gray border border-rule hover:border-sekai-teal hover:text-ink'
+                    : 'bg-white text-dark-gray border border-switch-stone-border hover:border-sekai-teal hover:text-ink'
                 }`}
               >
                 {region.label}{' '}
@@ -181,7 +181,7 @@ export default function JapanAreaMap({ areas }: { areas: Area[] }) {
             </div>
 
             {regionAreas.length === 0 ? (
-              <div className="border border-rule bg-paper p-8">
+              <div className="border border-switch-stone-border rounded-switch-lg bg-white p-8">
                 <p className="text-body-sm text-dark-gray jp-break">
                   この地方の掲載エリアは準備中です。清掃パートナーの確保でき次第、順次対応します。お急ぎの場合は
                   <Link href="/contact" className="text-sekai-teal font-bold underline underline-offset-4 mx-1">
@@ -196,7 +196,7 @@ export default function JapanAreaMap({ areas }: { areas: Area[] }) {
                   <Link
                     key={area.slug}
                     href={`/area/${area.slug}`}
-                    className="group flex flex-col bg-paper p-6 md:p-7 transition hover:bg-mist min-w-0"
+                    className="group flex flex-col bg-white p-6 md:p-7 transition hover:bg-switch-cloud min-w-0"
                   >
                     <div className="flex items-baseline justify-between gap-3 pb-3 border-b border-rule">
                       <h3 className="font-sans font-medium text-[20px] md:text-[22px] text-ink group-hover:text-sekai-teal transition leading-tight">

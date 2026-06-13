@@ -84,23 +84,24 @@ export default function ServicesPage() {
       <FloatingCTA />
       <main className="bg-ivory">
         {/* Hero — Editorial */}
-        <section className="bg-ivory border-b border-rule">
-          <div className="container-edit section-xl">
+        <section className="relative bg-switch-charcoal text-white overflow-hidden">
+          <div aria-hidden className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }} />
+          <div className="relative container-edit section-xl">
             <div className="flex items-center gap-4 mb-10">
-              <span className="rule-teal-sm" />
-              <span className="eyebrow">Services · Full Spectrum</span>
+              <span className="w-6 h-px bg-bright-teal" />
+              <span className="eyebrow !text-bright-teal">Services · Full Spectrum</span>
             </div>
             <div className="grid lg:grid-cols-[0.6fr_0.4fr] gap-10 lg:gap-20 items-end">
-              <h1 className="heading-masthead text-ink jp-keep">
+              <h1 className="heading-masthead text-white jp-keep">
                 民泊運営を支える、
                 <br />
-                <span className="font-sans font-light text-sekai-teal">
+                <span className="font-sans font-light text-bright-teal">
                   ワンストップの設計。
                 </span>
               </h1>
-              <p className="lead text-dark-gray jp-break">
+              <p className="lead !text-white/75 jp-break">
                 開業準備から運営代行、収益管理まで、すべてを一つの窓口で。
-                <span className="text-ink font-medium">手数料8%</span>で高品質な運営を実現します。
+                <span className="text-bright-teal font-medium">手数料8%</span>で高品質な運営を実現します。
               </p>
             </div>
           </div>
@@ -155,7 +156,7 @@ export default function ServicesPage() {
         </section>
 
         {/* Results */}
-        <section className="bg-mist">
+        <section className="bg-switch-cloud">
           <div className="container-edit section-xl">
             <div className="flex items-center gap-4 mb-10">
               <span className="rule-teal-sm" />
@@ -173,20 +174,20 @@ export default function ServicesPage() {
             </div>
 
             {/* Quality stats — dark band (portfolio スタイル踏襲) */}
-            <div className="bg-ink text-ivory border border-ivory/10 mb-10">
-              <div className="grid grid-cols-2 gap-px bg-ivory/10">
-                <div className="bg-ink px-6 py-6 md:px-8 md:py-7">
+            <div className="bg-switch-teal-deep text-white rounded-switch-lg overflow-hidden border border-white/10 mb-10">
+              <div className="grid grid-cols-2 gap-px bg-white/10">
+                <div className="bg-switch-teal-deep px-6 py-6 md:px-8 md:py-7">
                   <p className="eyebrow-mono text-bright-teal mb-3 !text-[10px]">Airbnb — Host Rating</p>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="font-sans font-light text-[40px] md:text-[52px] text-ivory leading-none tabular-nums">4.7</span>
-                    <span className="font-sans text-[14px] text-ivory/85">／5.0</span>
+                    <span className="font-sans font-light text-[40px] md:text-[52px] text-white leading-none tabular-nums">4.7</span>
+                    <span className="font-sans text-[14px] text-white/85">／5.0</span>
                   </div>
                 </div>
-                <div className="bg-ink px-6 py-6 md:px-8 md:py-7">
+                <div className="bg-switch-teal-deep px-6 py-6 md:px-8 md:py-7">
                   <p className="eyebrow-mono text-bright-teal mb-3 !text-[10px]">Booking.com — Review Score</p>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="font-sans font-light text-[40px] md:text-[52px] text-ivory leading-none tabular-nums">4.8</span>
-                    <span className="font-sans text-[14px] text-ivory/85">／5.0</span>
+                    <span className="font-sans font-light text-[40px] md:text-[52px] text-white leading-none tabular-nums">4.8</span>
+                    <span className="font-sans text-[14px] text-white/85">／5.0</span>
                   </div>
                 </div>
               </div>
@@ -195,7 +196,7 @@ export default function ServicesPage() {
             {/* Revenue cases — compact w/ property photo (grid for reliable image stretch) */}
             <div className="grid md:grid-cols-2 gap-6">
               {REVENUE_CASES.map((c, i) => (
-                <article key={i} className="bg-paper border border-rule overflow-hidden grid grid-cols-1 md:grid-cols-[2fr_3fr]">
+                <article key={i} className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card overflow-hidden grid grid-cols-1 md:grid-cols-[2fr_3fr]">
                   {/* Property photo — absolute fill, always renders */}
                   <div className="relative aspect-[16/10] md:aspect-auto overflow-hidden bg-ink">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -264,7 +265,7 @@ export default function ServicesPage() {
         </section>
 
         {/* Testimonials */}
-        <section className="bg-ivory">
+        <section className="bg-switch-cloud">
           <div className="container-edit section-xl">
             <div className="flex items-center gap-4 mb-10">
               <span className="rule-teal-sm" />
@@ -277,7 +278,7 @@ export default function ServicesPage() {
 
             <div className="grid md:grid-cols-3 gap-6">
               {TESTIMONIALS.map((t, i) => (
-                <figure key={i} className="bg-paper border border-rule p-8 flex flex-col">
+                <figure key={i} className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card p-8 flex flex-col">
                   <div className="flex items-center justify-between mb-6 pb-5 border-b border-rule">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-mist border border-rule flex items-center justify-center">
@@ -414,7 +415,7 @@ export default function ServicesPage() {
         </section>
 
         {/* Process */}
-        <section className="bg-bone">
+        <section className="bg-switch-cloud">
           <div className="container-edit section-xl">
             <div className="flex items-center gap-4 mb-10">
               <span className="rule-teal-sm" />
@@ -454,7 +455,7 @@ export default function ServicesPage() {
                     <div className="relative">
                       <span
                         aria-hidden
-                        className="hidden md:block absolute -left-[88px] top-3 w-3 h-3 rounded-full bg-sekai-teal ring-4 ring-bone"
+                        className="hidden md:block absolute -left-[88px] top-3 w-3 h-3 rounded-full bg-sekai-teal ring-4 ring-switch-cloud"
                       />
                       <h3 className="font-sans font-medium text-[22px] md:text-[26px] text-ink mb-4 leading-snug">
                         {f.title}
@@ -473,7 +474,7 @@ export default function ServicesPage() {
                   まずは、お話を聞かせてください。
                 </p>
               </div>
-              <Link href="/contact" className="btn btn-primary">
+              <Link href="/contact" className="group inline-flex items-center justify-center gap-2.5 bg-switch-accent hover:bg-switch-accent-hover text-white font-bold text-[15px] px-8 py-4 rounded-switch-md transition shadow-switch-card">
                 無料で相談する
                 <IconArrowRight size={14} />
               </Link>

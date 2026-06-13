@@ -45,17 +45,22 @@ export default function CompanyPage() {
       <FloatingCTA />
       <main className="bg-ivory">
         {/* Chapter Ⅰ — editorial masthead */}
-        <section className="bg-paper border-b border-rule">
-          <div className="container-edit section-hero">
+        <section className="relative bg-switch-charcoal text-white overflow-hidden">
+          <div
+            aria-hidden
+            className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none"
+            style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }}
+          />
+          <div className="container-edit section-hero relative">
             <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Company</p>
+              <span className="h-px w-6 bg-bright-teal" />
+              <p className="eyebrow !text-bright-teal">Company</p>
             </div>
-            <h1 className="heading-display text-ink mb-5">
+            <h1 className="heading-display text-white mb-5">
               会社概要
-              <span className="block font-sans font-light text-mid-gray text-[0.7em] mt-3">SEKAICHI Inc.</span>
+              <span className="block font-sans font-light text-white/60 text-[0.7em] mt-3">SEKAICHI Inc.</span>
             </h1>
-            <p className="lead text-dark-gray max-w-2xl">
+            <p className="lead !text-white/75 max-w-2xl">
               SEKAI STAY は、株式会社セカイチ（SEKAICHI Inc.）が運営する民泊運用代行サービスです。
               住宅宿泊管理業 国土交通大臣(01)第F05780号として、全国7拠点のネットワークでオーナー様の資産価値向上を支援しています。
             </p>
@@ -71,9 +76,9 @@ export default function CompanyPage() {
               <p className="eyebrow text-sekai-teal">Corporate Ledger</p>
             </div>
 
-            <div className="bg-paper border border-rule">
+            <div className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card overflow-hidden">
               {/* Header band */}
-              <div className="bg-ink text-ivory px-8 py-6 flex items-baseline justify-between">
+              <div className="bg-switch-teal-deep text-white px-8 py-6 flex items-baseline justify-between">
                 <div>
                   <p className="eyebrow-mono text-bright-teal mb-1">SEKAI STAY</p>
                   <p className="font-sans text-[17px] md:text-[19px]">株式会社セカイチ（SEKAICHI Inc.）</p>
@@ -88,7 +93,7 @@ export default function CompanyPage() {
                     key={i}
                     className="grid grid-cols-[120px_1fr] md:grid-cols-[220px_1fr] border-t border-rule"
                   >
-                    <div className="px-5 md:px-8 py-5 md:py-6 bg-mist border-r border-rule">
+                    <div className="px-5 md:px-8 py-5 md:py-6 bg-switch-cloud border-r border-rule">
                       <p className="eyebrow-mono text-mid-gray mb-1">№ {String(i + 1).padStart(2, '0')}</p>
                       <p className="font-sans text-[13px] md:text-[14px] text-ink font-medium">{row.label}</p>
                     </div>
@@ -105,7 +110,7 @@ export default function CompanyPage() {
         </section>
 
         {/* Chapter Ⅲ — offices */}
-        <section className="section-xl bg-bone border-y border-rule">
+        <section className="section-xl bg-switch-cloud border-y border-rule">
           <div className="container-edit px-5 md:px-8">
             <div className="chapter-marker">
               <span className="rule-teal-sm" />
@@ -124,7 +129,7 @@ export default function CompanyPage() {
               {offices.map((office, idx) => (
                 <div
                   key={office.id}
-                  className={`p-8 ${office.isHQ ? 'bg-ink text-ivory' : 'bg-paper text-ink'}`}
+                  className={`p-8 ${office.isHQ ? 'bg-switch-teal-deep text-white rounded-switch-lg' : 'bg-white text-ink'}`}
                 >
                   <div className="flex items-start justify-between mb-6">
                     <p className={`eyebrow-mono ${office.isHQ ? 'text-bright-teal' : 'text-mid-gray'}`}>
