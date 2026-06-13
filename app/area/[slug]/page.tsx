@@ -263,7 +263,7 @@ export default function AreaDetailPage({ params }: Props) {
                   className="bg-white p-7 md:p-9"
                 >
                   <div className="flex items-start gap-6">
-                    <span className="font-sans font-light text-[56px] md:text-[72px] text-sekai-teal leading-none tabular-nums flex-shrink-0">
+                    <span className="font-sans font-light text-[44px] md:text-[56px] text-sekai-teal leading-none tabular-nums flex-shrink-0">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="flex-1">

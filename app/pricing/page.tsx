@@ -161,8 +161,8 @@ export default function PricingPage() {
                 <p className="eyebrow text-bright-teal mb-3">変動運営委託費</p>
                 <div className="flex items-baseline gap-2 mb-4">
                   <span className="font-sans text-[14px] text-ivory">売上の</span>
-                  <span className="font-sans font-light text-[120px] text-ivory leading-none tabular-nums">8</span>
-                  <span className="font-sans font-light text-[48px] text-bright-teal">%</span>
+                  <span className="font-sans font-light text-[64px] md:text-[88px] text-ivory leading-none tabular-nums">8</span>
+                  <span className="font-sans font-light text-[36px] md:text-[44px] text-bright-teal">%</span>
                 </div>
                 <p className="font-sans text-[13px] text-ivory/60 mb-8">業界平均: 15〜25%</p>
 
