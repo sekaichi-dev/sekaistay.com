@@ -5,15 +5,17 @@ import Header from '@/components/Header'
 import Breadcrumb from '@/components/Breadcrumb'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
-import { getCaseStudies } from '@/lib/case-studies'
+import { getCaseStudies, getAverageMetrics } from '@/lib/case-studies'
+import { getAllAreas } from '@/lib/areas'
+import JapanAreaMap from '@/components/area/JapanAreaMap'
 import { IconArrowRight } from '@/components/Icons'
 
 export const metadata: Metadata = {
-  title: '導入事例 | SEKAI STAY',
-  description: '民泊運営で実績を上げたオーナー様の事例集。京都古民家から高級ヴィラ、都心アパートまで、SEKAI STAYの運営ノウハウで実現した収益向上・稼働率改善の事例をご紹介します。',
+  title: '実績・対応エリア | SEKAI STAY',
+  description: '民泊運営代行の導入事例と全国対応エリア。京都古民家から高級ヴィラ、都心アパートまで、SEKAI STAYが実現した収益向上・稼働率改善の数字と、全国の運用実績をご確認ください。',
   openGraph: {
-    title: '導入事例 | SEKAI STAY',
-    description: 'オーナー様の実績事例を多数掲載。運営代行で実現した収益向上をご確認ください。',
+    title: '実績・対応エリア | SEKAI STAY',
+    description: '数字で見るオーナーの成果と、全国の対応エリア。運営代行で実現した収益向上をご確認ください。',
     type: 'website',
     locale: 'ja_JP',
     url: 'https://sekaistay.com/case-studies',
@@ -21,8 +23,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '導入事例 | SEKAI STAY',
-    description: 'オーナー様の実績事例を多数掲載。運営代行で実現した収益向上をご確認ください。',
+    title: '実績・対応エリア | SEKAI STAY',
+    description: '数字で見るオーナーの成果と、全国の対応エリア。',
   },
   alternates: { canonical: 'https://sekaistay.com/case-studies' },
 }
@@ -48,11 +50,13 @@ const FAQS = [
 
 export default function CaseStudiesPage() {
   const caseStudies = getCaseStudies()
+  const areas = getAllAreas()
+  const metrics = getAverageMetrics()
 
   return (
     <>
       <Header />
-      <Breadcrumb items={[{ label: '導入事例' }]} />
+      <Breadcrumb items={[{ label: '実績・対応エリア' }]} />
 
       <main className="bg-ivory">
         {/* Chapter Ⅰ — dark editorial masthead */}
@@ -65,19 +69,48 @@ export default function CaseStudiesPage() {
           <div className="container-edit relative section-hero">
             <div className="chapter-marker">
               <span className="h-px w-10 bg-bright-teal" />
-              <p className="eyebrow !text-bright-teal">Success Stories</p>
+              <p className="eyebrow !text-bright-teal">Proof &amp; Coverage</p>
             </div>
             <h1 className="heading-display heading-mb-lg jp-keep text-white">
-              導入事例
-              <span className="block text-bright-teal mt-2 text-[0.6em]">Case Studies</span>
+              数字で見る、
+              <span className="block text-bright-teal mt-2">オーナーの成果。</span>
             </h1>
-            <div className="section-grid items-start">
-              <p className="font-sans text-[17px] md:text-[19px] text-bright-teal/90 leading-[1.85]">
-                —&nbsp;From Kyoto&#39;s machiya to urban flats.
-              </p>
-              <p className="text-body text-white/75 leading-[1.95] max-w-2xl jp-break">
-                SEKAI STAYの運営ノウハウで実現した、オーナー様の成功事例をご紹介します。京都古民家から高級ヴィラ、都心アパートまで、多様な物件での実績をご確認ください。
-              </p>
+            <p className="text-body text-white/70 leading-[1.8] max-w-xl jp-break">
+              全国{areas.length}エリア・{metrics.totalProperties}件の運用実績。成果は、数字で。
+            </p>
+
+            {/* Stat band — fuses results (成果) + coverage (エリア) */}
+            <div className="mt-12 pt-10 border-t border-white/15 grid grid-cols-2 md:grid-cols-4 gap-y-9 gap-x-6">
+              <div>
+                <p className="eyebrow-mono text-white/50 mb-2">Coverage</p>
+                <p className="font-sans font-light text-[40px] md:text-[52px] text-bright-teal leading-none tabular-nums">
+                  {areas.length}<span className="text-[24px] md:text-[30px] align-top">+</span>
+                </p>
+                <p className="font-sans text-caption text-white/60 mt-2">エリア対応</p>
+              </div>
+              <div>
+                <p className="eyebrow-mono text-white/50 mb-2">Portfolio</p>
+                <p className="font-sans font-light text-[40px] md:text-[52px] text-bright-teal leading-none tabular-nums">
+                  {metrics.totalProperties}
+                </p>
+                <p className="font-sans text-caption text-white/60 mt-2">件の導入実績</p>
+              </div>
+              <div>
+                <p className="eyebrow-mono text-white/50 mb-2">Occupancy</p>
+                <p className="font-sans font-light text-[40px] md:text-[52px] text-bright-teal leading-none tabular-nums">
+                  {metrics.averageOccupancyAfter}
+                </p>
+                <p className="font-sans text-caption text-white/60 mt-2">
+                  平均稼働率 <span className="line-through text-white/40">{metrics.averageOccupancyBefore}</span> から
+                </p>
+              </div>
+              <div>
+                <p className="eyebrow-mono text-white/50 mb-2">Superhost</p>
+                <p className="font-sans font-light text-[40px] md:text-[52px] text-bright-teal leading-none tabular-nums">
+                  {metrics.superhostCount}
+                </p>
+                <p className="font-sans text-caption text-white/60 mt-2">件 獲得</p>
+              </div>
             </div>
           </div>
         </section>
@@ -213,7 +246,27 @@ export default function CaseStudiesPage() {
           </div>
         </section>
 
-        {/* Chapter Ⅲ — CTA */}
+        {/* Chapter Ⅲ — nationwide coverage (folded in from /area) */}
+        <section id="area" className="section-xl bg-switch-cloud border-t border-rule scroll-mt-24">
+          <div className="container-edit px-5 md:px-8">
+            <div className="chapter-marker">
+              <span className="eyebrow-mono text-mid-gray">§ 03</span>
+              <span className="h-px bg-rule flex-1" />
+              <p className="eyebrow text-sekai-teal">Coverage · {areas.length} Areas</p>
+            </div>
+            <h2 className="heading-section text-ink mb-4">
+              実績は、
+              <span className="font-sans text-sekai-teal">全国{areas.length}エリア</span>
+              で。
+            </h2>
+            <p className="text-body text-dark-gray leading-[1.8] max-w-2xl mb-12 jp-break">
+              京都の町家から沖縄のリゾートまで。気になるエリアの相場と運用のポイントは、各エリアページでご確認いただけます。
+            </p>
+            <JapanAreaMap areas={areas} />
+          </div>
+        </section>
+
+        {/* Chapter Ⅳ — CTA */}
         <section className="relative bg-switch-charcoal text-white overflow-hidden">
           <div
             aria-hidden
@@ -230,7 +283,7 @@ export default function CaseStudiesPage() {
               <span className="block font-sans text-bright-teal mt-1">成長させませんか？</span>
             </h2>
             <p className="font-sans text-body md:text-[17px] text-white/75 leading-[1.95] mb-10 max-w-2xl">
-              SEKAI STAYの運営ノウハウは、すべてのオーナー様にご利用いただけます。京都古民家から都心アパート、高級ヴィラまで、多様な物件での実績があります。
+              どんな物件にも、まだ伸びしろがあります。まずは無料で、あなたの宿の数字を見にきてください。
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
@@ -257,7 +310,7 @@ export default function CaseStudiesPage() {
           </div>
         </section>
 
-        {/* Chapter Ⅳ — FAQ */}
+        {/* Chapter Ⅴ — FAQ */}
         <section className="section-xl bg-switch-cloud border-t border-rule">
           <div className="container-narrow px-5 md:px-8 max-w-3xl">
             <div className="chapter-marker">

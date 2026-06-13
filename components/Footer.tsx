@@ -12,7 +12,7 @@ const SERVICE_LINKS = [
 const COMPANY_LINKS = [
   { href: '/about', label: '私たちについて' },
   { href: '/company', label: '会社概要' },
-  { href: '/case-studies', label: '導入事例' },
+  { href: '/case-studies', label: '実績・対応エリア' },
   { href: '/blog', label: 'コラム' },
   { href: '/pricing', label: '料金' },
   { href: '/faq', label: 'よくある質問' },
@@ -29,7 +29,7 @@ const AREA_LINKS = [
   { href: '/area/hokkaido', label: '北海道' },
   { href: '/area/hakone', label: '箱根' },
   { href: '/area/karuizawa', label: '軽井沢' },
-  { href: '/area', label: 'すべてのエリア →' },
+  { href: '/case-studies#area', label: 'すべてのエリア →' },
 ]
 
 export default function Footer() {
