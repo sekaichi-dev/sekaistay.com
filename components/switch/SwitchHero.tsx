@@ -8,14 +8,30 @@ import DotPattern from "./deco/DotPattern";
 export default function SwitchHero({
   showUrgencyStrip = true,
   ctaMode = "diagnose",
+  badgeText = "他社で運営中のオーナー様へ",
 }: {
   showUrgencyStrip?: boolean;
-  ctaMode?: "diagnose" | "meeting";
+  ctaMode?: "diagnose" | "meeting" | "home";
+  badgeText?: string;
 }) {
   const [visible, setVisible] = useState(false);
   useEffect(() => setVisible(true), []);
 
-  const ctaConfig = ctaMode === "meeting"
+  const ctaConfig = ctaMode === "home"
+    ? {
+        href: "/audit",
+        target: undefined,
+        rel: undefined,
+        label: "無料で物件診断を受ける",
+        bridgeCopy: (
+          <>
+            入力3分・無料・営業連絡なし
+          </>
+        ),
+        dataCta: "audit",
+        dataCtaLabel: "home-hero",
+      }
+    : ctaMode === "meeting"
     ? {
         href: "#contact-form",
         target: undefined,
@@ -99,7 +115,7 @@ export default function SwitchHero({
                 <div className="inline-flex items-center gap-2 bg-white/8 border border-switch-teal-bright/40 rounded-full px-3 py-1 mb-3 backdrop-blur-sm">
                   <span className="w-1.5 h-1.5 bg-switch-teal-bright rounded-full" aria-hidden />
                   <span className="text-[12px] sm:text-xs font-bold tracking-wider text-switch-teal-bright">
-                    他社で運営中のオーナー様へ
+                    {badgeText}
                   </span>
                 </div>
 
@@ -171,7 +187,7 @@ export default function SwitchHero({
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      {ctaMode === "meeting" ? (
+                      {ctaMode !== "diagnose" ? (
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
