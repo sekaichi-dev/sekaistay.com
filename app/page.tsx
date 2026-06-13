@@ -4,7 +4,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
 /* ── Above-fold: static imports (critical path) ── */
-import HeroProduct from '@/components/home/HeroProduct'
+import SwitchHeroPortal from '@/components/switch/SwitchHeroPortal'
 
 /* ── Below-fold: dynamic imports (reduce initial JS bundle) ── */
 const FloatingCTA = dynamic(() => import('@/components/FloatingCTA'), { ssr: false })
@@ -46,7 +46,7 @@ export default function Home() {
       <Header />
       <FloatingCTA />
       <main>
-        <HeroProduct />
+        <SwitchHeroPortal hideCta hideUrgencyStrip />
         <ProductShowcase />
         <HowItWorks />
         <ServiceBuckets />

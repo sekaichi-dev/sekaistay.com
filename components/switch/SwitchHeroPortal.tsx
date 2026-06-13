@@ -8,13 +8,20 @@
 import { useEffect, useState } from "react";
 import DotPattern from "./deco/DotPattern";
 
-export default function SwitchHeroPortal() {
+export default function SwitchHeroPortal({
+  hideCta = false,
+  hideUrgencyStrip = false,
+}: {
+  hideCta?: boolean;
+  hideUrgencyStrip?: boolean;
+} = {}) {
   const [visible, setVisible] = useState(false);
   useEffect(() => setVisible(true), []);
 
   return (
     <section className="relative">
       {/* Top strip — control 同様の限定バー（ポータル系でも緊急性は維持） */}
+      {!hideUrgencyStrip && (
       <div className="bg-gradient-to-r from-black via-[#1a1a1a] to-black text-white py-2.5 sm:py-3 px-3 sm:px-4 relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,191,36,0.08),transparent_60%)] pointer-events-none" aria-hidden />
         <p className="relative flex items-center justify-center flex-wrap gap-x-2 gap-y-1 sm:gap-x-3 text-[11px] sm:text-base font-bold tracking-wide">
@@ -42,6 +49,7 @@ export default function SwitchHeroPortal() {
           </span>
         </p>
       </div>
+      )}
 
       <div className="bg-switch-charcoal text-white relative overflow-hidden">
         <div className="absolute top-[-10%] right-[-15%] w-[70%] h-[75%] bg-switch-teal-bright/22 blur-[140px] rounded-full pointer-events-none" />
@@ -102,6 +110,7 @@ export default function SwitchHeroPortal() {
                     <span className="relative text-[11px] text-white/55">+ ¥10,000/月</span>
                   </div>
 
+                  {!hideCta && (
                   <div className="flex flex-col lg:items-start items-center">
                     <a
                       href="#contact-form"
@@ -118,6 +127,7 @@ export default function SwitchHeroPortal() {
                       入力60秒でアプリのデモ予約完了
                     </p>
                   </div>
+                  )}
                 </div>
 
                 {/* 右: ダッシュボード画像 */}
@@ -321,6 +331,8 @@ export default function SwitchHeroPortal() {
                   <span className="relative gradient-text-mega text-[24px] sm:text-[28px] font-bold tabular-nums leading-none">8%</span>
                   <span className="relative text-[11px] text-white/55">+ ¥10,000/月</span>
                 </div>
+                {!hideCta && (
+                <>
                 <a
                   href="#contact-form"
                   data-cta="contact-form"
@@ -335,6 +347,8 @@ export default function SwitchHeroPortal() {
                 <p className="text-[12px] text-white/55 mt-3 leading-relaxed">
                   入力60秒でアプリのデモ予約完了
                 </p>
+                </>
+                )}
               </div>
             </div>
           </div>
