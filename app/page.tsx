@@ -4,7 +4,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
 /* ── Above-fold: static imports (critical path) ── */
-import SwitchHeroPortal from '@/components/switch/SwitchHeroPortal'
+import SwitchHero from '@/components/switch/SwitchHero'
 
 /* ── Below-fold: dynamic imports (reduce initial JS bundle) ── */
 const FloatingCTA = dynamic(() => import('@/components/FloatingCTA'), { ssr: false })
@@ -46,7 +46,7 @@ export default function Home() {
       <Header />
       <FloatingCTA />
       <main>
-        <SwitchHeroPortal hideCta hideUrgencyStrip />
+        <SwitchHero showUrgencyStrip={false} ctaMode="home" badgeText="運用中の物件も、これから始める方も。" />
         <ProductShowcase />
         <HowItWorks />
         <ServiceBuckets />
