@@ -92,7 +92,7 @@ export default function ServicesPage() {
               <span className="eyebrow !text-bright-teal">Services · Full Spectrum</span>
             </div>
             <div className="grid lg:grid-cols-[0.6fr_0.4fr] gap-10 lg:gap-20 items-end">
-              <h1 className="heading-masthead text-white jp-keep">
+              <h1 className="heading-display text-white jp-keep">
                 民泊運営を支える、
                 <br />
                 <span className="font-sans font-light text-bright-teal">
