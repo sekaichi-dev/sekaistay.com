@@ -14,6 +14,7 @@ const ServiceBuckets = dynamic(() => import('@/components/home/ServiceBuckets'))
 const PricingBand = dynamic(() => import('@/components/home/PricingBand'))
 const ResultsProof = dynamic(() => import('@/components/home/ResultsProof'))
 const PersonaPaths = dynamic(() => import('@/components/home/PersonaPaths'))
+const FoundersBand = dynamic(() => import('@/components/home/FoundersBand'))
 const TenQuestionsCompact = dynamic(() => import('@/components/home/TenQuestionsCompact'))
 const TrustBase = dynamic(() => import('@/components/home/TrustBase'))
 const FaqEleven = dynamic(() => import('@/components/home/FaqEleven'))
@@ -52,6 +53,7 @@ export default function Home() {
         <PricingBand />
         <ResultsProof />
         <PersonaPaths />
+        <FoundersBand />
         <TenQuestionsCompact />
         <TrustBase />
         <FaqEleven />

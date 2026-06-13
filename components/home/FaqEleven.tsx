@@ -8,7 +8,7 @@ export default function FaqEleven() {
   const [open, setOpen] = useState<number | null>(0)
 
   return (
-    <section className="bg-bone">
+    <section className="bg-switch-cloud">
       <div className="container-narrow section-xl">
         <div className="heading-mb">
           <div className="chapter-marker">
