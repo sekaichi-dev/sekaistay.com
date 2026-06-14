@@ -90,13 +90,6 @@ export default function SwitchHero({
             <span className="text-yellow-400 font-bold text-[15px] sm:text-lg tracking-wider">¥0</span>
             <span className="text-[9px] sm:text-[10px] text-white/45 font-normal tracking-normal ml-0.5">※運用中の物件</span>
           </span>
-          <span className="hidden sm:inline text-white/40">／</span>
-          <span className="inline-flex items-center gap-1 whitespace-nowrap">
-            <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-            </svg>
-            <span className="text-[11px] sm:text-xs text-white/90">〆切 <span className="text-yellow-400 font-bold tracking-wider">5/31</span></span>
-          </span>
         </p>
       </div>}
 
