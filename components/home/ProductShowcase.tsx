@@ -49,7 +49,7 @@ export default function ProductShowcase() {
         </div>
 
         {/* Mini features — the engine behind the numbers */}
-        <div className="grid md:grid-cols-3 border-t border-l border-switch-stone-border">
+        <div className="grid md:grid-cols-3 border-t border-l border-switch-stone-border rounded-switch-lg overflow-hidden">
           {PRODUCT_SHOWCASE.miniFeatures.map((f) => (
             <div key={f.title} className="border-b border-r border-switch-stone-border p-7 md:p-9 min-w-0 bg-switch-cloud">
               <div className="flex items-baseline gap-2 mb-5">
