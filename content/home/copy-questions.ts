@@ -215,7 +215,7 @@ export const PROMISES = {
 
 export const RESULTS_PROOF = {
   eyebrow: 'Open Results',
-  headline: '10問すべてに即答する運用を続けると、数字はこうなりました。',
+  headline: '運用を任せた先に、数字はこう動きました。',
   summary: [
     { value: '4.8', unit: '/5', label: '管理物件のレビュー平均' },
     { value: '+30', unit: '%', label: '稼働率改善（平均1.4倍）' },

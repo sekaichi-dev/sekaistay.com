@@ -31,8 +31,8 @@ export const HERO_V3 = {
 export const PRODUCT_SHOWCASE = {
   eyebrow: 'Owner Dashboard — Live Product',
   headline: {
-    line1: '「月末のレポート待ち」は、もう過去。',
-    line2: '物件の今が、一画面でわかる。',
+    line1: 'あなたの物件の今が、',
+    line2: 'リアルタイムで、ぜんぶ見える。',
   },
   body: 'オーナー専用のリアルタイムダッシュボード。下の画面はデモの実画面です——あなたの物件なら、ここにあなたの数字が並びます。',
   bullets: [
@@ -96,8 +96,8 @@ export const HOW_IT_WORKS = {
 export const SERVICE_BUCKETS = {
   eyebrow: 'Full-Stack Operation',
   headline: {
-    line1: '運用の全工程を、3つの持ち場で。',
-    line2: '',
+    line1: '集客も、現場も、数字も。',
+    line2: 'まるごと、おまかせください。',
   },
   body: '集客から現場、数字の開示まで。基本料金（売上の8%＋月1万円/物件）に含まれる標準業務です。',
   buckets: [
@@ -158,7 +158,7 @@ export const PERSONA_PATHS: {
   paths: readonly PersonaPath[]
 } = {
   eyebrow: 'Your Path',
-  headline: 'あなたの状況に、近い入口から。',
+  headline: '1物件でも、複数でも、これからでも。',
   paths: [
     {
       label: '1物件のオーナー',
