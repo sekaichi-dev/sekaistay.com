@@ -331,7 +331,7 @@ export default function BlogPostPage({ params }: Props) {
                   <p className="eyebrow text-sekai-teal">Related Articles</p>
                 </div>
                 <h2 className="font-sans font-medium text-[22px] md:text-[28px] text-ink mb-8">関連記事</h2>
-                <div className="grid md:grid-cols-3 gap-px bg-rule border border-rule">
+                <div className="grid md:grid-cols-3 gap-px bg-rule border border-rule rounded-switch-lg overflow-hidden">
                   {related.map((r, i) => (
                     <Link
                       key={r.slug}

@@ -241,7 +241,7 @@ export default function AboutPage() {
             </div>
 
             {/* Pillars — ledger */}
-            <div className="bg-rule grid grid-cols-2 md:grid-cols-4 gap-px mt-16 border border-rule">
+            <div className="bg-rule grid grid-cols-2 md:grid-cols-4 gap-px mt-16 border border-rule rounded-switch-lg overflow-hidden">
               {pillars.map((t, i) => (
                 <div
                   key={t}
@@ -368,7 +368,7 @@ export default function AboutPage() {
               <span className="block font-sans text-bright-teal">SEKAI STAYの現在地。</span>
             </h2>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 border border-ivory/10">
+            <div className="grid grid-cols-2 md:grid-cols-3 border border-ivory/10 rounded-switch-lg overflow-hidden">
               {stats.map((s, i) => {
                 const Icon = s.icon
                 return (
@@ -427,7 +427,7 @@ export default function AboutPage() {
             </div>
 
             {/* Team roles — ledger band */}
-            <div className="mt-14 bg-paper border border-rule">
+            <div className="mt-14 bg-paper border border-rule rounded-switch-lg overflow-hidden">
               <div className="px-6 py-4 border-b border-rule flex items-center justify-between">
                 <p className="eyebrow-mono text-mid-gray">Team Composition</p>
                 <p className="font-sans font-light text-[22px] text-sekai-teal tabular-nums">35<span className="text-[14px] font-sans text-ink ml-1">名</span></p>
@@ -468,7 +468,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div className="bg-rule grid md:grid-cols-3 gap-px border border-rule">
+            <div className="bg-rule grid md:grid-cols-3 gap-px border border-rule rounded-switch-lg overflow-hidden">
               {credo.map(c => (
                 <div
                   key={c.num}

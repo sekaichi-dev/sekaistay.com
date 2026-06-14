@@ -54,7 +54,7 @@ export default function ServiceBucketsInteractive({ buckets }: Props) {
         occupies one column and the 5 row tiers (image / description / svc1-3) align
         horizontally across columns regardless of content length.
       */}
-      <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-[repeat(5,auto)] md:grid-flow-col gap-px bg-rule border border-rule">
+      <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-[repeat(5,auto)] md:grid-flow-col gap-px bg-rule border border-rule rounded-switch-lg overflow-hidden">
         {buckets.map((bucket, bIdx) => (
           <div key={bucket.id} className="contents">
             {/* Row 1: image header */}

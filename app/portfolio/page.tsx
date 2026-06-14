@@ -112,7 +112,7 @@ export default function PortfolioPage() {
               <span className="h-px w-10 bg-bright-teal" />
               <p className="eyebrow !text-bright-teal">Quality Indicators</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/10 border border-white/10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/10 border border-white/10 rounded-switch-lg overflow-hidden">
               {STATS.map((s, i) => (
                 <div key={i} className="bg-switch-charcoal p-6 md:p-8">
                   <p className="eyebrow-mono text-bright-teal mb-3">№ {String(i + 1).padStart(2, '0')}</p>
@@ -244,7 +244,7 @@ export default function PortfolioPage() {
               お客様の
               <span className="font-sans text-sekai-teal">声</span>
             </h2>
-            <div className="bg-rule grid md:grid-cols-2 gap-px border border-rule">
+            <div className="bg-rule grid md:grid-cols-2 gap-px border border-rule rounded-switch-lg overflow-hidden">
               {TESTIMONIALS.map((t, i) => (
                 <div key={i} className="bg-white p-8 md:p-10">
                   <div className="flex items-center justify-between mb-6 pb-5 border-b border-rule">

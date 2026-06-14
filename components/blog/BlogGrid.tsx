@@ -77,7 +77,7 @@ export default function BlogGrid({ posts, categories }: Props) {
           <p className="font-sans text-body text-mid-gray">該当する記事がありません。</p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-rule border border-rule">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-rule border border-rule rounded-switch-lg overflow-hidden">
           {filtered.map((post, i) => (
             <Link
               key={post.slug}

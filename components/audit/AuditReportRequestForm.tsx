@@ -425,7 +425,7 @@ function ProgressLedger({ step }: { step: Step }) {
     { n: 3, label: "Contact" },
   ];
   return (
-    <div className="bg-rule grid grid-cols-3 gap-px border border-rule">
+    <div className="bg-rule grid grid-cols-3 gap-px border border-rule rounded-switch-lg overflow-hidden">
       {items.map((s) => {
         const active = s.n <= step;
         return (

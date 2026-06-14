@@ -119,7 +119,7 @@ export default function CaseStudiesPage() {
               <p className="eyebrow text-sekai-teal">Case Files · {caseStudies.length}</p>
             </div>
 
-            <div className="bg-rule grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px border border-rule">
+            <div className="bg-rule grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px border border-rule rounded-switch-lg overflow-hidden">
               {caseStudies.map((caseStudy, i) => (
                 <article
                   key={caseStudy.id}
