@@ -141,7 +141,7 @@ export default function AreaDetailPage({ params }: Props) {
   const faqs = [
     {
       question: `${area.name}での民泊運営、どの程度の収益が期待できますか？`,
-      answer: `${area.name}での平均月間運営実績は約${(area.avgRevenue / 10000).toFixed(0)}万円です。物件の立地・グレード・稼働率によって異なりますが、手数料8%のSEKAI STAYなら、従来より大幅に利益を増やすことができます。まずは無料診断で、あなたの物件のポテンシャルを確認してみてください。`,
+      answer: `${area.name}での平均月間運営実績は約${(area.avgRevenue / 10000).toFixed(0)}万円です（立地・グレード・稼働率で変動）。手数料8%のSEKAI STAYなら、手元に残る利益を大きく増やせます。まずは無料診断で物件のポテンシャルを確認してください。`,
     },
     {
       question: `SEKAI STAYは${area.name}での実績がありますか？`,
@@ -157,7 +157,7 @@ export default function AreaDetailPage({ params }: Props) {
     },
     {
       question: `${area.name}で民泊運営をする際の許認可はどうなりますか？`,
-      answer: `${area.name}（${area.prefecture}）では、住宅宿泊事業法（民泊新法）または旅館業法（簡易宿所）のいずれかに基づいて営業します。物件条件や運用方針に応じて、SEKAI STAYが最適な許認可経路をご提案し、届出・申請サポートまで対応します。許認可取得後の運用も一気通貫で代行可能です。`,
+      answer: `物件条件や運用方針に応じて、住宅宿泊事業法（民泊新法）／旅館業法（簡易宿所）の最適な許認可をSEKAI STAYがご提案し、届出から運用まで一気通貫で代行します。`,
     },
   ]
 
@@ -165,7 +165,7 @@ export default function AreaDetailPage({ params }: Props) {
     {
       title: 'OTA掲載管理',
       description:
-        'Airbnb、Booking.com、楽天トラベル等の複数のOTA(オンライン旅行代理店)での掲載・最適化をまるごと代行。',
+        'Airbnb・Booking.com・楽天トラベル等、複数OTAへの掲載と最適化をまるごと代行。',
     },
     {
       title: '24時間多言語ゲスト対応',
@@ -180,7 +180,7 @@ export default function AreaDetailPage({ params }: Props) {
     {
       title: 'プライシング最適化',
       description:
-        '季節・曜日・イベント・競合物件など、複数の要因を加味した動的価格設定で、収益を最大化します。',
+        '季節・曜日・イベント・競合を加味した動的価格で、収益を最大化します。',
     },
   ]
 
@@ -207,7 +207,7 @@ export default function AreaDetailPage({ params }: Props) {
       />
       <Breadcrumb
         items={[
-          { label: '対応エリア', href: '/area' },
+          { label: '対応エリア', href: '/case-studies#area' },
           { label: `${area.name}の民泊運用代行` },
         ]}
       />
@@ -238,7 +238,7 @@ export default function AreaDetailPage({ params }: Props) {
               <p className="eyebrow-mono text-white/60 mb-2">Market Comparison</p>
               <p className="font-sans text-body-sm md:text-[15px] text-white/75 leading-[1.9]">
                 一般的な運用代行の手数料 <span className="font-sans text-white/55">15〜25%</span> に対し、SEKAI STAYは
-                <span className="font-sans text-bright-teal mx-1">8%＋月10,000円/物件</span>。{area.name}では住宅宿泊事業法・旅館業法いずれにも対応します。
+                <span className="font-sans text-bright-teal mx-1">8%＋月10,000円/物件</span>。
               </p>
             </div>
           </div>
