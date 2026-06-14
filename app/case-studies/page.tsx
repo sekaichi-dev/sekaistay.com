@@ -76,25 +76,11 @@ export default function CaseStudiesPage() {
               <span className="block text-bright-teal mt-2">オーナーの成果。</span>
             </h1>
             <p className="text-body text-white/70 leading-[1.8] max-w-xl jp-break">
-              全国{areas.length}エリア・{metrics.totalProperties}件の運用実績。成果は、数字で。
+              全国{areas.length}エリアに対応。成果は、数字で語ります。
             </p>
 
-            {/* Stat band — fuses results (成果) + coverage (エリア) */}
-            <div className="mt-12 pt-10 border-t border-white/15 grid grid-cols-2 md:grid-cols-4 gap-y-9 gap-x-6">
-              <div>
-                <p className="eyebrow-mono text-white/50 mb-2">Coverage</p>
-                <p className="font-sans font-light text-[40px] md:text-[52px] text-bright-teal leading-none tabular-nums">
-                  {areas.length}<span className="text-[24px] md:text-[30px] align-top">+</span>
-                </p>
-                <p className="font-sans text-caption text-white/60 mt-2">エリア対応</p>
-              </div>
-              <div>
-                <p className="eyebrow-mono text-white/50 mb-2">Portfolio</p>
-                <p className="font-sans font-light text-[40px] md:text-[52px] text-bright-teal leading-none tabular-nums">
-                  {metrics.totalProperties}
-                </p>
-                <p className="font-sans text-caption text-white/60 mt-2">件の導入実績</p>
-              </div>
+            {/* Stat band — インパクトのある事実値のみ（件数の小さい指標は出さない） */}
+            <div className="mt-12 pt-10 border-t border-white/15 grid grid-cols-1 sm:grid-cols-3 gap-y-9 gap-x-6">
               <div>
                 <p className="eyebrow-mono text-white/50 mb-2">Occupancy</p>
                 <p className="font-sans font-light text-[40px] md:text-[52px] text-bright-teal leading-none tabular-nums">
@@ -105,11 +91,20 @@ export default function CaseStudiesPage() {
                 </p>
               </div>
               <div>
-                <p className="eyebrow-mono text-white/50 mb-2">Superhost</p>
+                <p className="eyebrow-mono text-white/50 mb-2">Commission</p>
                 <p className="font-sans font-light text-[40px] md:text-[52px] text-bright-teal leading-none tabular-nums">
-                  {metrics.superhostCount}
+                  8<span className="text-[24px] md:text-[30px]">%</span>
                 </p>
-                <p className="font-sans text-caption text-white/60 mt-2">件 獲得</p>
+                <p className="font-sans text-caption text-white/60 mt-2">
+                  手数料 <span className="line-through text-white/40">15〜25%</span> の業界平均に対し
+                </p>
+              </div>
+              <div>
+                <p className="eyebrow-mono text-white/50 mb-2">Coverage</p>
+                <p className="font-sans font-light text-[40px] md:text-[52px] text-bright-teal leading-none tabular-nums">
+                  {areas.length}<span className="text-[24px] md:text-[30px] align-top">+</span>
+                </p>
+                <p className="font-sans text-caption text-white/60 mt-2">全国の対応エリア</p>
               </div>
             </div>
           </div>
