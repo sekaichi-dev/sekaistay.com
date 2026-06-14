@@ -21,7 +21,9 @@ export default function FinalCtaLadder() {
                 <JP>{FINAL_CTA_LADDER.headline.line2}</JP>
               </span>
             </h2>
-            <p className="lead text-white/70 jp-break">{FINAL_CTA_LADDER.body}</p>
+            {FINAL_CTA_LADDER.body && (
+              <p className="lead text-white/70 jp-break">{FINAL_CTA_LADDER.body}</p>
+            )}
           </div>
         </div>
 
