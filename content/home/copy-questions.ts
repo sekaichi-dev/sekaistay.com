@@ -264,7 +264,7 @@ export const RESULTS_PROOF = {
 
 export const TRUST_BASE = {
   eyebrow: 'Operational Trust',
-  headline: '言い切れることだけ、書いています。',
+  headline: '運用を任せる前に、知っておいてほしいこと。',
   items: [
     { primary: '住宅宿泊管理業', secondary: '国土交通大臣(01)第F05780号' },
     { primary: '対応エリア', secondary: '清掃パートナー確保済みエリアで全国対応（国内の民泊エリアの約85%をカバー）。事例の野尻湖=長野県もその一つ' },
@@ -276,8 +276,8 @@ export const TRUST_BASE = {
 } as const
 
 export const FAQ_ELEVEN = {
-  eyebrow: 'Questions 11+',
-  headline: 'よくある11問目以降。',
+  eyebrow: 'Common Questions',
+  headline: 'よく聞かれること。',
   items: [
     {
       q: '本当に8%＋月1万円以外、かからないんですか？',
@@ -307,12 +307,12 @@ export const FAQ_ELEVEN = {
 } as const
 
 export const FINAL_CTA_LADDER = {
-  eyebrow: 'Your Turn',
+  eyebrow: "Let's Begin",
   headline: {
-    line1: 'このページの10問、私たちはすべて即答しました。',
-    line2: '次は、あなたの物件について質問する番です。',
+    line1: 'あなたの物件のポテンシャル、',
+    line2: 'ここから一緒に引き出しましょう。',
   },
-  body: '「うちの物件、いくら稼げるようになる？」——その答えを、個別の数字でお返しします。見て、比べて、それから決めてください。',
+  body: '',
   tiers: [
     {
       time: '30秒',
