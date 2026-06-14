@@ -329,7 +329,7 @@ export default function ServicesPage() {
             {/* Centered: compact cost strip on top, simulator below */}
             <div className="max-w-3xl mx-auto mb-10">
               {/* Compact cost summary — 3 cells above the simulator */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-ivory/10 border border-ivory/10">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-ivory/10 border border-ivory/10 rounded-switch-lg overflow-hidden">
                 <div className="bg-ink px-5 py-5 md:px-6">
                   <p className="eyebrow-mono text-bright-teal mb-2.5 !text-[9.5px]">01 — Initial Cost</p>
                   <p className="font-sans font-light text-ivory leading-none">

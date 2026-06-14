@@ -153,7 +153,7 @@ export default function PricingPage() {
               毎月の基本料金・初期費用・実費・希望制の有料オプション。見積もりにない名目の請求はしません。
             </p>
 
-            <div className="grid md:grid-cols-2 gap-px bg-ivory/10 border border-ivory/10">
+            <div className="grid md:grid-cols-2 gap-px bg-ivory/10 border border-ivory/10 rounded-switch-lg overflow-hidden">
               {/* 01 — Monthly base */}
               <div className="bg-ink p-10 md:p-12">
                 <p className="eyebrow-mono text-ivory/50 mb-8">01 — 毎月の基本料金</p>
@@ -230,7 +230,7 @@ export default function PricingPage() {
                   <span className="font-sans text-[14px] text-ivory/40">optional</span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-px bg-ivory/10 border border-ivory/10 mb-6">
+                <div className="grid grid-cols-1 gap-px bg-ivory/10 border border-ivory/10 rounded-switch-lg overflow-hidden mb-6">
                   {PAID_OPTIONS.map((item, i) => (
                     <div key={i} className="bg-ink/60 px-5 py-3 flex items-baseline gap-4">
                       <span className="eyebrow-mono text-ivory/50 !text-[9px]">{String(i + 1).padStart(2, '0')}</span>

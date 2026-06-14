@@ -256,7 +256,7 @@ export default function AreaDetailPage({ params }: Props) {
               <span className="font-sans text-sekai-teal">成功する理由。</span>
             </h2>
 
-            <div className="bg-rule grid grid-cols-1 md:grid-cols-2 gap-px border border-rule">
+            <div className="bg-rule grid grid-cols-1 md:grid-cols-2 gap-px border border-rule rounded-switch-lg overflow-hidden">
               {area.highlights.map((highlight, i) => (
                 <div
                   key={i}
@@ -297,7 +297,7 @@ export default function AreaDetailPage({ params }: Props) {
               <span className="block font-sans text-bright-teal">収益シミュレーション</span>
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/10 border border-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/10 border border-white/10 rounded-t-switch-lg overflow-hidden">
               <div className="bg-switch-charcoal p-7 md:p-9">
                 <p className="eyebrow-mono text-bright-teal mb-3">Monthly Avg Revenue</p>
                 <p className="font-sans font-light text-[44px] md:text-[56px] text-white leading-none tabular-nums">
@@ -322,7 +322,7 @@ export default function AreaDetailPage({ params }: Props) {
             </div>
 
             {/* Savings Highlight */}
-            <div className="mt-px bg-bright-teal text-ink p-8 md:p-10">
+            <div className="mt-px bg-bright-teal text-ink p-8 md:p-10 rounded-b-switch-lg">
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
                   <p className="eyebrow-mono text-ink/70 mb-2">Annual Savings</p>
@@ -360,7 +360,7 @@ export default function AreaDetailPage({ params }: Props) {
               SEKAI STAYの
               <span className="font-sans text-sekai-teal">運用代行。</span>
             </h2>
-            <div className="bg-rule grid grid-cols-1 md:grid-cols-2 gap-px border border-rule">
+            <div className="bg-rule grid grid-cols-1 md:grid-cols-2 gap-px border border-rule rounded-switch-lg overflow-hidden">
               {services.map((service, i) => (
                 <div
                   key={i}

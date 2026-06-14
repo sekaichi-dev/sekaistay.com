@@ -264,7 +264,7 @@ export default function DashboardDemoPage() {
                 </div>
 
                 {/* KPI Ledger */}
-                <div className="bg-rule grid grid-cols-2 lg:grid-cols-4 gap-px border border-rule mb-10">
+                <div className="bg-rule grid grid-cols-2 lg:grid-cols-4 gap-px border border-rule rounded-switch-lg overflow-hidden mb-10">
                   <KpiCell
                     label="Monthly Revenue"
                     valueDisplay={fmtMan(property.monthlyRevenue)}
@@ -293,7 +293,7 @@ export default function DashboardDemoPage() {
                 </div>
 
                 {/* Chart + Heatmap */}
-                <div className="grid lg:grid-cols-[1.4fr_1fr] gap-px bg-rule border border-rule mb-10">
+                <div className="grid lg:grid-cols-[1.4fr_1fr] gap-px bg-rule border border-rule rounded-switch-lg overflow-hidden mb-10">
                   {/* Chart panel */}
                   <div className="bg-paper p-6 md:p-7">
                     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6 pb-4 border-b border-rule">
@@ -400,7 +400,7 @@ export default function DashboardDemoPage() {
                 </div>
 
                 {/* Bookings + Actions */}
-                <div className="grid lg:grid-cols-2 gap-px bg-rule border border-rule">
+                <div className="grid lg:grid-cols-2 gap-px bg-rule border border-rule rounded-switch-lg overflow-hidden">
                   {/* Upcoming bookings */}
                   <div className="bg-paper p-6 md:p-7">
                     <div className="flex items-center justify-between pb-4 border-b border-rule mb-5">
@@ -484,7 +484,7 @@ export default function DashboardDemoPage() {
               運用の裏側をガラス張りにする、オーナーダッシュボードの機能群。
             </p>
 
-            <div className="bg-rule grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px border border-rule">
+            <div className="bg-rule grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px border border-rule rounded-switch-lg overflow-hidden">
               {[
                 { t: 'リアルタイム売上', d: '今月の売上・前月比・年間累計を、PC/スマホでいつでも確認。' },
                 { t: '稼働率トラッキング', d: '日別・週別・月別の稼働状況を可視化。空室期間も一目で把握。' },
