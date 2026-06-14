@@ -15,6 +15,9 @@ export default function ServiceBuckets() {
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-end">
             <h2 className="heading-hero text-ink jp-keep">
               <JP>{SERVICE_BUCKETS.headline.line1}</JP>
+              {SERVICE_BUCKETS.headline.line2 && (
+                <span className="block text-sekai-teal"><JP>{SERVICE_BUCKETS.headline.line2}</JP></span>
+              )}
             </h2>
             <p className="lead text-dark-gray jp-break">{SERVICE_BUCKETS.body}</p>
           </div>
