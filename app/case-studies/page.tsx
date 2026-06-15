@@ -12,7 +12,7 @@ import { IconArrowRight } from '@/components/Icons'
 
 export const metadata: Metadata = {
   title: '実績・対応エリア | SEKAI STAY',
-  description: '民泊運営代行の導入事例と全国対応エリア。京都古民家から高級ヴィラ、都心アパートまで、SEKAI STAYが実現した収益向上・稼働率改善の数字と、全国の運用実績をご確認ください。',
+  description: '民泊運営代行の導入事例と全国対応エリア。湖畔ヴィラから山岳ロッジ、サウナ付きリゾートまで、SEKAI STAYが実現した収益向上・稼働率改善の数字と、全国の運用実績をご確認ください。',
   openGraph: {
     title: '実績・対応エリア | SEKAI STAY',
     description: '数字で見るオーナーの成果と、全国の対応エリア。運営代行で実現した収益向上をご確認ください。',

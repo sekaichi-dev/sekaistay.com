@@ -30,7 +30,7 @@ const caseStudies: CaseStudy[] = [
     name: "The Lake House Nojiriko",
     location: "長野県信濃町",
     type: "一棟貸し湖畔ヴィラ",
-    image: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&h=500&fit=crop&q=80&auto=format",
+    image: "/images/switch/property-villa.jpg",
     description:
       "野尻湖の湖畔に立つプライベートヴィラ。1日1組限定で、フィンランド式サウナ、ジャグジー、プライベート桟橋を完備。4ベッドルームで1泊12万円からの高級物件。Booking.com評価は満点の10点満点を獲得し、民泊旅館簡易宿所業組合主催「BEST OF SAUNA STAY 2026」サウナ付き部門で全国第一位に選出されました。",
     highlights: [
@@ -60,7 +60,7 @@ const caseStudies: CaseStudy[] = [
     name: "The Lakeside Inn Nojiriko",
     location: "長野県信濃町",
     type: "トレーラーハウス複合施設",
-    image: "https://images.unsplash.com/photo-1587061949409-02df41d5e562?w=800&h=500&fit=crop&q=80&auto=format",
+    image: "/images/switch/property-cabin.jpg",
     description:
       "野尻湖畔に4棟のトレーラーハウスを展開するユニークな宿泊施設。各棟が独立した客室として機能し、グループ旅行や企業研修での利用が多い。湖畔の自然を活かしたアウトドア体験が特徴。",
     highlights: [
@@ -85,28 +85,23 @@ const caseStudies: CaseStudy[] = [
     ],
   },
   {
-    id: "kyoto-machiya",
-    name: "京都町家",
-    location: "京都市",
-    type: "一棟貸し町家",
-    image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&h=500&fit=crop&q=80&auto=format",
+    id: "mountain-villa-niseko",
+    name: "Mountain Villa Niseko",
+    location: "北海道ニセコ",
+    type: "一棟貸し山岳ロッジ",
+    image: "/images/switch/property-niseko.jpg",
     description:
-      "京都の伝統的な町家をリノベーションした一棟貸し物件。古都の文化と現代の快適さが融合した空間で、インバウンド層を中心に高い需要がある。季節による宿泊ニーズの変動が大きい。",
+      "ゲレンデから車で10分の一棟貸しロッジ。冬のスキーシーズンを中心に、インバウンドのグループ需要が高い物件。季節変動の大きい立地で、ピーク期の収益最大化と通年の稼働づくりを両立しています。",
     highlights: [
-      "季節別の動的プライシング戦略により、閑散期の赤字を解消",
-      "多言語対応とOTA最適化で、外国人客の予約率を35%から68%に飛躍",
-      "Airbnb内での検索順位改善とリスティング写真刷新で問い合わせ2倍化",
-      "ゲスト体験レビューの詳細分析から、改善施策を実施し評価を4.7に向上",
+      "ピークシーズンの売上を+22%改善",
+      "レビュー4.95（20件）の高評価を維持",
+      "インバウンドのスキー客向けに多言語対応とOTA最適化を強化",
+      "季節変動に合わせた動的プライシングで収益を最大化",
     ],
     results: {
-      occupancyBefore: "61%",
-      occupancyAfter: "79%",
-      revenueBefore: "750,000円/月",
-      revenueAfter: "1,050,000円/月",
-      reviewScore: "4.7",
-      superhost: true,
+      reviewScore: "4.95",
     },
-    tags: ["一棟貸し", "町家", "京都", "インバウンド対応", "文化体験"],
+    tags: ["一棟貸し", "スキーリゾート", "山岳ロッジ", "インバウンド対応"],
   },
   {
     id: "atami-white-house",
@@ -282,15 +277,16 @@ export function getCaseStudiesByLocation(location: string): CaseStudy[] {
  * Calculate average metrics across all case studies
  */
 export function getAverageMetrics() {
-  const results = caseStudies.map((study) => ({
-    occupancyBefore: parseFloat(study.results.occupancyBefore || "0"),
-    occupancyAfter: parseFloat(study.results.occupancyAfter || "0"),
-  }));
-
+  // 稼働率データがある事例のみで平均（欠落を0扱いして下振れさせない）
+  const withOccupancy = caseStudies.filter(
+    (s) => s.results.occupancyBefore && s.results.occupancyAfter
+  );
   const avgOccupancyBefore =
-    results.reduce((sum, r) => sum + r.occupancyBefore, 0) / results.length;
+    withOccupancy.reduce((sum, s) => sum + parseFloat(s.results.occupancyBefore || "0"), 0) /
+    withOccupancy.length;
   const avgOccupancyAfter =
-    results.reduce((sum, r) => sum + r.occupancyAfter, 0) / results.length;
+    withOccupancy.reduce((sum, s) => sum + parseFloat(s.results.occupancyAfter || "0"), 0) /
+    withOccupancy.length;
 
   return {
     averageOccupancyBefore: avgOccupancyBefore.toFixed(1) + "%",
