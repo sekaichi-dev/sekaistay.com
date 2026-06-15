@@ -236,14 +236,14 @@ export const RESULTS_PROOF = {
       body: 'この物件「Lake House Nojiriko」は「BEST OF SAUNA STAY 2026」サウナ付き部門で全国1位に選ばれました。',
     },
     {
-      effectHeadline: '稼働率 52% → 75%',
+      effectHeadline: 'レビュー 19件 → 61件',
       title: 'The Lakeside Inn Nojiriko',
       tag: 'トレーラーハウス複合施設',
       metrics: [
-        { label: '稼働率', from: '52%', to: '75%', delta: '約1.4倍', percent: 75 },
-        { label: '月間売上', from: '62万円', to: '98万円', delta: '+58%', percent: 86 },
+        { label: 'レビュー数', from: '19件', to: '61件', delta: '約3倍', percent: 85 },
+        { label: 'レビュー評価', from: '', to: '4.97', delta: '61件の平均', percent: 99 },
       ],
-      body: '野尻湖畔に4棟のトレーラーハウス。グループ予約に特化した運用で、稼働と売上を伸ばしました。',
+      body: '野尻湖畔に4棟のトレーラーハウス。グループ予約に特化した運用で、レビュー数を3倍に伸ばしました。',
     },
     {
       effectHeadline: 'レビュー 4.95 / 5',
