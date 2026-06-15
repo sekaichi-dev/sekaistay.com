@@ -29,7 +29,7 @@ export default function SwitchHero({
         label: "無料で物件診断を受ける",
         bridgeCopy: (
           <>
-            入力3分・無料・営業連絡なし
+            入力3分・無料
           </>
         ),
         dataCta: "audit",
