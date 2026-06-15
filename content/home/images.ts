@@ -58,18 +58,18 @@ export const IMG = {
     alt: 'クリエイティブ制作の現場',
   },
 
-  // ─── Results cases ────────────────────────
+  // ─── Results cases（自社管理物件の実写真。/case-studies 先頭3件と一致） ──
   caseNojiri: {
-    src: UNSPLASH('1528114039593-4366cc08227d', 800, 500),
-    alt: '野尻湖エリアの貸別荘',
+    src: '/images/switch/property-villa.jpg',
+    alt: 'Lake House Nojiriko（野尻湖の貸別荘）',
   },
   caseKyoto: {
-    src: UNSPLASH('1540518614846-7eded433c457', 800, 500),
-    alt: '京都エリアの宿泊物件',
+    src: '/images/switch/property-cabin.jpg',
+    alt: 'The Lakeside Inn Nojiriko（トレーラーハウス複合施設）',
   },
   caseNew: {
-    src: UNSPLASH('1582719478250-c89cae4dc85b', 800, 500),
-    alt: '立ち上げ初期の新規物件',
+    src: '/images/switch/property-niseko.jpg',
+    alt: 'Mountain Villa Niseko（一棟貸し山岳ロッジ）',
   },
 
   // ─── Final CTA ────────────────────────────
