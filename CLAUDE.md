@@ -27,6 +27,10 @@
   - `forwardLeadToSalesPortal` → sekaistay-sales-portal (公開エンドポイント)
 - HubSpot は不採用（2026-05-09 確定・自社CRMへ移行）
 
+### デザイン実装ルール（リニューアル中・必読）
+- **デザイン改修・新規セクションは必ず `docs/DESIGN_PARTS.md` のパーツから組む**（`components/ds/` の SectionHead / EditorialList / EditorialRow / CtaBand / GhostWordmark / OtaMarquee、既存共有の ContactSense / motion 等）。該当が無い構成は最も近いベースパーツを選び、派生ルールを `DESIGN_PARTS.md` に追記してから実装する。
+- 基準ページは `/services`。原則は `docs/DESIGN.md` / `docs/CREATIVE_GUIDE.md`。sense-trust 踏襲・ティール/アイボリー・Notoゴシック（セリフ不使用）・赤/オレンジ不使用・ピクトグラム多用しない（番号＋罫線主体）。
+
 ### SEO・規約
 - メタタグ・構造化データは絶対に壊さない（`SEO_AUDIT_REPORT.md` 参照）
 - Tailwindのデザイントークンは `SEKAI_STAY_Creative_Guide.md` に定義済み

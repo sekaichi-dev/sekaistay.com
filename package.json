@@ -8,9 +8,12 @@
     "start": "next start"
   },
   "dependencies": {
+    "@splidejs/react-splide": "^0.7.12",
+    "@splidejs/splide": "^4.1.4",
     "@supabase/supabase-js": "^2.105.3",
     "dotenv": "^17.4.2",
-    "next": "14.2.0",
+    "gsap": "^3.15.0",
+    "next": "^14.2.35",
     "react": "^18",
     "react-dom": "^18",
     "vercel": "^51.6.1"

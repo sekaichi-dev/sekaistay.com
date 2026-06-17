@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import { Noto_Sans_JP } from 'next/font/google'
+import { Noto_Sans_JP, Archivo, Space_Mono, Yuji_Boku } from 'next/font/google'
 import Script from 'next/script'
 import { Suspense } from 'react'
 import AnalyticsRouteTracker from '@/components/AnalyticsRouteTracker'
+import AuditModalProvider from '@/components/audit/AuditModalProvider'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -26,6 +27,29 @@ const notoSansJP = Noto_Sans_JP({
   variable: '--font-noto-sans-jp',
   preload: true,
   adjustFontFallback: true,
+})
+
+// DESIGN.md 準拠の個性的ラテン書体:
+//   Archivo    = 英見出し・数字・統計（“格”を出す洗練グロテスク。旧 Space Grotesk から変更）
+//   Space Mono = 英ラベル・セクション番号（大文字トラッキングの編集タグ）
+const grotesk = Archivo({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  display: 'swap',
+  variable: '--font-grotesk',
+})
+const spaceMono = Space_Mono({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  display: 'swap',
+  variable: '--font-space-mono',
+})
+// 筆書道スローガン用（sense-trust 参考の導入スローガン）
+const yujiBoku = Yuji_Boku({
+  weight: '400',
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-brush',
 })
 
 const SITE_URL = 'https://sekaistay.com'
@@ -122,7 +146,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja" className={notoSansJP.variable}>
+    <html lang="ja" className={`${notoSansJP.variable} ${grotesk.variable} ${spaceMono.variable} ${yujiBoku.variable}`}>
       <head>
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
@@ -204,7 +228,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Suspense fallback={null}>
           <AnalyticsRouteTracker />
         </Suspense>
-        {children}
+        <AuditModalProvider>{children}</AuditModalProvider>
       </body>
     </html>
   )

@@ -3,11 +3,34 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import type { BlogPostSummary } from '@/lib/blog'
-import { IMG } from '@/lib/images'
 
 interface Props {
   posts: BlogPostSummary[]
   categories: string[]
+}
+
+/* サムネイル — 画像が無い／読み込み失敗した記事はグレー地＋SEKAI STAYロゴのプレースホルダ */
+function CardThumb({ src, alt }: { src?: string; alt: string }) {
+  const [failed, setFailed] = useState(false)
+  return (
+    <div className="aspect-[1.618/1] overflow-hidden">
+      {src && !failed ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={alt}
+          onError={() => setFailed(true)}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          loading="lazy"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-rule">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/switch/logo-lockup.png" alt="SEKAI STAY" className="h-auto w-[46%] max-w-[200px] opacity-40" loading="lazy" />
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function BlogGrid({ posts, categories }: Props) {
@@ -29,100 +52,78 @@ export default function BlogGrid({ posts, categories }: Props) {
 
   return (
     <>
-      {/* Editorial tag rail */}
+      {/* カテゴリフィルター（pill 形式） */}
       {categories.length > 0 && (
-        <div className="mb-12 md:mb-16">
-          <div className="flex items-center gap-3 mb-5">
-            <span className="eyebrow-mono text-mid-gray">§ Categories</span>
-            <span className="h-px bg-rule flex-1" />
-          </div>
-          <div className="flex gap-0 overflow-x-auto border-b border-rule">
-            <button
-              onClick={() => setActive('all')}
-              className={`relative inline-flex items-baseline gap-2 text-[13px] md:text-[14px] px-4 md:px-5 py-3 md:py-4 whitespace-nowrap flex-shrink-0 transition font-sans ${
-                active === 'all' ? 'text-ink' : 'text-mid-gray hover:text-ink'
-              }`}
-            >
-              <span>すべて</span>
-              <span className="eyebrow-mono text-mid-gray/80">{String(posts.length).padStart(2, '0')}</span>
-              {active === 'all' && (
-                <span className="absolute left-4 right-4 bottom-0 h-[2px] bg-sekai-teal" />
-              )}
-            </button>
-            {categories.map(cat => {
-              const isActive = active === cat
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setActive(cat)}
-                  className={`relative inline-flex items-baseline gap-2 text-[13px] md:text-[14px] px-4 md:px-5 py-3 md:py-4 whitespace-nowrap flex-shrink-0 transition font-sans ${
-                    isActive ? 'text-ink' : 'text-mid-gray hover:text-ink'
-                  }`}
-                >
-                  <span>{cat}</span>
-                  <span className="eyebrow-mono text-mid-gray/80">{String(counts[cat] || 0).padStart(2, '0')}</span>
-                  {isActive && (
-                    <span className="absolute left-4 right-4 bottom-0 h-[2px] bg-sekai-teal" />
-                  )}
-                </button>
-              )
-            })}
-          </div>
+        <div className="mb-12 flex flex-wrap gap-2.5 md:mb-16">
+          <button
+            onClick={() => setActive('all')}
+            className={`inline-flex items-baseline gap-2 rounded-full px-5 py-2.5 text-[14px] font-bold transition ${
+              active === 'all'
+                ? 'bg-navy text-white'
+                : 'border border-rule bg-paper text-ink/70 hover:border-sekai-teal hover:text-sekai-teal'
+            }`}
+          >
+            <span>すべて</span>
+            <span className="font-grotesk text-[12px] opacity-70">{String(posts.length).padStart(2, '0')}</span>
+          </button>
+          {categories.map(cat => {
+            const isActive = active === cat
+            return (
+              <button
+                key={cat}
+                onClick={() => setActive(cat)}
+                className={`inline-flex items-baseline gap-2 rounded-full px-5 py-2.5 text-[14px] font-bold transition ${
+                  isActive
+                    ? 'bg-navy text-white'
+                    : 'border border-rule bg-paper text-ink/70 hover:border-sekai-teal hover:text-sekai-teal'
+                }`}
+              >
+                <span>{cat}</span>
+                <span className="font-grotesk text-[12px] opacity-70">{String(counts[cat] || 0).padStart(2, '0')}</span>
+              </button>
+            )
+          })}
         </div>
       )}
 
-      {/* Posts grid */}
+      {/* 記事一覧 */}
       {filtered.length === 0 ? (
-        <div className="text-center py-24">
-          <p className="font-sans text-body text-mid-gray">該当する記事がありません。</p>
+        <div className="py-24 text-center">
+          <p className="text-[15px] text-ink/60">該当する記事がありません。</p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-rule border border-rule rounded-switch-lg overflow-hidden">
-          {filtered.map((post, i) => (
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((post) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
-              className="block bg-paper group transition hover:bg-mist"
+              className="group block overflow-hidden rounded-lg border border-rule bg-paper transition hover:-translate-y-0.5"
             >
-              <div className="aspect-[16/10] overflow-hidden bg-mist relative">
-                <img
-                  src={post.image || IMG.blogPlaceholder}
-                  alt={post.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute top-4 left-4 bg-ivory/95 backdrop-blur-sm px-3 py-1 border border-rule">
-                  <p className="eyebrow-mono text-ink">№ {String(i + 1).padStart(3, '0')}</p>
+              <CardThumb src={post.image} alt={post.title} />
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <p className="text-[12px] font-bold tracking-[0.12em] text-sekai-teal">{post.category}</p>
+                  <p className="font-grotesk text-[13px] text-ink/50">{post.date}</p>
                 </div>
-              </div>
-              <div className="p-6 md:p-7">
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-rule">
-                  <p className="eyebrow text-sekai-teal">{post.category}</p>
-                  <p className="eyebrow-mono text-mid-gray">{post.date}</p>
-                </div>
-                <h2 className="font-sans font-medium text-[16px] md:text-[17px] text-ink leading-snug mb-3 line-clamp-3 group-hover:text-sekai-teal transition">
+                <h2 className="mt-3 text-[1.125rem] font-bold leading-snug text-ink line-clamp-3 transition group-hover:opacity-70">
                   {post.title}
                 </h2>
-                <p className="font-sans text-caption text-dark-gray line-clamp-2 leading-[1.85]">
+                <p className="mt-3 text-[13px] leading-[1.85] text-ink/65 line-clamp-2">
                   {post.description}
                 </p>
-                <div className="mt-5 flex items-center gap-2 text-sekai-teal">
-                  <span className="eyebrow-mono">Read</span>
-                  <span className="block w-6 h-px bg-sekai-teal group-hover:w-10 transition-[width]" />
-                </div>
               </div>
             </Link>
           ))}
         </div>
       )}
 
-      {/* Result count */}
-      <p className="mt-8 font-sans text-caption text-mid-gray text-center">
+      {/* 件数表示 */}
+      <p className="mt-10 text-center text-[13px] text-ink/55">
         {filtered.length}件の記事を表示中
         {active !== 'all' && (
           <button
             onClick={() => setActive('all')}
-            className="ml-3 text-sekai-teal hover:text-ink transition font-normal border-b border-sekai-teal pb-0.5"
+            className="ml-3 font-bold text-sekai-teal transition hover:opacity-70"
           >
             すべて表示
           </button>

@@ -1,10 +1,18 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import Header from '@/components/Header'
-import Breadcrumb from '@/components/Breadcrumb'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
-import { IconArrowRight } from '@/components/Icons'
+import Reveal from '@/components/motion/Reveal'
+import SectionHead from '@/components/ds/SectionHead'
+import EditorialList from '@/components/ds/EditorialList'
+import SlideCarousel from '@/components/ds/SlideCarousel'
+import CountUp from '@/components/switch/deco/CountUp'
+import GhostWordmark from '@/components/ds/GhostWordmark'
+import SavingsSimulator from '@/components/services/SavingsSimulator'
+import ServicesFaq from '@/components/services/ServicesFaq'
+import RelatedLinks from '@/components/ds/RelatedLinks'
+import AuditLink from '@/components/audit/AuditLink'
+import { ContactSense } from '@/components/home/SenseSections'
 
 export const metadata: Metadata = {
   title: '料金',
@@ -29,47 +37,45 @@ export const metadata: Metadata = {
 }
 
 const INCLUDES = [
-  'OTA掲載・リスティング最適化',
-  'リアルタイムダッシュボード（24時間・スマホ）',
-  '24時間・4言語ゲスト対応',
-  'ダイナミックプライシング',
-  '清掃手配・品質管理',
-  '自動返信・定型メッセージ設定',
-  '法令対応サポート',
-  'レビュー管理・改善',
-  '専任スタッフ（3ヶ月毎・オンライン定例ミーティング）',
-  '緊急時対応（24時間）',
+  { t: 'OTA掲載・リスティング最適化', img: '/images/included/INCLUDED1.png' },
+  { t: 'リアルタイムダッシュボード（24時間・スマホ）', img: '/images/included/INCLUDED2.png' },
+  { t: '24時間・4言語ゲスト対応', img: '/images/included/INCLUDED3.png' },
+  { t: 'データに基づく価格調整', img: '/images/included/INCLUDED4.png' },
+  { t: '清掃手配・品質管理', img: '/images/included/INCLUDED5.png' },
+  { t: '自動返信・定型メッセージ設定', img: '/images/included/INCLUDED6.png' },
+  { t: '法令対応サポート', img: '/images/included/INCLUDED7-2.png' },
+  { t: 'レビュー管理・改善', img: '/images/included/INCLUDED8.png' },
+  { t: '専任スタッフ（3ヶ月毎・オンライン定例）', img: '/images/included/INCLUDED9.png' },
+  { t: '緊急時対応（24時間）', img: '/images/included/INCLUDED10.png' },
 ]
 
-const PAID_OPTIONS = [
-  'プロカメラマンによる物件撮影',
-  '家具家電の購入・設置代行',
-  '民泊・旅館業の許認可申請代行',
-  'スマートロック導入',
-  '一休.com・じゃらん 追加掲載',
-  '直接予約サイト構築',
+const EXTRAS = [
+  { no: '01', title: '初期費用', body: '乗り換えは一律10万円、新規立ち上げは20万円から対応。移行作業・リスティング最適化（多言語）・運用セットアップを含みます。' },
+  { no: '02', title: '有料オプション（希望制）', body: '①物件撮影 ②インテリアコーディネート ③許認可申請代行 ④スマートロック導入 ⑤一休.com・じゃらん追加掲載 は、事前見積もりのうえ、物件のサイズなどに応じて承ります。' },
+  { no: '03', title: '民泊保険・火災保険の加入', body: '我々は火災保険・民泊保険への加入をオーナー様にお願いしております。きちんと訴求しない民泊運用代行業者も一部ありますが、なにかあったときに大切な物件を守るためにも、弊社としては推奨いたします。（保険の紹介手数料などをいただくことは一切ございません。）' },
+]
+
+const TERMS_PANELS = [
+  { no: '01', title: '最低契約期間が6ヶ月の理由', body: '価格調整と掲載最適化の効果が数字に表れるまで、季節をまたいだ運用期間が必要だからです。短期で判断せず、稼働率と単価を着実に伸ばすための期間として設けています。その上で任せられないと判断された場合には、いつでも解約が可能です。' },
+  { no: '02', title: '解約の条件は最初に開示', body: '7ヶ月目以降の解約金は¥0、解約のご連絡は3ヶ月前まで。6ヶ月未満で途中解約する場合のみ解約手数料20万円をいただきます。この条件も契約前にすべてお伝えします。' },
 ]
 
 const PRICING_FAQ = [
   {
-    q: 'SEKAI STAYの民泊運用代行の料金は？',
+    q: 'SEKAI STAYの民泊運営代行の料金は？',
     a: '毎月の基本料金は、変動運営委託費（売上の8%）＋固定管理費10,000円/物件/月です。初期費用は乗り換えが100,000円/物件、新規立ち上げが200,000円〜。このほかは消耗品などの実費（実費＋20%）と、ご希望のときだけの有料オプションのみで、かかりうる費用は契約前にすべて金額つきで提示します。',
   },
   {
     q: '他社からの乗り換えに費用はかかりますか？',
-    a: '初期費用として100,000円/物件をいただきます。移行作業に加えて、AI画像加工とリスティング最適化（多言語）まで含む金額です。Airbnb・Booking.com等のOTA引き継ぎは並走で進めるため収益の空白期間はなく、移行は最短2週間で完了します。',
-  },
-  {
-    q: '他社は手数料15〜25%なのに、なぜ8%なのですか？',
-    a: '自社運営のオペレーション基盤と、清掃パートナーネットワーク、多言語ゲスト対応センターを内製化することで、一般的な代行業者の運営コストを大幅に削減しているためです。その差分をオーナー様に還元しています。',
+    a: '初期費用として100,000円/物件をいただきます。移行作業に加えて、リスティング最適化（多言語）まで含む金額です。OTAの引き継ぎは並走で進めるため収益の空白期間はなく、移行は最短2週間で完了します。',
   },
   {
     q: '解約金はかかりますか？',
-    a: '最低契約期間は6ヶ月です。7ヶ月目以降の解約金は¥0で、いつでも解約できます（解約のご連絡は3ヶ月前までにお願いします）。6ヶ月未満で途中解約する場合のみ、解約手数料200,000円をいただきます。この条件も、隠さず最初にお伝えします。',
+    a: '最低契約期間は6ヶ月です。7ヶ月目以降の解約金は¥0で、いつでも解約できます（解約のご連絡は3ヶ月前までにお願いします）。6ヶ月未満で途中解約する場合のみ、解約手数料20万円をいただきます。この条件も、最初にお伝えします。',
   },
   {
     q: '宿泊予約がない月も費用はかかりますか？',
-    a: '固定管理費（10,000円/物件）のみ発生し、変動運営委託費（8%）は売上連動のため0円です。閑散期の固定費は1物件で月10,000円に限定されます。',
+    a: '固定管理費（10,000円/物件）のみ発生し、変動運営委託費（8%）は売上連動のため0円です。閑散期の固定費は1物件で月10,000円に収まります。',
   },
   {
     q: '清掃費や備品補充は別途請求されますか？',
@@ -81,293 +87,183 @@ const PRICING_FAQ = [
   },
 ]
 
-const COMPARE = [
-  { label: '手数料率', us: '8%', others: '15〜25%', highlight: true },
-  { label: '月額固定費', us: '¥10,000/物件', others: '¥15,000〜30,000', highlight: false },
-  { label: '初期費用', us: '¥100,000〜', others: '¥50,000〜200,000', highlight: false },
-  { label: '解約金', us: '7ヶ月目以降 ¥0 ※', others: '¥30,000〜100,000', highlight: true },
-  { label: '多言語対応', us: '4言語', others: '日英のみが多い', highlight: false },
-  { label: '運営の見える化', us: 'リアルタイムダッシュボード', others: '月次レポート or なし', highlight: true },
-  { label: 'OTA対応数', us: '主要5サイト+', others: 'Airbnbのみが多い', highlight: false },
-  { label: 'ホストレビュー平均', us: '4.8 / 5.0 ※', others: '非公開が多い', highlight: true },
-]
-
 export default function PricingPage() {
   return (
     <>
       <Header />
-      <Breadcrumb items={[{ label: '料金' }]} />
       <FloatingCTA />
-      <main className="bg-ivory">
-        {/* Hero */}
-        <section className="relative bg-switch-charcoal text-white overflow-hidden">
-          <div aria-hidden className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }} />
-          <div className="relative container-edit section-xl">
-            <div className="flex items-center gap-4 mb-10">
-              <span className="w-6 h-px bg-bright-teal" />
-              <span className="eyebrow !text-bright-teal">Pricing · The Clean Math</span>
+      <main>
+        {/* 1. Hero（ivory）— SectionHead(h1)＋GhostWordmark（他ページとサイズ統一） */}
+        <section className="relative w-full overflow-hidden bg-ivory section-hero pt-28 sm:pt-32">
+          <GhostWordmark />
+          <div className="relative z-10 container-edit">
+            <SectionHead
+              as="h1"
+              hero
+              en="PRICING"
+              sub="民泊運営代行の料金プラン"
+              lead="毎月の基本料金は、売上の8%＋月1万円/物件。初期費用・実費・希望制の有料オプションまで、かかりうる費用をこのページですべて開示します。"
+            />
+          </div>
+        </section>
+
+        {/* 2. 料金プラン（navy）— /services PRICE と同型：巨大8%ロックアップ＋¥0内訳帯 */}
+        <section className="w-full bg-navy section-2xl text-white">
+          <div className="container-edit">
+            <SectionHead light en="PLAN" sub="料金はたったひとつだけ" />
+
+            {/* 価格ロックアップ：巨大8% を主役に、右に補足＋CTA を収める */}
+            <div className="mt-12 flex flex-col gap-10 sm:mt-16 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+              <Reveal as="div" className="flex flex-wrap items-end gap-x-6 gap-y-3">
+                <CountUp
+                  target={8}
+                  suffix="%"
+                  duration={1600}
+                  className="font-grotesk text-[clamp(6rem,23vw,15rem)] font-bold leading-[0.72] tracking-[-0.05em] text-white tabular-nums"
+                />
+                <div className="mb-2 sm:mb-3">
+                  <p className="text-[clamp(1.25rem,2.6vw,1.875rem)] font-bold text-white">＋ 月額 ¥10,000 ／ 物件</p>
+                  <p className="mt-2 text-[14px] font-bold text-white/55">これ以外の費用は、いただきません。</p>
+                </div>
+              </Reveal>
+              <Reveal as="div" className="shrink-0">
+                <AuditLink
+                  data-cta="audit"
+                  data-cta-label="pricing-plan"
+                  className="btn btn-cta group !rounded-full px-9"
+                >
+                  無料で収益診断を受ける
+                  <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </AuditLink>
+              </Reveal>
             </div>
-            <div className="grid lg:grid-cols-[0.6fr_0.4fr] gap-10 lg:gap-20 items-end">
-              <h1 className="heading-display text-white jp-keep">
-                運営代行の料金、
-                <br />
-                <span className="font-sans font-light text-bright-teal">
-                  ぜんぶ出します。
+
+            <Reveal as="div">
+              <p className="mt-10 max-w-3xl text-[15px] leading-[1.95] text-white/80 sm:text-[16px]">
+                SEKAI STAYの料金は「売上の8% ＋ ¥10,000/物件/月」のみ。解約金・広告費・レポート作成費など、運営に関わる費用はすべて¥0です。清掃費は別途かかりますが、ゲストにご請求するため、オーナー様のご負担は一切発生しません。
+              </p>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* 3. 含まれるもの／外でかかる費用（paper）— EditorialList */}
+        <section className="w-full bg-paper section-2xl">
+          <div className="container-edit">
+            <SectionHead
+              en="INCLUDED"
+              sub="基本料金で民泊運用の全てをまるっと対応"
+              lead="各種予約サイトの写真・文章の最適化、ゲスト対応、清掃手配、急なトラブル対応まで。運営はすべてSEKAI STAYが引き受けます。オーナー様は何もしなくて大丈夫。お任せいただいた瞬間から、運営は私たちの仕事です。"
+            />
+          </div>
+
+          {/* 含まれる業務 — 横スライドカルーセル（ACHIEVEMENT型） */}
+          <div className="container-edit mt-12 sm:mt-16">
+            <SlideCarousel
+              fullBleed
+              ariaLabel="基本料金に含まれる運用業務"
+              items={INCLUDES.map((i) => ({ image: i.img, alt: i.t, title: i.t, tag: '標準で含まれる' }))}
+            />
+          </div>
+
+          {/* 基本料金の外でかかりうる費用 — カード3枚（スライドなし） */}
+          <div className="container-edit mt-20 sm:mt-24">
+            <p className="text-[clamp(1.125rem,1.8vw,1.375rem)] font-bold text-ink">基本料金の外でかかりうる費用</p>
+            <div className="mt-8 grid gap-5 sm:mt-10 sm:gap-6 md:grid-cols-3">
+              {EXTRAS.map((x) => (
+                <div key={x.no} className={`flex flex-col rounded-[12px] bg-white p-7 ${x.no === '01' ? 'ring-2 ring-[#F2691B]' : 'ring-1 ring-rule'}`}>
+                  <span className={`font-grotesk text-[1.75rem] font-bold leading-none ${x.no === '01' ? 'text-[#F2691B]' : 'text-sekai-teal'}`}>{x.no}</span>
+                  <h3 className="mt-4 text-[1.0625rem] font-bold leading-snug text-ink">{x.title}</h3>
+                  <p className="mt-3 flex-1 text-[13.5px] leading-[1.9] text-ink/70">{x.body}</p>
+                  {x.no === '01' && (
+                    <AuditLink
+                      data-cta="audit"
+                      data-cta-label="pricing-campaign"
+                      className="group mt-5 block overflow-hidden rounded-[12px] bg-[#F2691B] px-5 py-4 text-white animate-[cta-pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] transition-transform hover:-translate-y-0.5 motion-reduce:animate-none"
+                    >
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-white">
+                        <span className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75 motion-reduce:hidden" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                        </span>
+                        8月中のお問い合わせ限定キャンペーン
+                      </span>
+                      <p className="mt-2 flex items-baseline gap-2 font-bold text-white">
+                        乗り換え初期費用
+                        <span className="text-[14px] text-white/60 line-through">¥100,000</span>
+                        <span className="font-grotesk text-[2rem] leading-none text-white">¥0</span>
+                      </p>
+                      <p className="mt-1.5 text-[12px] leading-[1.7] text-white/85">
+                        通常一律10万円の初期費用を、今月中にお問い合わせいただいたオーナー様は無料に。
+                      </p>
+                      <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-bold text-white">
+                        このまま無料で収益診断を受ける
+                        <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </span>
+                    </AuditLink>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="mt-8 max-w-2xl text-[14px] leading-[1.95] text-ink/60">
+              見積もりにない名目の請求はしません。かかりうる費用は、すべて契約前に金額つきでお渡しします。
+            </p>
+          </div>
+        </section>
+
+        {/* 4. HOW MUCH? — かんたん収益試算（ivory・/services と共通） */}
+        <section className="w-full bg-ivory section-2xl">
+          <div className="container-edit">
+            <SectionHead
+              en="HOW MUCH?"
+              sub="30秒でかんたん収益試算"
+              lead="スライダーを動かすと、今の手数料との差額が年間・累計でわかります。30秒で、手取りがどう変わるかの目安をご確認ください。"
+            />
+            <Reveal as="div" className="mt-12 sm:mt-14">
+              <SavingsSimulator />
+            </Reveal>
+          </div>
+        </section>
+
+        {/* 4. 解約金・最低契約（navy）— ¥0 巨大数字 */}
+        <section className="w-full bg-navy section-2xl text-white">
+          <div className="container-edit">
+            <SectionHead light en="TERMS" sub="解約金と最低契約期間" />
+            <Reveal as="div" className="mt-12 sm:mt-16">
+              <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
+                <span className="font-grotesk text-[clamp(5rem,20vw,12rem)] font-bold leading-[0.8] tracking-[-0.04em] text-white">
+                  ¥0
                 </span>
-              </h1>
-              <p className="lead !text-white/75 jp-break">
-                毎月の基本料金は、売上の8%＋月1万円/物件。初期費用・実費・希望制の有料オプションまで、かかりうる費用をこのページですべて開示します。
+                <span className="mb-3 text-[clamp(1.125rem,2.4vw,1.625rem)] font-bold text-white">7ヶ月目以降の解約金</span>
+              </div>
+              <p className="mt-8 max-w-2xl text-[15px] leading-[1.95] text-white">
+                最低契約期間は6ヶ月です。7ヶ月目以降は、解約金なしでいつでもご解約いただけます。民泊運用代行業界では、長期の契約期間や高額な解約金が設定されているケースも少なくありません。私たちは、オーナー様ご自身が納得したうえで、民泊運用を続けられることが何より大切だと考えています。そのため、契約期間を必要以上に縛らず、安心して始めていただける形にしています。
               </p>
-            </div>
-
-            {/* Summary strip */}
-            <div className="mt-14 bg-white/5 border border-white/15 rounded-switch-lg px-8 py-6">
-              <p className="text-body text-white/85 jp-break leading-relaxed">
-                一般的な運用代行の手数料 <span className="font-sans text-[20px] text-white/60">15〜25%</span> に対し、
-                SEKAI STAY は <span className="font-sans text-[24px] text-bright-teal">8%</span> ＋
-                月 <span className="font-sans text-[20px] text-bright-teal">¥10,000/物件</span>。
-                初期費用は乗り換え ¥100,000/物件・新規立ち上げ ¥200,000〜。
-                解約金は7ヶ月目以降 ¥0（最低契約期間6ヶ月・解約のご連絡は3ヶ月前まで）。
+              <p className="mt-4 max-w-2xl text-[13px] leading-[1.9] text-white/70">
+                ※解約をご希望の場合は、解約希望日の3ヶ月前までにご連絡ください。
               </p>
+            </Reveal>
+            <div className="mt-12">
+              <EditorialList light columns={2} items={TERMS_PANELS} />
             </div>
           </div>
         </section>
 
-        {/* Pricing panels — dark */}
-        <section className="bg-ink text-ivory relative overflow-hidden">
-          <div
-            aria-hidden
-            className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-40 blur-3xl"
-            style={{ background: 'radial-gradient(circle, rgba(22,123,129,0.5) 0%, transparent 70%)' }}
-          />
-          <div className="relative container-edit section-xl">
-            <div className="flex items-center gap-4 mb-10">
-              <span className="w-6 h-px bg-bright-teal" />
-              <span className="eyebrow !text-bright-teal">Cost Structure — Four Layers</span>
-            </div>
-            <h2 className="heading-hero !font-sans text-ivory jp-keep mb-6 max-w-3xl">
-              かかりうる費用は、
-              <span className="font-sans font-light text-bright-teal">この4層です。</span>
-            </h2>
-            <p className="text-body text-ivory/70 jp-break mb-14 max-w-2xl">
-              毎月の基本料金・初期費用・実費・希望制の有料オプション。見積もりにない名目の請求はしません。
-            </p>
+        {/* 料金FAQ */}
+        <ServicesFaq items={PRICING_FAQ} sub="料金についてよくある質問" />
 
-            <div className="grid md:grid-cols-2 gap-px bg-ivory/10 border border-ivory/10 rounded-switch-lg overflow-hidden">
-              {/* 01 — Monthly base */}
-              <div className="bg-ink p-10 md:p-12">
-                <p className="eyebrow-mono text-ivory/50 mb-8">01 — 毎月の基本料金</p>
-
-                <p className="eyebrow text-bright-teal mb-3">変動運営委託費</p>
-                <div className="flex items-baseline gap-2 mb-4">
-                  <span className="font-sans text-[14px] text-ivory">売上の</span>
-                  <span className="font-sans font-light text-[64px] md:text-[88px] text-ivory leading-none tabular-nums">8</span>
-                  <span className="font-sans font-light text-[36px] md:text-[44px] text-bright-teal">%</span>
-                </div>
-                <p className="font-sans text-[13px] text-ivory/60 mb-8">業界平均: 15〜25%</p>
-
-                <div className="pt-8 border-t border-ivory/10">
-                  <p className="eyebrow text-bright-teal mb-3">固定管理費</p>
-                  <p className="font-sans text-[24px] text-ivory">
-                    ¥10,000
-                    <span className="text-[14px] text-ivory/60 font-sans ml-2">/ 1物件 / 月</span>
-                  </p>
-                </div>
-              </div>
-
-              {/* 02 — Initial */}
-              <div className="bg-ink p-10 md:p-12">
-                <div className="flex items-start justify-between mb-8">
-                  <p className="eyebrow-mono text-ivory/50">02 — 初期費用（一度だけ）</p>
-                  <span className="font-sans text-[14px] text-ivory/40">one-time</span>
-                </div>
-
-                <div className="pb-8 border-b border-ivory/10 mb-8">
-                  <p className="eyebrow text-bright-teal mb-3">乗り換え（既存物件）</p>
-                  <p className="font-sans text-[24px] text-ivory mb-3">
-                    ¥100,000
-                    <span className="text-[14px] text-ivory/60 font-sans ml-2">/ 物件</span>
-                  </p>
-                  <p className="text-body-sm text-ivory/70 jp-break">
-                    移行作業・AI画像加工・リスティング最適化（多言語）まで含みます。移行中も予約は並走で引き継ぎ、収益の空白期間はありません。
-                  </p>
-                </div>
-
-                <p className="eyebrow text-bright-teal mb-3">新規立ち上げ</p>
-                <p className="font-sans text-[24px] text-ivory mb-3">
-                  ¥200,000〜
-                  <span className="text-[14px] text-ivory/60 font-sans ml-2">/ 物件</span>
-                </p>
-                <p className="text-body-sm text-ivory/70 jp-break">
-                  リスティング作成・ハウスマニュアル・運用セットアップ等込み。Wi-Fi・消防設備・家具家電など物件側の設備実費は別途です。
-                </p>
-              </div>
-
-              {/* 03 — Pass-through */}
-              <div className="bg-ink p-10 md:p-12">
-                <div className="flex items-start justify-between mb-8">
-                  <p className="eyebrow-mono text-ivory/50">03 — 実費</p>
-                  <span className="font-sans text-[14px] text-ivory/40">at cost</span>
-                </div>
-
-                <div className="pb-8 border-b border-ivory/10 mb-8">
-                  <p className="eyebrow text-bright-teal mb-3">消耗品（アメニティ等）</p>
-                  <p className="font-sans text-[20px] text-ivory mb-2">実費＋20% で精算</p>
-                  <p className="text-body-sm text-ivory/70 jp-break">補充のたびに金額を明示して精算します。</p>
-                </div>
-
-                <p className="eyebrow text-bright-teal mb-3">清掃費</p>
-                <p className="font-sans text-[20px] text-ivory mb-2">ゲストの宿泊料に含めて精算</p>
-                <p className="text-body-sm text-ivory/70 jp-break">
-                  オーナー様の月々の持ち出しはありません。清掃の手配・品質管理は基本料金に含まれます。
-                </p>
-              </div>
-
-              {/* 04 — Optional add-ons */}
-              <div className="bg-ink p-10 md:p-12">
-                <div className="flex items-start justify-between mb-8">
-                  <p className="eyebrow-mono text-ivory/50">04 — 有料オプション（希望制）</p>
-                  <span className="font-sans text-[14px] text-ivory/40">optional</span>
-                </div>
-
-                <div className="grid grid-cols-1 gap-px bg-ivory/10 border border-ivory/10 rounded-switch-lg overflow-hidden mb-6">
-                  {PAID_OPTIONS.map((item, i) => (
-                    <div key={i} className="bg-ink/60 px-5 py-3 flex items-baseline gap-4">
-                      <span className="eyebrow-mono text-ivory/50 !text-[9px]">{String(i + 1).padStart(2, '0')}</span>
-                      <p className="text-body-sm text-ivory">{item}</p>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-body-sm text-ivory/70 jp-break">
-                  ご希望のときだけ。すべて事前見積もり・後出しの請求はしません。
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-12 flex justify-center">
-              <Link
-                href="/services#pricing"
-                className="btn bg-ivory text-teal-ink hover:bg-bright-teal hover:text-ivory border-ivory"
-              >
-                収支シミュレーション
-                <IconArrowRight size={12} />
-              </Link>
-            </div>
+        {/* 関連ページ導線 */}
+        <section className="w-full bg-paper">
+          <div className="container-edit border-t border-rule py-14">
+            <RelatedLinks items={[{ href: '/services', label: 'サービス内容を見る' }, { href: '/case-studies', label: '実績・オーナーの声' }]} />
           </div>
         </section>
 
-        {/* Includes */}
-        <section className="bg-switch-cloud">
-          <div className="container-edit section-xl">
-            <div className="flex items-center gap-4 mb-10">
-              <span className="rule-teal-sm" />
-              <span className="eyebrow">What's Included</span>
-            </div>
-            <h2 className="heading-section text-ink jp-keep mb-14 max-w-2xl">
-              基本料金に含まれる
-              <span className="font-sans font-light text-sekai-teal">サービス。</span>
-            </h2>
-
-            <div className="grid sm:grid-cols-2 bg-switch-stone-border gap-px border border-switch-stone-border rounded-switch-lg overflow-hidden shadow-switch-card">
-              {INCLUDES.map((item, i) => (
-                <div key={i} className="bg-white px-6 py-7 flex items-baseline gap-5">
-                  <span className="font-sans font-light text-[28px] text-sekai-teal leading-none tabular-nums flex-shrink-0">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span className="font-sans text-[15px] md:text-[16px] text-ink">{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Comparison */}
-        <section className="bg-switch-cloud">
-          <div className="container-edit section-xl">
-            <div className="flex items-center gap-4 mb-10">
-              <span className="rule-teal-sm" />
-              <span className="eyebrow">Side by Side</span>
-            </div>
-            <h2 className="heading-section text-ink jp-keep mb-14 max-w-2xl">
-              他社との
-              <span className="font-sans font-light text-sekai-teal">比較。</span>
-            </h2>
-
-            <div className="bg-white border border-switch-stone-border rounded-switch-lg overflow-hidden shadow-switch-card">
-              <div className="grid grid-cols-3 border-b border-rule">
-                <div className="p-5 bg-switch-cloud" />
-                <div className="p-5 bg-switch-teal-deep text-center">
-                  <p className="eyebrow !text-bright-teal">SEKAI STAY</p>
-                </div>
-                <div className="p-5 bg-switch-cloud text-center">
-                  <p className="eyebrow text-mid-gray">業界平均</p>
-                </div>
-              </div>
-              {COMPARE.map((row, i, arr) => (
-                <div
-                  key={i}
-                  className={`grid grid-cols-3 items-center ${i !== arr.length - 1 ? 'border-b border-rule' : ''}`}
-                >
-                  <div className="p-5 bg-switch-cloud">
-                    <p className="font-sans text-[14px] text-ink">{row.label}</p>
-                  </div>
-                  <div className={`p-5 text-center ${row.highlight ? 'bg-[rgba(22,123,129,0.05)]' : ''}`}>
-                    <p className="font-sans text-[16px] md:text-[20px] text-sekai-teal tabular-nums jp-keep">{row.us}</p>
-                  </div>
-                  <div className="p-5 text-center">
-                    <p className="font-sans text-[13px] text-mid-gray">{row.others}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="mt-5 text-caption text-mid-gray leading-relaxed jp-break max-w-3xl">
-              ※ 解約金は最低契約期間6ヶ月の経過後（7ヶ月目以降）¥0。6ヶ月未満の途中解約は¥200,000、解約のご連絡は3ヶ月前までにお願いします。初期費用は乗り換え¥100,000/物件・新規立ち上げ¥200,000〜。ホストレビュー平均は SEKAI STAY 管理物件（Airbnb / Booking.com 掲載）の加重平均（2024-2025）。他社平均の料率・固定費・最低契約期間は各社公開情報からの一般的水準。実際の条件は契約形態により異なります。
-            </p>
-          </div>
-        </section>
-
-        {/* Pricing FAQ */}
-        <section className="bg-switch-cloud">
-          <div className="container-narrow section-xl">
-            <div className="flex items-center gap-4 mb-10">
-              <span className="rule-teal-sm" />
-              <span className="eyebrow">Pricing FAQ</span>
-            </div>
-            <h2 className="heading-section text-ink jp-keep mb-14 max-w-2xl">
-              料金に関する、
-              <span className="font-sans font-light text-sekai-teal">よくあるご質問。</span>
-            </h2>
-
-            <div>
-              {PRICING_FAQ.map((f, i, arr) => (
-                <div
-                  key={i}
-                  className={`py-8 grid grid-cols-[auto_1fr] gap-6 md:gap-10 ${
-                    i !== arr.length - 1 ? 'border-b border-rule' : ''
-                  }`}
-                >
-                  <span className="font-sans font-light text-[32px] text-sekai-teal leading-none tabular-nums">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <div>
-                    <h3 className="font-sans font-medium text-[17px] md:text-[19px] text-ink mb-4 leading-snug">
-                      {f.q}
-                    </h3>
-                    <p className="text-body text-dark-gray jp-break max-w-prose-jp">{f.a}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-caption text-mid-gray text-center mt-10">
-              さらに詳しいご質問は{' '}
-              <Link href="/faq" className="text-sekai-teal border-b border-sekai-teal/40 hover:border-sekai-teal pb-0.5 font-sans">
-                FAQページ
-              </Link>{' '}
-              をご覧ください。
-            </p>
-          </div>
-        </section>
+        {/* 末尾CTA — 共通 ContactSense（無料診断／相談 2分割） */}
+        <ContactSense />
 
         {/* FAQPage JSON-LD */}
         <script
@@ -384,15 +280,14 @@ export default function PricingPage() {
             }),
           }}
         />
-
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'Product',
-              name: 'SEKAI STAY 民泊運用代行',
-              description: '管理物件レビュー平均4.8の民泊運用代行サービス。OTA運用・ゲスト対応・清掃・プライシング最適化を一括代行。',
+              name: 'SEKAI STAY 民泊運営代行',
+              description: '民泊運営代行サービス。OTA運用・ゲスト対応・清掃・プライシング最適化を一括代行。基本料金は売上の8%＋月額10,000円/物件。',
               brand: { '@type': 'Organization', name: 'SEKAI STAY' },
               offers: {
                 '@type': 'AggregateOffer',
@@ -401,12 +296,11 @@ export default function PricingPage() {
                 highPrice: '200000',
                 offerCount: '3',
                 offers: [
-                  { '@type': 'Offer', name: '初期費用（乗り換え）', price: '100000', priceCurrency: 'JPY', description: '1物件あたり。移行作業・AI画像加工・リスティング最適化（多言語）を含む。', availability: 'https://schema.org/InStock' },
+                  { '@type': 'Offer', name: '初期費用（乗り換え）', price: '100000', priceCurrency: 'JPY', description: '1物件あたり。移行作業・リスティング最適化（多言語）を含む。', availability: 'https://schema.org/InStock' },
                   { '@type': 'Offer', name: '初期費用（新規立ち上げ）', price: '200000', priceCurrency: 'JPY', description: '1物件あたり200,000円〜。リスティング作成・ハウスマニュアル・運用セットアップ等を含む。', availability: 'https://schema.org/InStock' },
                   { '@type': 'Offer', name: '月額固定管理費', price: '10000', priceCurrency: 'JPY', description: '1物件あたり月額10,000円。変動運営委託費は売上の8%。', availability: 'https://schema.org/InStock' },
                 ],
               },
-              aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', reviewCount: '47', bestRating: '5' },
             }),
           }}
         />

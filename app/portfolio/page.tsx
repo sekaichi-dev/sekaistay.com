@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Header from '@/components/Header'
-import Breadcrumb from '@/components/Breadcrumb'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
 import { IconStar, IconCheckCircle } from '@/components/Icons'
@@ -80,7 +79,6 @@ export default function PortfolioPage() {
   return (
     <>
       <Header />
-      <Breadcrumb items={[{ label: '運営実績' }]} />
       <FloatingCTA />
       <main className="bg-ivory">
         {/* Chapter Ⅰ — masthead */}

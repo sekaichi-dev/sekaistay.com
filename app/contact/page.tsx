@@ -4,16 +4,30 @@ import { useState, FormEvent } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
-import { IconCheck, IconArrowRight } from '@/components/Icons'
+import AuditLink from '@/components/audit/AuditLink'
 
 const inputCls =
-  'w-full bg-switch-cloud border border-switch-stone-border rounded-switch-md px-5 py-4 text-[15px] font-sans text-ink placeholder:text-mid-gray/70 outline-none transition focus:border-sekai-teal focus:bg-white'
+  'w-full rounded-md border border-rule bg-paper px-4 py-3 text-[15px] text-ink outline-none transition placeholder:text-ink/40 focus:border-sekai-teal'
 
 const MEETING_URL = 'https://timerex.net/s/sekai-stay/d61b424d'
 
 const getUtm = (k: string) => {
   try { return typeof window !== 'undefined' ? sessionStorage.getItem(k) || '' : '' } catch { return '' }
 }
+
+/* 相談で話せること */
+const TALK_POINTS = [
+  { no: '01', title: '乗り換えの段取り', body: '今の会社との契約が残っていても大丈夫です。引き継ぎの進め方や、予約を止めずに移行する手順をご案内します。' },
+  { no: '02', title: '物件の向き不向き', body: '立地・間取り・周辺需要から、民泊として伸びる物件かどうか。率直な見立てをお伝えします。' },
+  { no: '03', title: '費用と収益の目安', body: '手数料8%＋月¥10,000を前提に、想定される売上と手取りのイメージを一緒に整理します。' },
+]
+
+/* 安心要素（売り込みなし） */
+const ASSURANCES = [
+  { title: '無理な勧誘はしません', body: 'こちらから営業のお電話をかけることはありません。検討の材料だけお渡しします。' },
+  { title: '相談だけでも歓迎です', body: '契約を前提としたご相談である必要はありません。情報整理の壁打ちとしてお使いください。' },
+  { title: '2営業日以内に返信', body: 'いただいた内容は担当が確認し、2営業日以内に個別でご返信します。' },
+]
 
 export default function ContactPage() {
   const [submitting, setSubmitting] = useState(false)
@@ -86,164 +100,116 @@ export default function ContactPage() {
       <Header />
       <FloatingCTA />
       <main className="bg-ivory">
-        {/* Chapter Ⅰ — masthead */}
-        <section className="relative bg-switch-charcoal text-white overflow-hidden">
-          <div
-            aria-hidden
-            className="absolute -top-32 -right-24 w-[640px] h-[640px] rounded-full opacity-25 blur-3xl pointer-events-none"
-            style={{ background: 'radial-gradient(circle, #167B81 0%, transparent 65%)' }}
-          />
-          <div className="container-edit section-hero relative">
-            <div className="chapter-marker">
-              <span className="h-px w-6 bg-bright-teal" />
-              <p className="eyebrow !text-bright-teal">Contact</p>
-            </div>
-            <h1 className="heading-display text-white mb-5">
-              お問い合わせ
-              <span className="block font-sans font-light text-white/60 text-[0.6em] mt-3">Correspondence</span>
-            </h1>
-            <p className="lead !text-white/75 max-w-2xl">
-              民泊運用に関するご質問・ご相談はお気軽にどうぞ。2営業日以内に担当より返信いたします。
+        {/* CONTACT — お問い合わせ・ご相談 */}
+        <section className="w-full bg-ivory pb-24 pt-28 sm:pb-32 sm:pt-36">
+          <div className="mx-auto max-w-6xl px-6 sm:px-8">
+            <h2 className="label-giant text-[clamp(2.5rem,6vw,4.375rem)] text-ink">CONTACT</h2>
+            <p className="mt-2 text-[clamp(1.125rem,1.8vw,1.375rem)] font-bold text-ink">お問い合わせ・ご相談</p>
+            <p className="mt-10 max-w-2xl text-[15px] leading-[1.95] text-ink/75">
+              売り込みや無理な営業は一切いたしません。「まだ検討中」「他社と比較したい」「自分の物件が向いているか知りたい」——そんな段階のご相談だけでも大歓迎です。どんな状態からでも、担当が一緒に状況を整理します。しつこい電話もありませんので、どうぞ安心してお問い合わせください。
             </p>
+            <div className="mt-14 grid gap-10 sm:mt-16 md:grid-cols-3">
+              {TALK_POINTS.map((p) => (
+                <div key={p.no} className="border-t-2 border-sekai-teal pt-5">
+                  <span className="font-grotesk block text-[2rem] font-bold leading-none text-sekai-teal">{p.no}</span>
+                  <h3 className="mt-5 text-[1.25rem] font-bold leading-snug text-ink">{p.title}</h3>
+                  <p className="mt-3 text-[14px] leading-[1.9] text-ink/70">{p.body}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Chapter Ⅱ — form */}
-        <section className="section-xl">
-          <div className="container-narrow px-5 md:px-8 max-w-2xl">
+        {/* フォーム */}
+        <section id="contact-form" className="w-full bg-mist py-24 sm:py-32">
+          <div className="mx-auto max-w-2xl px-6 sm:px-8">
             {done ? (
-              <div className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card overflow-hidden">
-                <div className="bg-switch-charcoal text-white px-8 py-10 text-center">
-                  <div className="w-14 h-14 border-[3px] border-bright-teal flex items-center justify-center mx-auto mb-5">
-                    <IconCheck size={22} className="text-bright-teal" />
-                  </div>
-                  <p className="eyebrow-mono text-bright-teal mb-3">Dispatched</p>
-                  <h2 className="font-sans text-[22px] md:text-[26px] mb-3">送信が完了しました</h2>
-                  <span className="block w-10 h-px bg-bright-teal mx-auto mb-4" />
-                  <p className="font-sans text-body-sm text-white/75 leading-[1.9]">
-                    お問い合わせいただきありがとうございます。<br />
-                    2営業日以内に担当より返信いたします。
-                  </p>
-                </div>
-                <div className="px-8 py-8 text-center space-y-3">
-                  <p className="eyebrow-mono text-mid-gray mb-3">Next Step</p>
-                  <p className="font-sans text-body-sm text-dark-gray mb-5">
-                    ご自身の物件の状態を今すぐ把握したい方は
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <a
-                      href="/audit"
-                      className="group inline-flex items-center justify-center gap-2.5 bg-switch-accent hover:bg-switch-accent-hover text-white font-bold text-[15px] px-8 py-4 rounded-switch-md transition shadow-switch-card"
-                    >
-                      無料物件診断へ
-                      <IconArrowRight size={14} />
-                    </a>
-                    <a
-                      href="/services#pricing"
-                      className="btn btn-ghost text-[14px]"
-                    >
-                      収益シミュレーション
-                      <IconArrowRight size={14} />
-                    </a>
-                  </div>
+              <div className="rounded-lg border border-rule bg-paper p-8 text-center sm:p-12">
+                <h2 className="text-[clamp(1.5rem,3vw,2rem)] font-bold text-ink">送信が完了しました</h2>
+                <p className="mt-5 text-[14px] leading-[1.95] text-ink/70">
+                  お問い合わせいただきありがとうございます。<br />
+                  2営業日以内に担当よりご返信いたします。
+                </p>
+                <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+                  <AuditLink
+                    className="btn-cta group inline-flex min-h-[54px] items-center justify-center gap-2 rounded-md px-8 text-[15px] font-bold transition-all"
+                  >
+                    無料収益診断へ
+                    <svg className="h-5 w-5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  </AuditLink>
+                  <a
+                    href="/services#pricing"
+                    className="inline-flex min-h-[54px] items-center justify-center gap-2 rounded-md border border-rule px-8 text-[15px] font-bold text-sekai-teal transition-opacity hover:opacity-70"
+                  >
+                    料金を見る
+                  </a>
                 </div>
               </div>
             ) : (
-              <div>
-                {/* Ledger intro */}
-                <div className="chapter-marker">
-                  <span className="eyebrow-mono text-mid-gray">§ 02</span>
-                  <span className="h-px bg-rule flex-1" />
-                  <p className="eyebrow text-sekai-teal">Message Form</p>
-                </div>
+              <>
+                <h2 className="label-giant text-[clamp(2.5rem,6vw,4.375rem)] text-ink">FORM</h2>
+                <p className="mt-2 text-[clamp(1.125rem,1.8vw,1.375rem)] font-bold text-ink">お問い合わせフォーム</p>
 
                 {error && (
-                  <div className="mb-6 bg-paper border border-red-300 text-red-700 px-4 py-3 text-[14px] font-sans">
+                  <div className="mt-8 rounded-md border border-rule bg-paper px-4 py-3 text-[14px] text-ink">
                     {error}
                   </div>
                 )}
-                <form onSubmit={handleSubmit} className="bg-white border border-switch-stone-border rounded-switch-lg shadow-switch-card p-6 md:p-10 space-y-7">
-                  <Field number="01" label="お名前" required>
-                    <input
-                      type="text" name="name" required
-                      className={inputCls}
-                      placeholder="山田 太郎"
-                    />
+
+                <form onSubmit={handleSubmit} className="mt-10 space-y-6 rounded-lg border border-rule bg-paper p-6 sm:p-10">
+                  <Field label="お名前" required>
+                    <input type="text" name="name" required className={inputCls} placeholder="山田 太郎" />
                   </Field>
-                  <Field number="02" label="メールアドレス" required>
-                    <input
-                      type="email" name="email" required
-                      className={inputCls}
-                      placeholder="example@email.com"
-                    />
+                  <Field label="メールアドレス" required>
+                    <input type="email" name="email" required className={inputCls} placeholder="example@email.com" />
                   </Field>
-                  <Field number="03" label="電話番号">
-                    <input
-                      type="tel" name="phone"
-                      className={inputCls}
-                      placeholder="090-1234-5678"
-                    />
+                  <Field label="電話番号">
+                    <input type="tel" name="phone" className={inputCls} placeholder="090-1234-5678" />
                   </Field>
-                  <Field number="04" label="お問い合わせ内容" required>
-                    <textarea
-                      name="message" required rows={6}
-                      className={inputCls + ' resize-none'}
-                      placeholder="お気軽にご記入ください"
-                    />
+                  <Field label="お問い合わせ内容" required>
+                    <textarea name="message" required rows={6} className={inputCls + ' resize-none'} placeholder="お気軽にご記入ください" />
                   </Field>
 
-                  <div className="pt-4 space-y-3">
+                  <div className="space-y-3 pt-2">
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="group inline-flex w-full items-center justify-center gap-2.5 bg-switch-accent hover:bg-switch-accent-hover text-white font-bold text-[15px] px-8 py-4 rounded-switch-md transition shadow-switch-card disabled:opacity-50"
+                      className="group inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-md bg-navy px-8 text-[15px] font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-navy-hover disabled:opacity-50 disabled:hover:translate-y-0"
                     >
                       {submitting ? '送信中...' : (
                         <>
                           送信する
-                          <IconArrowRight size={14} />
+                          <svg className="h-5 w-5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                         </>
                       )}
                     </button>
-                    <p className="text-caption text-mid-gray text-center font-sans">
-                      送信により<a href="/privacy" className="text-sekai-teal hover:underline">プライバシーポリシー</a>に同意したものとみなします
+                    <p className="text-center text-[12px] text-ink/50">
+                      送信により<a href="/privacy" className="font-bold text-sekai-teal hover:underline">プライバシーポリシー</a>に同意したものとみなします
                     </p>
                   </div>
                 </form>
-
-                {/* Alt lead-in — audit / simulate */}
-                <div className="mt-10 bg-switch-cloud border border-switch-stone-border rounded-switch-lg p-8 md:p-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="rule-teal-sm" />
-                    <p className="eyebrow text-sekai-teal">Alternative Path</p>
-                  </div>
-                  <h3 className="font-sans font-medium text-[20px] md:text-[24px] text-ink leading-snug mb-3">
-                    すぐに物件の状態を<br className="hidden md:block" />チェックしたい方へ
-                  </h3>
-                  <p className="font-sans text-body-sm text-dark-gray leading-[1.9] mb-6">
-                    3分の診断と収益シミュレーションをご用意しています。結果をもとに、最適な運営方針をご提案します。
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <a
-                      href="/audit"
-                      className="btn btn-ghost text-[14px]"
-                    >
-                      無料物件診断（3分）
-                      <IconArrowRight size={14} />
-                    </a>
-                    <a
-                      href="/services#pricing"
-                      className="btn btn-ghost text-[14px]"
-                    >
-                      収益シミュレーション
-                      <IconArrowRight size={14} />
-                    </a>
-                  </div>
-                </div>
-              </div>
+              </>
             )}
           </div>
         </section>
+
+        {/* 安心要素（売り込みなし） */}
+        {!done && (
+          <section className="w-full bg-navy py-24 text-white sm:py-32">
+            <div className="mx-auto max-w-6xl px-6 sm:px-8">
+              <h2 className="label-giant text-[clamp(2.5rem,6vw,4.375rem)] text-white">NO PUSH</h2>
+              <p className="mt-2 text-[clamp(1.125rem,1.8vw,1.375rem)] font-bold text-white">相談しても、売り込みはありません</p>
+              <div className="mt-14 grid gap-x-8 gap-y-12 sm:mt-16 md:grid-cols-3">
+                {ASSURANCES.map((a) => (
+                  <div key={a.title} className="border-t border-white/20 pt-5">
+                    <h3 className="text-[1.125rem] font-bold text-white">{a.title}</h3>
+                    <p className="mt-3 text-[14px] leading-[1.9] text-white/75">{a.body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
       <Footer />
     </>
@@ -251,27 +217,20 @@ export default function ContactPage() {
 }
 
 function Field({
-  number,
   label,
   required,
   children,
 }: {
-  number: string
   label: string
   required?: boolean
   children: React.ReactNode
 }) {
   return (
     <div>
-      <div className="flex items-baseline gap-3 mb-3">
-        <span className="font-sans font-light text-[22px] text-sekai-teal leading-none tabular-nums">
-          {number}
-        </span>
-        <label className="font-sans font-medium text-[14px] md:text-[15px] text-ink">
-          {label}
-          {required && <span className="text-sekai-teal ml-1 font-sans">*</span>}
-        </label>
-      </div>
+      <label className="mb-2 block text-[14px] font-bold text-ink">
+        {label}
+        {required && <span className="ml-1 text-sekai-teal">*</span>}
+      </label>
       {children}
     </div>
   )

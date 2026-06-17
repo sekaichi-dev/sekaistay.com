@@ -193,36 +193,6 @@ const caseStudies: CaseStudy[] = [
       "北海道",
     ],
   },
-  {
-    id: "hawaii-private-beach",
-    name: "ハワイ プライベートビーチ",
-    location: "ハワイ",
-    type: "一棟貸しビーチフロント",
-    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=500&fit=crop&q=80&auto=format",
-    description:
-      "ハワイのプライベートビーチ付き一棟貸し物件。enabler(DAO)が所有していた高級リゾート物件で、SEKAI STAYの代表が全物件の統括管理を行ってきた。国際的なゲスト層を相手に、グローバル水準の運営品質を実現。",
-    highlights: [
-      "多言語対応（英語・日本語・中国語）とグローバル決済対応で世界中からのブッキング獲得",
-      "国際的なゲスト対応マニュアルの確立で満足度を4.7から4.95に向上",
-      "Airbnbプラス認定ホテルグレード認証の維持で、高額宿泊客の獲得継続",
-      "月売上1,200,000円以上を安定的に確保し、グローバル運営の成功事例を確立",
-    ],
-    results: {
-      occupancyBefore: "72%",
-      occupancyAfter: "88%",
-      revenueBefore: "1,100,000円/月",
-      revenueAfter: "1,550,000円/月",
-      reviewScore: "4.95",
-      superhost: true,
-    },
-    tags: [
-      "一棟貸し",
-      "プライベートビーチ",
-      "高級リゾート",
-      "インバウンド対応",
-      "グローバル運営",
-    ],
-  },
 ];
 
 /**

@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
-import Breadcrumb from '@/components/Breadcrumb'
 import Footer from '@/components/Footer'
 import { JP } from '@/components/JP'
 import {
@@ -150,7 +149,6 @@ export default function DashboardDemoPage() {
   return (
     <>
       <Header />
-      <Breadcrumb items={[{ label: 'オーナーダッシュボード デモ' }]} />
 
       <main className="bg-ivory pb-20">
         {/* ─────────── Hero ─────────── */}

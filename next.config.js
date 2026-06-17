@@ -25,6 +25,13 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
   async headers() {
+    // dev では即時 immutable キャッシュを付けない。
+    // dev のチャンクは content-hash されないため、immutable を付けると
+    // ビルド変更後もブラウザが旧チャンクを参照し options.factory クラッシュを起こす。
+    // 本番（content-hash 付き）でのみ長期 immutable を付与する。
+    if (process.env.NODE_ENV !== 'production') {
+      return []
+    }
     return [
       {
         source: '/:all*(svg|jpg|jpeg|png|gif|ico|webp|avif|woff|woff2)',
@@ -53,8 +60,10 @@ const nextConfig = {
       { source: '/diagnostic/:path*',  destination: '/audit', permanent: true },
       { source: '/result',             destination: '/audit', permanent: true },
       { source: '/result/:path*',      destination: '/audit', permanent: true },
-      // 対応エリア一覧は「実績」ページ(/case-studies)へ統合。個別エリア /area/:slug は温存。
-      { source: '/area',               destination: '/case-studies#area', permanent: true },
+      // 対応エリア一覧は /services の AREA セクションへ移設。個別エリア /area/:slug は温存。
+      { source: '/area',               destination: '/services#area', permanent: true },
+      // 会社概要は /about に統合済み。
+      { source: '/company',            destination: '/about', permanent: true },
     ]
   },
 }

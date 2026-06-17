@@ -13,3 +13,6 @@ awesome-design-md-jp-main/
 
 # TypeScript build cache
 tsconfig.tsbuildinfo
+
+# Claude Code local tooling
+.claude/

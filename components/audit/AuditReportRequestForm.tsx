@@ -21,7 +21,7 @@
  * 今は LP 側の改善が editorial 側に意図せず波及しないよう敢えて独立を選択。
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 // ─────── Constants ───────
@@ -139,6 +139,7 @@ const LP_VARIANT = "audit";
 
 export function AuditReportRequestForm() {
   const [step, setStep] = useState<Step>(1);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState<FormState>(INITIAL);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -213,7 +214,7 @@ export function AuditReportRequestForm() {
       });
     }
     setStep(nextStep);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function handleBack() {
@@ -226,7 +227,7 @@ export function AuditReportRequestForm() {
       lp_variant: LP_VARIANT,
     });
     setStep(toStep);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -319,20 +320,15 @@ export function AuditReportRequestForm() {
   }
 
   return (
-    <div>
+    <div ref={rootRef} className="scroll-mt-24">
       {/* Progress Ledger — editorial 3-column */}
       <ProgressLedger step={step} />
 
-      {/* Chapter Header per step */}
-      <div className="chapter-marker mt-10">
-        <span className="rule-teal-sm" />
-        <p className="eyebrow text-sekai-teal">
-          {step === 1 && "Step 01 · 手数料"}
-          {step === 2 && "Step 02 · 試算"}
-          {step === 3 && "Step 03 · ご連絡先"}
-        </p>
-      </div>
-      <h2 className="font-sans font-bold text-[24px] md:text-[28px] text-ink leading-snug mb-8 jp-keep">
+      {/* Step Header */}
+      <p className="mt-10 font-grotesk text-[12px] font-bold tracking-[0.18em] text-sekai-teal">
+        STEP {String(step).padStart(2, "0")} <span className="text-ink/30">/ 03</span>
+      </p>
+      <h2 className="mt-3 mb-8 text-[clamp(1.375rem,2.6vw,1.75rem)] font-bold leading-snug text-ink jp-keep">
         {step === 1 && "今の運営代行の手数料を教えてください"}
         {step === 2 && "あなたの物件、SEKAI STAYでどう変わる？"}
         {step === 3 && "レポートをお届けする連絡先を教えてください"}
@@ -375,13 +371,13 @@ export function AuditReportRequestForm() {
           </div>
         )}
 
-        {/* Navigation — editorial buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-rule">
+        {/* Navigation */}
+        <div className="flex flex-col gap-3 border-t border-rule pt-7 sm:flex-row">
           {step > 1 && (
             <button
               type="button"
               onClick={handleBack}
-              className="btn btn-ghost flex-1 justify-center text-[14px]"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-rule px-6 py-3.5 text-[14px] font-bold text-ink transition hover:bg-mist"
             >
               ← 戻る
             </button>
@@ -391,7 +387,7 @@ export function AuditReportRequestForm() {
               type="button"
               disabled={(step === 1 && !canNextFromStep1) || (step === 2 && !canNextFromStep2)}
               onClick={handleNext}
-              className="btn btn-primary flex-1 justify-center text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-ink px-6 py-4 text-[15px] font-bold text-white transition hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-40"
             >
               次へ →
             </button>
@@ -399,9 +395,9 @@ export function AuditReportRequestForm() {
             <button
               type="submit"
               disabled={submitting || !canSubmit}
-              className="btn btn-primary flex-1 justify-center text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-cta !rounded-full flex-1 justify-center disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {submitting ? "送信中..." : "無料レポート申込 →"}
+              {submitting ? "送信中..." : "無料で診断レポートをもらう →"}
             </button>
           )}
         </div>
@@ -420,20 +416,35 @@ export function AuditReportRequestForm() {
 
 function ProgressLedger({ step }: { step: Step }) {
   const items = [
-    { n: 1, label: "Fee" },
-    { n: 2, label: "Estimate" },
-    { n: 3, label: "Contact" },
+    { n: 1, label: "手数料" },
+    { n: 2, label: "試算" },
+    { n: 3, label: "ご連絡先" },
   ];
   return (
-    <div className="bg-rule grid grid-cols-3 gap-px border border-rule rounded-switch-lg overflow-hidden">
-      {items.map((s) => {
+    <div className="flex items-center gap-2 sm:gap-3">
+      {items.map((s, i) => {
+        const done = s.n < step;
         const active = s.n <= step;
+        const current = s.n === step;
         return (
-          <div key={s.n} className={`p-4 ${active ? "bg-ink text-ivory" : "bg-paper text-mid-gray"}`}>
-            <p className={`eyebrow-mono mb-1 ${active ? "text-bright-teal" : "text-mid-gray"}`}>
-              Step {String(s.n).padStart(2, "0")}
-            </p>
-            <p className={`font-sans text-[13px] ${active ? "text-ivory" : "text-mid-gray"}`}>{s.label}</p>
+          <div key={s.n} className="flex flex-1 items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2.5">
+              <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-grotesk text-[13px] font-bold transition-colors ${
+                  active ? "bg-sekai-teal text-white" : "bg-rule text-ink/40"
+                }`}
+              >
+                {done ? (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                ) : (
+                  s.n
+                )}
+              </span>
+              <span className={`whitespace-nowrap text-[12px] font-bold ${current ? "text-ink" : "text-ink/40"} ${current ? "" : "hidden sm:inline"}`}>
+                {s.label}
+              </span>
+            </div>
+            {i < items.length - 1 && <span className={`h-px flex-1 ${s.n < step ? "bg-sekai-teal" : "bg-rule"}`} />}
           </div>
         );
       })}
@@ -453,26 +464,27 @@ function Field({
   number: string;
   label: string;
   required?: boolean;
-  children: ReactNode;
+  children: (id: string) => ReactNode;
   hint?: ReactNode;
 }) {
+  const id = useId();
   return (
     <div>
-      <div className="flex items-baseline gap-3 mb-3">
-        <span className="font-sans font-light text-[22px] text-sekai-teal leading-none tabular-nums">{number}</span>
-        <label className="font-sans font-medium text-[14px] md:text-[15px] text-ink">
+      <div className="mb-3 flex items-baseline gap-3">
+        <span className="font-grotesk text-[1.125rem] font-bold leading-none text-sekai-teal tabular-nums">{number}</span>
+        <label htmlFor={id} className="text-[14px] font-bold text-ink md:text-[15px]">
           {label}
-          {required && <span className="text-sekai-teal ml-1 font-sans">*</span>}
+          {required && <span className="ml-1 text-sekai-teal">*</span>}
         </label>
       </div>
-      {children}
-      {hint && <p className="text-[12px] text-mid-gray mt-2 font-sans leading-relaxed">{hint}</p>}
+      {children(id)}
+      {hint && <p className="mt-2 text-[12px] leading-relaxed text-ink/55">{hint}</p>}
     </div>
   );
 }
 
 const editorialInput =
-  "w-full bg-mist border border-rule px-5 py-4 text-[15px] font-sans text-ink placeholder:text-mid-gray/70 outline-none transition focus:border-sekai-teal focus:bg-paper";
+  "w-full rounded-[10px] border border-rule bg-white px-5 py-3.5 text-[15px] text-ink placeholder:text-ink/40 outline-none transition focus:border-sekai-teal focus:ring-2 focus:ring-sekai-teal/20";
 
 // ─────── Step 1: Fee ───────
 
@@ -493,6 +505,8 @@ function Step1Fee({
 
   return (
     <Field number="01" label="現在の運営代行手数料" required>
+      {(id) => (
+      <>
       <div className={`grid grid-cols-2 gap-3 transition-opacity ${dimmed}`}>
         {FEE_CARDS.map((v) => {
           const selected = commissionRate === v;
@@ -502,10 +516,10 @@ function Step1Fee({
               type="button"
               onClick={() => onChange(v)}
               disabled={startingNew}
-              className={`py-6 text-[22px] font-bold border transition-all active:scale-[0.98] font-sans ${
+              className={`rounded-[12px] border py-6 font-grotesk text-[22px] font-bold transition-all active:scale-[0.98] ${
                 selected
-                  ? "bg-ink text-ivory border-ink"
-                  : "bg-paper text-ink border-rule hover:border-sekai-teal/60"
+                  ? "border-sekai-teal bg-sekai-teal text-white"
+                  : "border-rule bg-white text-ink hover:border-sekai-teal/60"
               }`}
             >
               {v}%
@@ -513,11 +527,12 @@ function Step1Fee({
           );
         })}
         <div
-          className={`border transition-all relative ${
-            otherSelected ? "bg-ink border-ink" : "bg-paper border-rule"
+          className={`relative rounded-[12px] border transition-all ${
+            otherSelected ? "border-sekai-teal bg-sekai-teal" : "border-rule bg-white"
           }`}
         >
           <select
+            id={id}
             value={otherSelected ? commissionRate : ""}
             onChange={(e) => onChange(e.target.value)}
             disabled={startingNew}
@@ -552,6 +567,8 @@ function Step1Fee({
         />
         <span className="text-[13px] leading-relaxed text-dark-gray font-sans">これから民泊を始める方</span>
       </label>
+      </>
+      )}
     </Field>
   );
 }
@@ -583,116 +600,132 @@ function Step2Estimate({
   };
 
   const result = useMemo(() => {
-    const diff = Math.max(0, feePct - SEKAI_FEE_PCT) / 100;
     const annualRevMan = monthlyRev * 12;
-    const annualWasteMan = annualRevMan * diff;
-    const annualNetDiffMan = Math.max(0, annualWasteMan - SEKAI_FIXED_ANNUAL_MAN);
-    const annualSaving = Math.round(annualNetDiffMan);
-    const pastLoss = annualSaving * pastYears;
-    const futureLoss = annualSaving * futureYears;
-    const totalLoss = pastLoss + futureLoss;
+    const otherFee = annualRevMan * (feePct / 100);
+    const sekaiCost = annualRevMan * (SEKAI_FEE_PCT / 100) + SEKAI_FIXED_ANNUAL_MAN;
+    const annualSaving = Math.max(0, Math.round(otherFee - sekaiCost));
     const futureSaving = annualSaving * futureYears;
-    return { pastLoss, futureLoss, totalLoss, annualSaving, futureSaving };
-  }, [feePct, monthlyRev, pastYears, futureYears]);
+    const max = Math.max(otherFee, sekaiCost, 1);
+    return {
+      annualSaving,
+      futureSaving,
+      otherFee: Math.round(otherFee),
+      sekaiCost: Math.round(sekaiCost),
+      otherPct: Math.round((otherFee / max) * 100),
+      sekaiPct: Math.round((sekaiCost / max) * 100),
+    };
+  }, [feePct, monthlyRev, futureYears]);
 
   return (
     <div className="space-y-10">
       <Field number="02" label="今の代行会社の手数料率">
+        {(id) => (
+        <>
         <div className="text-[26px] font-bold text-sekai-teal mb-3 font-sans tabular-nums">{feePct}%</div>
-        <input type="range" min={8} max={35} step={1} value={feePct}
+        <input id={id} type="range" min={8} max={35} step={1} value={feePct} aria-valuetext={`${feePct}%`}
           onChange={(e) => { onFeePct(parseInt(e.target.value, 10)); markTouched(); }}
           className="w-full accent-sekai-teal" />
         <div className="flex justify-between text-[11px] text-mid-gray mt-2 font-sans">
           <span>8%</span><span>35%</span>
         </div>
+        </>
+        )}
       </Field>
 
       <Field number="03" label="物件の月間総売上">
+        {(id) => (
+        <>
         <div className="text-[26px] font-bold text-sekai-teal mb-3 font-sans tabular-nums">{monthlyRev}万円</div>
-        <input type="range" min={10} max={500} step={5} value={monthlyRev}
+        <input id={id} type="range" min={10} max={500} step={5} value={monthlyRev} aria-valuetext={`${monthlyRev}万円`}
           onChange={(e) => { onMonthlyRev(parseInt(e.target.value, 10)); markTouched(); }}
           className="w-full accent-sekai-teal" />
         <div className="flex justify-between text-[11px] text-mid-gray mt-2 font-sans">
           <span>10万円</span><span>500万円</span>
         </div>
+        </>
+        )}
       </Field>
 
       <Field number="04" label="これまでの運用期間">
+        {(id) => (
+        <>
         <div className="text-[26px] font-bold text-sekai-teal mb-3 font-sans tabular-nums">{pastYears}年</div>
-        <input type="range" min={0} max={15} step={1} value={pastYears}
+        <input id={id} type="range" min={0} max={15} step={1} value={pastYears} aria-valuetext={`${pastYears}年`}
           onChange={(e) => { onPastYears(parseInt(e.target.value, 10)); markTouched(); }}
           className="w-full accent-sekai-teal" />
         <div className="flex justify-between text-[11px] text-mid-gray mt-2 font-sans">
           <span>0年</span><span>15年</span>
         </div>
+        </>
+        )}
       </Field>
 
       <Field number="05" label="今後あと何年運用する予定">
+        {(id) => (
+        <>
         <div className="text-[26px] font-bold text-sekai-teal mb-3 font-sans tabular-nums">{futureYears}年</div>
-        <input type="range" min={1} max={20} step={1} value={futureYears}
+        <input id={id} type="range" min={1} max={20} step={1} value={futureYears} aria-valuetext={`${futureYears}年`}
           onChange={(e) => { onFutureYears(parseInt(e.target.value, 10)); markTouched(); }}
           className="w-full accent-sekai-teal" />
         <div className="flex justify-between text-[11px] text-mid-gray mt-2 font-sans">
           <span>1年</span><span>20年</span>
         </div>
+        </>
+        )}
       </Field>
 
       <div
-        className={`border border-rule overflow-hidden transition-opacity duration-300 ${touched ? "opacity-100" : "opacity-70"}`}
+        className={`overflow-hidden rounded-[14px] border border-rule transition-opacity duration-300 ${touched ? "opacity-100" : "opacity-70"}`}
         aria-live="polite"
       >
         {!touched && (
-          <p className="bg-paper px-5 py-3 text-[12px] text-mid-gray text-center border-b border-rule font-sans">
+          <p className="border-b border-rule bg-paper px-5 py-3 text-center text-[12px] text-ink/55">
             ↑ スライダを動かすと、あなたの数字が出ます
           </p>
         )}
 
-        <div className="bg-ink text-ivory p-8 md:p-10 text-center">
-          <p className="eyebrow-mono text-bright-teal mb-5">今の代行業者のままだと</p>
-          <p className="font-sans font-light leading-none text-ivory mb-6 tabular-nums">
-            <span className="text-[44px] md:text-[64px] mr-1">−</span>
-            <span className="text-[56px] md:text-[80px]">{result.totalLoss}</span>
-            <span className="text-[22px] md:text-[28px] ml-3 text-ivory/70">万円</span>
+        <div className="bg-navy p-8 text-white md:p-10">
+          <p className="text-[clamp(1.125rem,2.4vw,1.5rem)] font-bold leading-snug text-white">
+            SEKAI STAY に切り替えると
           </p>
-          <div className="grid grid-cols-2 gap-6 pt-6 border-t border-ivory/20 max-w-md mx-auto">
-            <div>
-              <p className="eyebrow-mono text-ivory/60 mb-2">過去 {pastYears} 年</p>
-              <p className="font-sans text-[20px] md:text-[22px] text-ivory/90 tabular-nums">
-                −{result.pastLoss}<span className="text-[12px] text-ivory/60 ml-1">万円</span>
-              </p>
-            </div>
-            <div>
-              <p className="eyebrow-mono text-ivory/60 mb-2">今後 {futureYears} 年</p>
-              <p className="font-sans text-[20px] md:text-[22px] text-ivory/90 tabular-nums">
-                −{result.futureLoss}<span className="text-[12px] text-ivory/60 ml-1">万円</span>
-              </p>
-            </div>
-          </div>
-        </div>
+          <p className="mt-2 text-[13px] font-bold text-white/80">今後{futureYears}年の累計で</p>
+          <p className="mt-1 flex flex-wrap items-baseline gap-x-2">
+            <span className="font-grotesk text-[clamp(2.75rem,11vw,4.5rem)] font-bold leading-none tracking-tight text-white tabular-nums">
+              +{result.futureSaving}
+            </span>
+            <span className="text-[16px] font-bold text-white">万円 おトク</span>
+          </p>
+          <p className="mt-3 text-[13px] text-white/85">
+            年間<span className="font-grotesk mx-1 font-bold text-white tabular-nums">+{result.annualSaving}</span>万円が手元に戻る
+          </p>
 
-        <div className="relative bg-paper flex items-center justify-center py-5 border-y border-rule">
-          <div className="w-9 h-9 rounded-full bg-sekai-teal flex items-center justify-center">
-            <svg className="w-4 h-4 text-ivory" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+          {/* 年間手数料の比較バー */}
+          <div className="mt-7 space-y-4">
+            <FeeBar label="一般的な代行" amount={result.otherFee} pct={result.otherPct} tone="muted" />
+            <FeeBar label="SEKAI STAY" amount={result.sekaiCost} pct={result.sekaiPct} tone="teal" />
           </div>
-        </div>
 
-        <div className="bg-mist p-8 md:p-10 text-center">
-          <p className="eyebrow-mono text-sekai-teal mb-5">SEKAI STAY に切り替えると</p>
-          <p className="font-sans font-light leading-tight text-ink mb-2 tabular-nums">
-            <span className="text-[20px] md:text-[24px]">{futureYears}年で</span>
-            <span className="text-[44px] md:text-[60px] text-sekai-teal mx-2 font-medium">{result.futureSaving}</span>
-            <span className="text-[22px] md:text-[24px] text-sekai-teal">万円</span>
-            <span className="text-[16px] md:text-[18px] text-dark-gray ml-1">節約</span>
-          </p>
-          <p className="text-[13px] text-dark-gray mt-3 font-sans">
-            年間<span className="font-bold text-sekai-teal mx-1 tabular-nums">{result.annualSaving}</span>万円が手元に戻る
-          </p>
-          <p className="text-[11px] text-mid-gray mt-4 font-sans">
-            ※ 手数料 8% ＋ 物件あたり月額 ¥10,000 で計算
+          <p className="mt-5 text-[11px] leading-[1.7] text-white/70">
+            ※ 年間の手数料（売上に対する手数料率＋固定費）の比較。手数料8%＋物件あたり月額¥10,000で試算。実際の金額は契約条件・物件により異なります。
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function FeeBar({ label, amount, pct, tone }: { label: string; amount: number; pct: number; tone: "muted" | "teal" }) {
+  return (
+    <div>
+      <div className="mb-1 flex items-baseline justify-between text-[12px]">
+        <span className={`font-bold ${tone === "teal" ? "text-white" : "text-white/70"}`}>{label}</span>
+        <span className="font-grotesk font-bold tabular-nums text-white">約 {amount}万円/年</span>
+      </div>
+      <div className="h-3 w-full overflow-hidden rounded-full bg-white/15">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${tone === "teal" ? "bg-bright-teal" : "bg-white/35"}`}
+          style={{ width: `${Math.max(4, pct)}%` }}
+        />
       </div>
     </div>
   );
@@ -715,7 +748,9 @@ function Step3Contact({
   return (
     <div className="space-y-8">
       <Field number="07" label="お名前" required>
+        {(id) => (
         <input
+          id={id}
           type="text"
           value={name}
           onChange={(e) => onChange("name", e.target.value)}
@@ -724,9 +759,12 @@ function Step3Contact({
           placeholder="山田 太郎"
           className={editorialInput}
         />
+        )}
       </Field>
       <Field number="08" label="メールアドレス" required>
+        {(id) => (
         <input
+          id={id}
           type="email"
           inputMode="email"
           value={email}
@@ -736,9 +774,12 @@ function Step3Contact({
           placeholder="example@email.com"
           className={editorialInput}
         />
+        )}
       </Field>
       <Field number="09" label="電話番号" required>
+        {(id) => (
         <input
+          id={id}
           type="tel"
           inputMode="tel"
           value={phone}
@@ -748,9 +789,12 @@ function Step3Contact({
           placeholder="090-1234-5678"
           className={editorialInput}
         />
+        )}
       </Field>
       <Field number="10" label="現状の課題（任意）">
+        {(id) => (
         <textarea
+          id={id}
           value={complaints}
           onChange={(e) => onChange("complaints", e.target.value)}
           rows={5}
@@ -758,6 +802,7 @@ function Step3Contact({
           placeholder="現代行や運営面でのご不満・ご要望があればお書きください"
           className={editorialInput + " resize-none"}
         />
+        )}
       </Field>
     </div>
   );

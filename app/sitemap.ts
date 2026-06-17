@@ -30,7 +30,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/portfolio`,    lastModified: new Date('2026-03-25'), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/dashboard-demo`, lastModified: new Date('2026-04-16'), changeFrequency: 'monthly', priority: 0.75 },
     { url: `${baseUrl}/about`,        lastModified: new Date('2026-04-15'), changeFrequency: 'monthly', priority: 0.85 },
-    { url: `${baseUrl}/company`,      lastModified: new Date('2026-02-01'), changeFrequency: 'yearly',  priority: 0.6 },
     { url: `${baseUrl}/contact`,      lastModified: new Date('2026-02-01'), changeFrequency: 'yearly',  priority: 0.7 },
     { url: `${baseUrl}/switch`,       lastModified: new Date('2026-04-20'), changeFrequency: 'weekly',  priority: 0.9 },
     // NOTE: /lp は広告の着地ページ専用。メインサイトのサイトマップには含めない（noindex）。

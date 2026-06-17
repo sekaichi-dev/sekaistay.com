@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import Header from '@/components/Header'
-import Breadcrumb from '@/components/Breadcrumb'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
 import { getAllPosts, getPostBySlug } from '@/lib/blog'
-import { IconArrowRight, IconCalendar, IconCheck } from '@/components/Icons'
+import { IconArrowRight, IconCalendar } from '@/components/Icons'
+import AuditLink from '@/components/audit/AuditLink'
 
 const SITE_URL = 'https://sekaistay.com'
 
@@ -200,63 +201,55 @@ export default function BlogPostPage({ params }: Props) {
   return (
     <>
       <Header />
-      <Breadcrumb items={[{ label: 'コラム', href: '/blog' }, { label: post.title }]} />
       <BlogPostJsonLd post={post} />
       <FloatingCTA />
       <main className="bg-ivory">
         {/* ── Hero ─────────────────────────────────────── */}
-        <section className="bg-paper border-b border-rule">
-          <div className="container-narrow px-5 md:px-8 pt-14 md:pt-20 pb-12 md:pb-16 max-w-3xl">
-            <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">{post.category}</p>
-            </div>
-
-            <h1 className="font-sans font-bold text-[22px] sm:text-[26px] md:text-[36px] text-ink leading-[1.4] mb-8">
+        <section className="w-full bg-paper">
+          <div className="container-narrow pt-28 pb-10 sm:pt-32 sm:pb-12">
+            <p className="text-[12px] font-bold tracking-[0.18em] text-sekai-teal">{post.category}</p>
+            <h1 className="mt-5 text-[clamp(1.75rem,4vw,3rem)] font-bold leading-[1.4] tracking-[-0.01em] text-ink">
               {post.title}
             </h1>
-
-            {/* Meta band */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pb-8 border-b border-rule mb-8">
-              <time className="inline-flex items-center gap-2 eyebrow-mono text-mid-gray" dateTime={post.date}>
-                <IconCalendar size={11} />
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 font-grotesk text-[13px] text-ink/50">
+              <time className="inline-flex items-center gap-2" dateTime={post.date}>
+                <IconCalendar size={12} />
                 {post.date}
               </time>
               <span className="h-3 w-px bg-rule" />
-              <p className="eyebrow-mono text-mid-gray">Read · 約{readingMinutes}分</p>
+              <span>約{readingMinutes}分で読めます</span>
             </div>
-
-            <p className="font-sans text-[15px] md:text-[17px] text-dark-gray leading-[2]">
+            <p className="mt-7 max-w-2xl text-[clamp(1rem,1.5vw,1.1875rem)] leading-[2] text-ink/70">
               {post.description}
             </p>
+          </div>
 
-            {/* Hero image */}
-            {post.image && (
-              <div className="aspect-[2/1] sm:aspect-[5/2] overflow-hidden mt-10 border border-rule">
-                <img
-                  src={post.image}
-                  alt={post.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+          {/* Hero image — 黄金比・画像なしはグレー＋ロゴ */}
+          <div className="container-narrow pb-14 sm:pb-20">
+            <div className="relative aspect-[1.618/1] overflow-hidden rounded-[14px] border border-rule">
+              {post.image ? (
+                <Image src={post.image} alt={post.title} fill priority sizes="(max-width: 880px) 100vw, 820px" className="object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-rule">
+                  <img src="/images/switch/logo-lockup.png" alt="SEKAI STAY" className="h-auto w-[26%] max-w-[260px] opacity-40" />
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
         {/* ── Article body ─────────────────────────────── */}
         <article className="section-xl">
-          <div className="container-narrow px-5 md:px-8 max-w-3xl">
-            {/* Author card */}
-            <div className="flex items-center gap-4 mb-12 pb-8 border-b border-rule">
-              <div className="w-12 h-12 bg-ink text-ivory flex items-center justify-center font-sans font-medium text-[18px] flex-shrink-0">
+          <div className="container-narrow">
+            {/* 編集者 byline */}
+            <div className="mb-12 flex items-center gap-4 border-b border-rule pb-8">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-navy text-[18px] font-bold text-white">
                 松
               </div>
               <div>
-                <p className="eyebrow-mono text-sekai-teal mb-1">Column Editor</p>
-                <p className="font-sans font-medium text-[15px] text-ink leading-tight">
-                  松本凌輔
-                </p>
-                <p className="font-sans text-caption text-mid-gray mt-1 leading-relaxed">
+                <p className="text-[11px] font-bold tracking-[0.16em] text-sekai-teal">編集部</p>
+                <p className="mt-1 text-[15px] font-bold leading-tight text-ink">松本凌輔</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-ink/55">
                   agoda CS部門出身 · 民泊業界5年 · 住宅宿泊管理業修了
                 </p>
               </div>
@@ -269,83 +262,72 @@ export default function BlogPostPage({ params }: Props) {
             />
 
             {/* Tags */}
-            <div className="flex flex-wrap gap-2 mt-14 pt-8 border-t border-rule">
-              <p className="eyebrow-mono text-mid-gray w-full mb-3">§ Tags</p>
-              {post.tags.map(tag => (
-                <span key={tag} className="font-sans text-caption text-dark-gray border border-rule bg-mist px-3 py-1">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-
-            {/* Premium CTA */}
-            <div className="relative overflow-hidden bg-ink mt-16">
-              <div
-                className="absolute inset-0 opacity-50 pointer-events-none"
-                style={{
-                  background:
-                    'radial-gradient(circle at 20% 0%, rgba(84,190,195,0.4), transparent 50%), radial-gradient(circle at 80% 100%, rgba(22,123,129,0.35), transparent 55%)',
-                }}
-              />
-              <div className="relative px-7 py-10 md:px-10 md:py-14">
-                <div className="chapter-marker">
-                  <span className="h-px w-10 bg-bright-teal" />
-                  <p className="eyebrow text-bright-teal">SEKAI STAY Management</p>
-                </div>
-                <h2 className="font-sans font-medium text-[22px] md:text-[30px] leading-snug text-ivory mb-3">
-                  民泊運営を、まるごと。
-                  <span className="block font-sans text-bright-teal mt-1">手数料8%で一括代行。</span>
-                </h2>
-                <p className="font-sans text-body-sm text-ivory/80 leading-[1.95] mb-8 max-w-lg">
-                  OTA掲載・プライシング・ゲスト対応・清掃まで。基本料金は売上の8%＋月1万円/物件。かかりうる費用は事前にすべて提示します。
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Link
-                    href="/contact"
-                    className="group inline-flex items-center gap-3 bg-ivory text-ink px-7 py-4 transition hover:bg-bright-teal font-sans font-medium text-[14px]"
-                  >
-                    無料相談する
-                    <IconArrowRight size={14} className="group-hover:translate-x-1 transition" />
-                  </Link>
-                  <Link
-                    href="/services#pricing"
-                    className="group inline-flex items-center gap-3 border border-ivory/30 text-ivory px-7 py-4 transition hover:bg-ivory/5 hover:border-bright-teal font-sans font-medium text-[14px]"
-                  >
-                    収支シミュレーション
-                    <IconArrowRight size={14} className="group-hover:translate-x-1 transition" />
-                  </Link>
-                </div>
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 pt-6 border-t border-ivory/10 font-sans text-caption text-ivory/60">
-                  <span className="inline-flex items-center gap-1.5"><IconCheck size={11} color="#54BEC3" /> 基本料金 8%＋月1万円</span>
-                  <span className="inline-flex items-center gap-1.5"><IconCheck size={11} color="#54BEC3" /> 手数料8%</span>
-                  <span className="inline-flex items-center gap-1.5"><IconCheck size={11} color="#54BEC3" /> 全国対応</span>
-                </div>
+            <div className="mt-14 border-t border-rule pt-8">
+              <p className="text-[11px] font-bold tracking-[0.16em] text-ink/45">TAGS</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {post.tags.map(tag => (
+                  <span key={tag} className="rounded-full border border-rule bg-paper px-3 py-1 text-[12px] text-ink/60">
+                    #{tag}
+                  </span>
+                ))}
               </div>
             </div>
 
-            {/* Related */}
+            {/* CTA — navy */}
+            <div className="relative mt-16 overflow-hidden rounded-[16px] bg-navy px-7 py-10 text-white sm:px-10 sm:py-14">
+              <p className="text-[12px] font-bold tracking-[0.18em] text-bright-teal">SEKAI STAY 運用代行</p>
+              <h2 className="mt-3 text-[clamp(1.375rem,2.4vw,1.875rem)] font-bold leading-[1.5]">
+                民泊運営を、まるごと。
+                <span className="block text-bright-teal">手数料8%で一括代行。</span>
+              </h2>
+              <p className="mt-4 max-w-lg text-[14px] leading-[1.95] text-white/75">
+                OTA掲載・プライシング・ゲスト対応・清掃まで。基本料金は売上の8%＋月1万円/物件。かかりうる費用は事前にすべて提示します。
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <AuditLink className="btn btn-cta !rounded-full group px-7">
+                  無料で収益診断
+                  <IconArrowRight size={14} className="transition group-hover:translate-x-1" />
+                </AuditLink>
+                <Link
+                  href="/pricing"
+                  className="group inline-flex items-center justify-center gap-3 rounded-full border border-white/30 px-7 py-4 text-[14px] font-bold text-white transition hover:border-bright-teal hover:bg-white/5"
+                >
+                  料金を見る
+                  <IconArrowRight size={14} className="transition group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Related — 一覧と同じ黄金比カード */}
             {related.length > 0 && (
               <div className="mt-20">
-                <div className="chapter-marker">
-                  <span className="rule-teal-sm" />
-                  <p className="eyebrow text-sekai-teal">Related Articles</p>
-                </div>
-                <h2 className="font-sans font-medium text-[22px] md:text-[28px] text-ink mb-8">関連記事</h2>
-                <div className="grid md:grid-cols-3 gap-px bg-rule border border-rule rounded-switch-lg overflow-hidden">
-                  {related.map((r, i) => (
+                <p className="text-[12px] font-bold tracking-[0.18em] text-sekai-teal">RELATED</p>
+                <h2 className="mt-2 text-[clamp(1.5rem,3vw,2rem)] font-bold text-ink">関連記事</h2>
+                <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {related.map((r) => (
                     <Link
                       key={r.slug}
                       href={`/blog/${r.slug}`}
-                      className="group block bg-paper p-6 transition hover:bg-mist"
+                      className="group block overflow-hidden rounded-lg border border-rule bg-paper transition hover:-translate-y-0.5"
                     >
-                      <p className="eyebrow-mono text-mid-gray mb-3">No. {String(i + 1).padStart(2, '0')}</p>
-                      <p className="eyebrow text-sekai-teal mb-3">
-                        {r.category}
-                      </p>
-                      <p className="font-sans font-medium text-[14px] md:text-[15px] text-ink group-hover:text-sekai-teal transition leading-snug mb-3 line-clamp-3">
-                        {r.title}
-                      </p>
-                      <p className="font-sans text-caption text-mid-gray">{r.date}</p>
+                      <div className="relative aspect-[1.618/1] overflow-hidden">
+                        {r.image ? (
+                          <Image src={r.image} alt={r.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-rule">
+                            <img src="/images/switch/logo-lockup.png" alt="SEKAI STAY" className="h-auto w-[46%] max-w-[180px] opacity-40" loading="lazy" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-5">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[12px] font-bold tracking-[0.12em] text-sekai-teal">{r.category}</p>
+                          <p className="font-grotesk text-[12px] text-ink/50">{r.date}</p>
+                        </div>
+                        <p className="mt-2 text-[15px] font-bold leading-snug text-ink line-clamp-3 transition group-hover:opacity-70">
+                          {r.title}
+                        </p>
+                      </div>
                     </Link>
                   ))}
                 </div>
@@ -353,10 +335,10 @@ export default function BlogPostPage({ params }: Props) {
             )}
 
             {/* Back to index */}
-            <div className="mt-16 pt-10 border-t border-rule text-center">
+            <div className="mt-16 border-t border-rule pt-10 text-center">
               <Link
                 href="/blog"
-                className="inline-flex items-center gap-2 font-sans text-body-sm text-sekai-teal hover:text-ink transition"
+                className="inline-flex items-center gap-2 text-[14px] font-bold text-sekai-teal transition hover:text-ink"
               >
                 ← コラム一覧へ戻る
               </Link>

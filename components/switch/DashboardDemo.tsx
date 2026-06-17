@@ -89,7 +89,7 @@ const properties = [
   { name: "京都町家貸切C", emoji: "🏯", rating: 4.97, occupancy: 81, pricePerNight: 40000, bg: "from-[#5aaa9e] to-[#3a8a7e]", location: "京都府京都市" },
 ];
 
-export default function DashboardDemo() {
+export default function DashboardDemo({ noteClass = 'text-switch-gray-mid' }: { noteClass?: string } = {}) {
   const [activeTab, setActiveTab] = useState(0);
 
   return (
@@ -138,7 +138,7 @@ export default function DashboardDemo() {
           </div>
         </div>
 
-        <p className="text-[10px] text-switch-gray-mid text-center mt-2">
+        <p className={`text-[10px] ${noteClass} text-center mt-2`}>
           ※こちらのダッシュボードはサンプルです。
         </p>
       </div>

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Header from '@/components/Header'
-import Breadcrumb from '@/components/Breadcrumb'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
 
@@ -62,7 +61,6 @@ export default function PrivacyPage() {
   return (
     <>
       <Header />
-      <Breadcrumb items={[{ label: 'プライバシーポリシー' }]} />
       <FloatingCTA />
       <main className="bg-ivory">
         {/* Chapter Ⅰ — masthead */}

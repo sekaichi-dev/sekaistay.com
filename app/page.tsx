@@ -2,23 +2,23 @@ import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { getAllPostSummaries } from '@/lib/blog'
 
 /* ── Above-fold: static imports (critical path) ── */
-import SwitchHero from '@/components/switch/SwitchHero'
+import HomeHero from '@/components/home/HomeHero'
 
 /* ── Below-fold: dynamic imports (reduce initial JS bundle) ── */
 const FloatingCTA = dynamic(() => import('@/components/FloatingCTA'), { ssr: false })
-const ProductShowcase = dynamic(() => import('@/components/home/ProductShowcase'))
-const HowItWorks = dynamic(() => import('@/components/home/HowItWorks'))
-const ServiceBuckets = dynamic(() => import('@/components/home/ServiceBuckets'))
-const PricingBand = dynamic(() => import('@/components/home/PricingBand'))
-const ResultsProof = dynamic(() => import('@/components/home/ResultsProof'))
-const PersonaPaths = dynamic(() => import('@/components/home/PersonaPaths'))
-const FoundersBand = dynamic(() => import('@/components/home/FoundersBand'))
-const TenQuestionsCompact = dynamic(() => import('@/components/home/TenQuestionsCompact'))
-const TrustBase = dynamic(() => import('@/components/home/TrustBase'))
-const FaqEleven = dynamic(() => import('@/components/home/FaqEleven'))
-const FinalCtaLadder = dynamic(() => import('@/components/home/FinalCtaLadder'))
+const BusinessSense = dynamic(() => import('@/components/home/SenseSections').then(m => m.BusinessSense))
+const AboutSense = dynamic(() => import('@/components/home/SenseSections').then(m => m.AboutSense))
+const ContactSense = dynamic(() => import('@/components/home/SenseSections').then(m => m.ContactSense))
+const ValueBand = dynamic(() => import('@/components/home/SenseSections2').then(m => m.ValueBand))
+const ResultsSense = dynamic(() => import('@/components/home/SenseSections2').then(m => m.ResultsSense))
+const OpeningFlowSense = dynamic(() => import('@/components/home/SenseSections2').then(m => m.OpeningFlowSense))
+const FaqTealSense = dynamic(() => import('@/components/home/SenseSections2').then(m => m.FaqTealSense))
+const NewsSense = dynamic(() => import('@/components/home/SenseSections2').then(m => m.NewsSense))
+const MagazineSense = dynamic(() => import('@/components/home/SenseSections2').then(m => m.MagazineSense))
+const CompanyTeaser = dynamic(() => import('@/components/home/SenseSections2').then(m => m.CompanyTeaser))
 
 /* ─── SEO Meta ────────────────────────────────── */
 
@@ -41,23 +41,23 @@ export const metadata: Metadata = {
 /* ─── Page ────────────────────────────────────── */
 
 export default function Home() {
+  const magazinePosts = getAllPostSummaries().slice(0, 5)
   return (
     <>
       <Header />
       <FloatingCTA />
       <main>
-        <SwitchHero showUrgencyStrip={false} showBadge={false} showCta={false} />
-        <ProductShowcase />
-        <HowItWorks />
-        <ServiceBuckets />
-        <PricingBand />
-        <ResultsProof />
-        <PersonaPaths />
-        <FoundersBand />
-        <TenQuestionsCompact />
-        <TrustBase />
-        <FaqEleven />
-        <FinalCtaLadder />
+        <HomeHero />
+        <AboutSense />
+        <NewsSense />
+        <BusinessSense />
+        <ValueBand />
+        <ResultsSense />
+        <OpeningFlowSense />
+        <MagazineSense posts={magazinePosts} />
+        <FaqTealSense />
+        <CompanyTeaser />
+        <ContactSense />
       </main>
       <Footer />
     </>

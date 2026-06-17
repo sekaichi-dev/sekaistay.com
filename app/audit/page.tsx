@@ -1,10 +1,11 @@
 'use client'
 
 import Header from '@/components/Header'
-import Breadcrumb from '@/components/Breadcrumb'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
 import EngagementTracker from '@/components/EngagementTracker'
+import SectionHead from '@/components/ds/SectionHead'
+import GhostWordmark from '@/components/ds/GhostWordmark'
 import { AuditReportRequestForm } from '@/components/audit/AuditReportRequestForm'
 
 /* ─────────────────────────────────────────────────────────────
@@ -33,31 +34,34 @@ export default function AuditPage() {
           page_view は layout の config が、フォームの funnel イベントは AuditReportRequestForm が既に送信済み。 */}
       <EngagementTracker lpVariant="audit" />
       <main className="bg-ivory">
-        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: '無料物件診断' }]} />
 
-        {/* Hero / Masthead */}
-        <section data-track-section="hero" className="bg-paper border-b border-rule">
-          <div className="container-edit section-hero">
-            <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Free Property Audit</p>
+        {/* Hero — 他ページと統一（巨大ENラベル＋和文サブ＋リード） */}
+        <section data-track-section="hero" className="relative w-full overflow-hidden bg-ivory section-hero pt-28 sm:pt-32">
+          <GhostWordmark />
+          <div className="relative z-10 container-edit">
+            <SectionHead
+              as="h1"
+              hero
+              en="REPORT"
+              sub="無料で診断レポートをもらう"
+              lead="入力は約3分、費用は一切かかりません。物件の稼働率の改善余地・他社との手数料差・収益を伸ばす運用プランを、専任担当が個別レポートにまとめ、最短1営業日以内にメールでお届けします。診断後にしつこい営業のお電話はありません。"
+            />
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3">
+              {['約3分で入力完了', '最短1営業日でお届け', '営業電話なし・登録不要'].map((t) => (
+                <span key={t} className="inline-flex items-center gap-2 text-[13px] font-bold text-ink/70">
+                  <svg className="h-4 w-4 shrink-0 text-sekai-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {t}
+                </span>
+              ))}
             </div>
-            <h1 className="heading-display text-ink mb-5">
-              無料物件診断
-              <span className="block font-sans font-light text-mid-gray text-[0.6em] mt-3">
-                3 minutes · personalized report
-              </span>
-            </h1>
-            <p className="lead text-dark-gray max-w-2xl">
-              あなたの物件の稼働率改善余地・手数料比較・運営ロードマップを、SEKAI STAY
-              の担当アナリストが個別レポートとしてお届けします。最短24時間後にメールでご返送します。
-            </p>
           </div>
         </section>
 
         {/* Form */}
-        <section data-track-section="form" className="section-xl">
-          <div className="container-edit max-w-2xl mx-auto px-5 md:px-8">
+        <section data-track-section="form" className="w-full bg-paper section-2xl">
+          <div className="container-edit mx-auto max-w-2xl">
             <AuditReportRequestForm />
           </div>
         </section>

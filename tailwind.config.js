@@ -25,6 +25,13 @@ module.exports = {
         'mist':         '#F7F5F0',
         'rule':         '#E6E1D6',
         'ink':          '#1A1A1A',
+        // Brass — DESIGN.md の“格”の差し色（要所のみ <5%）
+        'brass':        '#C9A86A',
+        'brass-bright': '#F0D8A4',
+        // Navy — sense-trust 準拠（#003C87）。ティールは差し色に。
+        'navy':         '#167B81',
+        'navy-deep':    '#0E565A',
+        'navy-hover':   '#13696D',
         // Legacy / semantic
         'danger':        '#B91C1C',
         'danger-bg':     '#FEF2F2',
@@ -73,11 +80,16 @@ module.exports = {
         display: ['Helvetica Neue', 'var(--font-noto-sans-jp)', 'Arial', 'sans-serif'],
         mincho: ['var(--font-noto-sans-jp)', 'Helvetica Neue', 'Arial', 'sans-serif'],
         mono: ['SFMono-Regular', 'Consolas', 'Menlo', 'monospace'],
+        // DESIGN.md: 英見出し・数字 / 英ラベル・番号
+        grotesk: ['var(--font-grotesk)', 'var(--font-noto-sans-jp)', 'Helvetica Neue', 'sans-serif'],
+        'mono-editorial': ['var(--font-space-mono)', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       fontSize: {
-        'display-xl': ['clamp(2.75rem, 7vw, 5.75rem)', { lineHeight: '1.02', letterSpacing: '-0.02em' }],
+        // 大胆タイポ主導スケール（DESIGN.md §3.3）
+        'display-hero': ['clamp(2.75rem, 7.6vw, 5.5rem)', { lineHeight: '1.08', letterSpacing: '-0.03em' }],
+        'display-xl': ['clamp(2.5rem, 6vw, 4.5rem)', { lineHeight: '1.1', letterSpacing: '-0.025em' }],
         'display-lg': ['clamp(2.25rem, 5.5vw, 4.25rem)', { lineHeight: '1.08', letterSpacing: '-0.015em' }],
-        'display-md': ['clamp(1.75rem, 3.6vw, 2.75rem)', { lineHeight: '1.18', letterSpacing: '-0.005em' }],
+        'display-md': ['clamp(1.75rem, 3.6vw, 2.75rem)', { lineHeight: '1.2', letterSpacing: '-0.01em' }],
         'display-sm': ['clamp(1.375rem, 2.4vw, 1.75rem)', { lineHeight: '1.3', letterSpacing: '0' }],
       },
       borderRadius: {

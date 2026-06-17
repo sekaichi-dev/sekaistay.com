@@ -1,21 +1,12 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import Image from 'next/image'
 import Header from '@/components/Header'
-import Breadcrumb from '@/components/Breadcrumb'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
-import { JP } from '@/components/JP'
-import {
-  IconArrowRight,
-  IconCheck,
-  IconSparkles,
-  IconShield,
-  IconTrendingUp,
-  IconStar,
-  IconGlobe,
-  IconChart,
-} from '@/components/Icons'
+import SectionHead from '@/components/ds/SectionHead'
+import GhostWordmark from '@/components/ds/GhostWordmark'
+import RelatedLinks from '@/components/ds/RelatedLinks'
+import Reveal from '@/components/motion/Reveal'
+import { ContactSense } from '@/components/home/SenseSections'
 
 const SITE_URL = 'https://sekaistay.com'
 
@@ -58,491 +49,284 @@ function AboutJsonLd() {
         { '@type': 'Person', name: '明神 洸次郎' },
       ],
       areaServed: 'JP',
-      slogan: '宿を管理するのではない。宿の価値を伸ばす。',
+      slogan: '物件の価値最大化×透明性のある民泊運用',
     },
   }
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
 }
 
-/* ─── Founder card — editorial ─ */
-function FounderCard({
-  number,
-  photo,
-  name,
-  kana,
-  role,
-  quote,
-  bio,
-}: {
-  number: string
-  photo: string
-  name: string
-  kana: string
-  role: string
-  quote: string
-  bio: string[]
-}) {
-  return (
-    <article className="bg-paper border border-switch-stone-border rounded-switch-lg shadow-switch-card overflow-hidden">
-      {/* Portrait photo */}
-      <div className="relative w-full aspect-[16/10] overflow-hidden">
-        <Image
-          src={photo}
-          alt={`${name} — ${role}`}
-          fill
-          sizes="(max-width: 768px) 100vw, 560px"
-          quality={85}
-          className="object-cover object-top"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, rgba(26,26,26,0) 55%, rgba(26,26,26,0.55) 100%)' }}
-        />
-        <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between text-ivory">
-          <div>
-            <p className="font-sans font-light text-[14px] text-ivory/80 mb-0.5">{kana}</p>
-            <h3 className="font-sans font-medium text-[22px] md:text-[26px] leading-tight">{name}</h3>
-          </div>
-          <p className="eyebrow-mono !text-[9px] text-ivory/70">№ {number}</p>
-        </div>
-      </div>
+/* ─── データ（トップの AboutSense / MessageSense と一致） ─────── */
+const ABOUT_REASONS = [
+  {
+    no: '01',
+    title: '透明性のある運用体制',
+    body: '透明性のある運営を目指し、売上・予約・チャット・経費まで、必要な情報をすべてあなた専用のダッシュボードでリアルタイムに確認できます。物件の“いま”がひと目で見えて、まるでゲームのように売上の動きを追えます。',
+    img: '/images/switch/dashboard-mockup.png',
+  },
+  {
+    no: '02',
+    title: '業界平均15〜25%に対し、手数料8%',
+    body: '料金は売上の8% ＋ ¥10,000/物件/月。SEKAI STAYでは「オーナーファースト」を掲げ、業界平均を大きく下回る8%という水準を実現しています。',
+  },
+  {
+    no: '03',
+    title: '物件の収益最大化を図るサポート',
+    body: '各種予約サイトの写真・文章の最適化、運用歴5年のビッグデータをもとにした価格設計、多言語対応など。稼働率・客室単価・宿泊満足度を指標に、高い収益性を生み出します。',
+  },
+]
 
-      <div className="p-8 md:p-10">
-      {/* Role strip */}
-      <div className="flex items-center justify-between mb-7 pb-6 border-b border-rule">
-        <p className="eyebrow text-sekai-teal">{role}</p>
-      </div>
+const MVV = [
+  {
+    label: 'MISSION',
+    ja: 'ミッション',
+    title: '宿の価値を、正しく伸ばす。',
+    body: '日本にはまだ世界に届くべき宿が数多くあります。魅力を磨き、伝え、売上まで伸ばす。宿を預かるだけでなく、その価値そのものを育てる運用を実装します。',
+  },
+  {
+    label: 'VISION',
+    ja: 'ビジョン',
+    title: '民泊運用を、もっと健全で透明に。',
+    body: '不透明な手数料や属人的な運用が残る業界を、適正な価格と見える運営へ。オーナーが人に自慢できるくらい透明なサービスを、当たり前にしていきます。',
+  },
+  {
+    label: 'VALUE',
+    ja: 'バリュー',
+    title: 'オーナー目線で、再現性のある運用を。',
+    body: '管理件数ではなく1件1件の成果を起点に判断します。仕組みとチームで品質を支え、短期の効率より長く信頼される運用を選びます。',
+  },
+]
 
-      {/* Pull quote */}
-      <blockquote className="border-l-2 border-sekai-teal pl-5 md:pl-6 mb-8">
-        <p className="font-sans font-light text-[20px] md:text-[24px] text-ink leading-[1.45]">
-          「{quote}」
-        </p>
-      </blockquote>
+const FOUNDERS = [
+  {
+    img: '/images/founders/tenichi.png',
+    role: '代表取締役 CEO',
+    name: '劉 添毅',
+    romaji: 'Tenichi Liu',
+    bio: 'Amazon 米国本社でオペレーション設計に従事し、データに基づく業務最適化を主導。その後、日米で複数の民泊物件をオーナーとして運営する中で、業界に根づく不透明な手数料構造と「見えない運用」に当事者として直面した。運営をすべて仕組み化し、透明にする——その構想を形にするため SEKAI STAY を創業。',
+    comment:
+      '民泊運用代行の相場である手数料15〜25%は、すべてを人の手で回す前提で組み上がった金額です。私たちは一つひとつの業務を分解して仕組みに落とし込み、手数料を抑えながら運営品質をむしろ高めることに挑んでいます。そして同じくらい大切にしているのが、運営の中身を「見える」状態にすること。何にいくらかかり、なぜその判断をしたのか——すべてをダッシュボードでお見せします。数字とプロセスを開示し、納得して長く任せていただける。そんな運用代行を、業界の新しい当たり前にしていきます。',
+  },
+  {
+    img: '/images/founders/jiro.png',
+    role: '共同代表 Co-CEO',
+    name: '明神 洸次郎',
+    romaji: 'Kojiro Myojin',
+    bio: '登録者125万人超のYouTubeグループ「カリスマブラザーズ」を「ジロー」として10年以上牽引し、旅と宿の魅力を伝える発信で幅広い支持を集めてきた。その「伝える力」と現場感覚を、物件の見せ方・ゲスト体験・オーナーポータルの設計に注ぎ込んでいる。',
+    comment:
+      '民泊で成果を分けるのは、予約サイトに載せることではなく、その物件の魅力を正しく伝え、選ばれ続ける状態をつくり込めるかどうかです。写真一枚、料金の付け方、レビューへの一言、ゲストへの対応——その積み重ねが稼働率を大きく動かします。私たちは管理業務を代行するだけでなく、見せ方から価格設計、ゲスト満足度の向上まで踏み込み、物件ごとに「どうすれば伸びるか」を一緒に考え抜きます。預かるのではなく、共に育てる。大切な物件だからこそ、その可能性を最後まで引き出させてください。',
+  },
+]
 
-      {/* Bio */}
-      <div className="space-y-3">
-        {bio.map((line, i) => (
-          <p key={i} className="font-sans text-body-sm text-dark-gray leading-[1.95]">
-            {line}
-          </p>
-        ))}
-      </div>
-      </div>
-    </article>
-  )
-}
+/* ─── 会社概要（旧 /company から統合） ───────────────────────── */
+const COMPANY_INFO = [
+  { label: '社名', value: '株式会社セカイチ（SEKAI STAY事業）' },
+  { label: '所在地', value: '〒153-0042\n東京都目黒区青葉台2-20-7 KM中目黒ビル1F' },
+  { label: '代表取締役', value: '劉 添毅（リュウ テンイチ）' },
+  { label: '設立', value: '株式会社セカイチ／SEKAI STAY事業' },
+  { label: '資本金（資本準備金含む）', value: '1,650万円' },
+  { label: '法人番号', value: '4011001162956' },
+  { label: '登録番号', value: '住宅宿泊管理業 国土交通大臣(01)第F05780号' },
+  { label: '事業内容', value: '民泊運用代行・宿泊施設運営' },
+]
 
 /* ─── Page ────────────────────────────────────────────────────── */
 export default function AboutPage() {
-  const stats = [
-    { icon: IconTrendingUp, value: '1.4', unit: '倍', label: '稼働率', sub: '運用改善と見せ方の最適化によって、稼働率の向上を実現（平均改善倍率）。' },
-    { icon: IconChart,      value: '+57', unit: '%',  label: '月間売上', sub: '価格設計、導線改善、集客強化を通じて、売上成長を支援。' },
-    { icon: IconStar,       value: '4.8', unit: '/5', label: 'レビュー評価', sub: '管理物件において、高い顧客満足度を維持。' },
-    { icon: IconShield,     value: '5',   unit: '年+', label: '運用支援', sub: '現場に根ざした運用改善を継続。' },
-    { icon: IconSparkles,   value: '20',  unit: '万人+', label: '自社YouTube', sub: '発信力と見せ方の知見を、宿泊運用にも活用。' },
-    { icon: IconGlobe,      value: '7',   unit: '拠点', label: '全国展開', sub: '地域ごとの特性を踏まえた運用支援が可能。' },
-  ]
-
-  const credo = [
-    {
-      num: '01',
-      title: '透明に向き合う。',
-      body:
-        '何をしているか分からない運用にはしません。料金も、判断も、改善の理由も、できる限りオーナーに見える形で共有します。大切なのは、任せやすさだけでなく、納得できることだから。',
-    },
-    {
-      num: '02',
-      title: 'オーナー目線で考える。',
-      body:
-        '大事なのは、管理件数ではなく1件1件の成果です。"こちらの都合"ではなく"オーナーにとって本当にいいか"を起点に判断します。短期の効率より、長く信頼される運用を。',
-    },
-    {
-      num: '03',
-      title: '管理で終わらせない。',
-      body:
-        '宿は、ただ回すだけでは伸びません。見せ方、伝え方、価格設計、集客導線まで整えて、価値そのものを育てます。宿を預かる会社ではなく、宿の価値を伸ばす会社でありたい。',
-    },
-  ]
-
-  const pillars = ['もっとわかりやすく。', 'もっと綺麗に。', 'もっと透明に。', '最小限の手数料で。']
-  const teamRoles = ['オペレーション', '清掃', 'ゲスト対応', '撮影・制作', '掲載改善']
-
   return (
     <>
       <Header />
-      <Breadcrumb items={[{ label: '私たちについて' }]} />
       <AboutJsonLd />
       <FloatingCTA />
 
-      <main className="bg-ivory">
-        {/* ─────────── Chapter Ⅰ. Hero — dark editorial ─────────── */}
-        <section className="relative bg-ink text-ivory overflow-hidden">
-          <div
-            aria-hidden
-            className="absolute -top-40 -right-40 w-[520px] h-[520px] rounded-full opacity-40 blur-3xl pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(84,190,195,0.55), transparent 60%)' }}
-          />
-          <div
-            aria-hidden
-            className="absolute -bottom-40 -left-40 w-[460px] h-[460px] rounded-full opacity-30 blur-3xl pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(22,123,129,0.6), transparent 60%)' }}
-          />
-
-          <div className="container-edit relative section-hero">
-            <div className="chapter-marker">
-              <span className="h-px w-10 bg-bright-teal" />
-              <p className="eyebrow text-bright-teal">About SEKAI STAY</p>
-            </div>
-            <h1 className="heading-display heading-mb-lg jp-keep">
-              <JP>宿を管理するのではない。</JP>
-              <span className="block text-bright-teal mt-2"><JP>宿の価値を伸ばす。</JP></span>
-            </h1>
-            <div className="section-grid items-start">
-              <p className="font-sans text-[16px] md:text-[18px] text-bright-teal/90 leading-[1.9]">
-                —&nbsp;Not a manager. A steward of value.
-              </p>
-              <p className="text-body text-ivory/80 leading-[1.95] max-w-2xl jp-break">
-                SEKAI STAYは、ただ宿を預かるための会社ではありません。宿の魅力を正しく伝え、売上まで伸ばす。運用代行の枠を超えて、宿の価値そのものを育てることを目指しています。
-              </p>
-            </div>
+      <main>
+        {/* ─── Hero — ABOUT（SectionHead h1＋ゴーストワードマーク） ─── */}
+        <section className="relative w-full overflow-hidden bg-ivory section-hero pt-28 sm:pt-32">
+          <GhostWordmark />
+          <div className="relative z-10 container-edit">
+            <SectionHead as="h1" hero en="ABOUT" sub="私たち「SEKAI STAY」の考え方" />
           </div>
         </section>
 
-        {/* ─────────── Chapter Ⅱ. Mission ─────────── */}
-        <section className="section-xl">
-          <div className="container-narrow px-5 md:px-8">
-            <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Our Mission</p>
-            </div>
-            <h2 className="heading-section text-ink mb-12 max-w-3xl">
-              まだ届いていない宿の価値を、
-              <span className="block font-sans text-sekai-teal mt-2">きちんと世界に届ける。</span>
-            </h2>
-
-            <div className="grid md:grid-cols-[1fr_1.2fr] gap-10 md:gap-16">
-              <div>
-                <p className="eyebrow-mono text-mid-gray mb-5">§ Prologue</p>
-                <span className="block w-10 h-px bg-rule mb-5" />
-                <p className="font-sans text-[17px] md:text-[19px] text-ink leading-[1.75]">
-                  日本には、世界に届くべき宿がまだ数多くあります。
-                </p>
-              </div>
-              <div className="space-y-6 font-sans text-body md:text-[17px] text-dark-gray leading-[2]">
-                <p>
-                  けれどこの業界では、宿を持つ人と、その価値を伝えられる人が分かれすぎている。本来伸びるはずの宿が、埋もれたままになっています。
-                </p>
-                <p>
-                  SEKAI STAYは、宿を預かるだけの会社ではありません。魅力を磨き、伝え、売上まで伸ばす。その&ldquo;宿の価値を伸ばす運用&rdquo;を実装するために生まれました。
-                </p>
-              </div>
-            </div>
-
-            {/* Pillars — ledger */}
-            <div className="bg-rule grid grid-cols-2 md:grid-cols-4 gap-px mt-16 border border-rule rounded-switch-lg overflow-hidden">
-              {pillars.map((t, i) => (
-                <div
-                  key={t}
-                  className="bg-paper p-8 md:p-10"
-                >
-                  <p className="eyebrow-mono text-mid-gray mb-3">№ {String(i + 1).padStart(2, '0')}</p>
-                  <p className="font-sans font-medium text-[15px] md:text-[17px] text-ink leading-snug">{t}</p>
-                  <span className="block w-6 h-px bg-sekai-teal mt-4" />
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-16 text-center">
-              <span className="block w-10 h-px bg-rule mx-auto mb-6" />
-              <p className="font-sans font-light text-[22px] md:text-[30px] text-ink leading-[1.5] max-w-2xl mx-auto">
-                宿泊運用のあり方そのものを、より健全で、より本質的なものへ。
-              </p>
-              <p className="eyebrow-mono text-sekai-teal mt-6">— It is our mission.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* ─────────── Chapter Ⅲ. Origin ─────────── */}
-        <section className="section-xl bg-bone border-y border-rule">
-          <div className="container-narrow px-5 md:px-8">
-            <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Origin Story</p>
-            </div>
-            <h2 className="heading-section text-ink mb-12 max-w-3xl">
-              この業界を、
-              <span className="block font-sans text-sekai-teal mt-2">もっと本質的にできるはずだと思った。</span>
-            </h2>
-
-            <div className="grid md:grid-cols-[auto_1fr] gap-6 md:gap-12">
-              <div className="md:pt-2">
-                <p className="font-sans font-light text-[56px] md:text-[88px] text-sekai-teal leading-none tabular-nums">6</p>
-                <p className="eyebrow-mono text-mid-gray mt-2">Years in the field</p>
-              </div>
-              <div className="space-y-7 font-sans text-body md:text-[17px] text-dark-gray leading-[2]">
-                <p>
-                  民泊事業を立ち上げてから6年間、現場で運用に向き合ってきました。その中で強く感じたのは、<span className="text-ink font-medium">この業界にはまだ非効率と不透明さが多く残っている</span>ということでした。
-                </p>
-                <p>
-                  本来はもっと良くできるのに、業界の慣習の中で、オーナーが見えないコストや不透明な運用を受け入れている。伸びるはずの宿が、力を出しきれないまま終わっている。その現実に、何度も疑問を感じてきました。
-                </p>
-                <p>
-                  だからこそ、<span className="text-ink font-medium">運用の中身を表に出し、オーナーが人に自慢できるくらい透明なサービス</span>をつくる。自動化と仕組み化で管理できる物件数を伸ばしつつ、対話の質はむしろ高める。そこに自社のインバウンド基盤とメディアの知見を掛け合わせ、単なる代行では終わらない運用にしています。
-                </p>
-                <div className="pt-6 border-t border-rule">
-                  <p className="font-sans font-light text-[22px] md:text-[26px] text-ink leading-[1.55]">
-                    SEKAI STAYは、宿を回すためだけの会社ではありません。
-                    <span className="block text-sekai-teal mt-1">宿の価値を、正しく伸ばすための会社です。</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ─────────── Chapter Ⅳ. Founders ─────────── */}
-        <section className="section-xl">
-          <div className="container-edit px-5 md:px-8">
-            <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Founders</p>
-            </div>
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
-              <h2 className="heading-section text-ink max-w-2xl">
-                現場を知る会社だから、
-                <span className="block font-sans text-sekai-teal">つくれた仕組みがあります。</span>
+        {/* ─── Statement（私たちの役割）— 濃紺ゾーン ─── */}
+        <section className="w-full bg-navy section-2xl text-white">
+          <div className="container-edit">
+            <div className="grid gap-10 lg:grid-cols-[0.9fr_1fr] lg:gap-16">
+              <h2 className="text-[clamp(1.75rem,3.6vw,2.75rem)] font-bold leading-[1.4] text-white">
+                物件の価値最大化
+                <span>×</span>
+                <span className="block">透明性のある民泊運用</span>
               </h2>
-              <p className="font-sans text-body-sm text-dark-gray max-w-md leading-[1.95]">
-                運用を知る視点と、伝え方を知る視点。その両方があるからこそ、SEKAI STAYは&ldquo;ただの代行&rdquo;で終わりません。
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <FounderCard
-                number="01"
-                photo="/images/switch/founder-tenichi.png?v=2"
-                name="劉 添毅"
-                kana="Liu Tianyi"
-                role="Co-Founder · Ops & Systems"
-                quote="仕組みで支え、運用を強くする。"
-                bio={[
-                  '米国大学卒業後、Amazon本社に入社。',
-                  'その後独立し、明神と共にSEKAI STAYを設立。',
-                  '海外ネットワークやオペレーション設計、システム開発や事業基盤づくりを担う。',
-                ]}
-              />
-              <FounderCard
-                number="02"
-                photo="/images/switch/founder-koji.png"
-                name="明神 洸次郎"
-                kana="Myojin Kojiro"
-                role="Co-Founder · Brand & Media"
-                quote="伝え方を変えれば、宿の価値はもっと伸びる。"
-                bio={[
-                  '米国留学後、メディア事業を立ち上げ、発信・集客・見せ方の設計を現場で実践。YouTube累計再生回数は6億再生を超える。',
-                  '飲食・メディア・マーケティング領域で事業を展開し、ブランドづくりと集客導線の構築を経験。',
-                  '現在はSEKAI STAYにて、ブランディング、マーケティング、発信・集客導線の設計を担当。',
-                ]}
-              />
+              <div className="space-y-6 text-[15px] leading-[1.95] text-white/75 sm:text-[16px]">
+                <p>
+                  私たちSEKAI STAYは、オーナー様の大切な物件が持つ「観光資産としての価値」を最大化するための、民泊運営の共創パートナーです。物件ごとの魅力や立地特性、需要の変化を捉えながら、収益性と運営品質の両面から、長く選ばれる宿泊施設づくりを支援しています。
+                </p>
+                <p>
+                  私たちが大切にしているのは、「適正な価格設計」と「運営の透明化」。日々の売上、稼働率、予約状況、未対応事項などをリアルタイムで確認できる専用ダッシュボードにより、オーナー様が運営状況をいつでも把握できる体制を整えています。
+                </p>
+                <p>
+                  ただ貸し出す場所ではなく、選ばれ続ける観光資産へ。SEKAI STAYは、テクノロジーと現場運営の力で、物件の可能性を最大限に引き出します。
+                </p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ─────────── Chapter Ⅴ. Numbers ─────────── */}
-        <section className="relative bg-ink text-ivory overflow-hidden">
-          <div
-            aria-hidden
-            className="absolute top-1/2 -right-40 w-[500px] h-[500px] rounded-full opacity-25 blur-3xl pointer-events-none -translate-y-1/2"
-            style={{ background: 'radial-gradient(circle, rgba(84,190,195,0.5), transparent 60%)' }}
-          />
+        {/* ─── 選ばれる3つの理由 ─── */}
+        <section className="w-full bg-ivory section-2xl">
+          <div className="container-edit">
+            <SectionHead en="REASONS" sub="選ばれる3つの理由" />
 
-          <div className="container-edit relative px-5 md:px-8 section-xl">
-            <div className="chapter-marker">
-              <span className="h-px w-10 bg-bright-teal" />
-              <p className="eyebrow text-bright-teal">Numbers</p>
-            </div>
-            <h2 className="font-sans font-bold text-[28px] md:text-[42px] leading-[1.3] mb-14 max-w-3xl">
-              数字で見る、
-              <span className="block font-sans text-bright-teal">SEKAI STAYの現在地。</span>
-            </h2>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 border border-ivory/10 rounded-switch-lg overflow-hidden">
-              {stats.map((s, i) => {
-                const Icon = s.icon
-                return (
-                  <div
-                    key={s.label}
-                    className={`relative p-6 md:p-8 ${
-                      i % 3 !== 2 ? 'md:border-r' : ''
-                    } ${
-                      i % 2 !== 1 ? 'border-r md:border-r' : ''
-                    } ${
-                      i < stats.length - 2 ? 'border-b' : ''
-                    } border-ivory/10`}
-                  >
-                    <div className="flex items-start justify-between mb-6">
-                      <p className="eyebrow-mono text-bright-teal">№ {String(i + 1).padStart(2, '0')}</p>
-                      <Icon size={16} color="#54BEC3" />
-                    </div>
-                    <div className="flex items-baseline gap-1 mb-3">
-                      <span className="font-sans font-light text-[44px] md:text-[64px] text-ivory leading-none tabular-nums">
-                        {s.value}
+            <div className="mt-12 flex flex-col gap-4 sm:mt-16 sm:gap-5">
+              {/* 01: 画像付き・全幅 */}
+              <div className="relative reason-card rounded-[10px] px-7 py-11 sm:px-12 sm:py-14 lg:px-[60px] lg:py-[44px]">
+                <div className="flex flex-col gap-8 lg:block lg:pr-[400px]">
+                  <div>
+                    <div className="flex items-baseline gap-4">
+                      <span className="font-grotesk text-[18px] font-bold tracking-[0.12em] text-ink">
+                        {ABOUT_REASONS[0].no}
                       </span>
-                      <span className="font-sans text-[14px] md:text-[16px] text-bright-teal">{s.unit}</span>
+                      <p className="text-[clamp(1.25rem,2.2vw,1.5rem)] font-bold leading-[1.4] text-ink">
+                        {ABOUT_REASONS[0].title}
+                      </p>
                     </div>
-                    <p className="font-sans font-medium text-[13px] md:text-[15px] text-ivory mb-3 uppercase tracking-wider">
-                      {s.label}
-                    </p>
-                    <p className="font-sans text-caption text-ivory/60 leading-[1.85]">
-                      {s.sub}
+                    <p className="mt-6 max-w-3xl text-[15px] leading-[1.9] text-ink/75 sm:text-[16px]">
+                      {ABOUT_REASONS[0].body}
                     </p>
                   </div>
-                )
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* ─────────── Chapter Ⅵ. Team & Culture ─────────── */}
-        <section className="section-xl">
-          <div className="container-narrow px-5 md:px-8">
-            <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Team &amp; Culture</p>
-            </div>
-            <h2 className="heading-section text-ink mb-12 max-w-3xl">
-              宿の運用は、ひとりの力ではなく、
-              <span className="block font-sans text-sekai-teal mt-2">チームの力でつくる。</span>
-            </h2>
-
-            <div className="space-y-7 font-sans text-body md:text-[17px] text-dark-gray leading-[2]">
-              <p>
-                SEKAI STAYの運用は、属人的な体制ではありません。分析を自動化し、各領域の実務者を当てこむことで、すべての物件を同じクオリティで運用します。オペレーション、清掃、ゲスト対応、撮影、掲載改善まで、業務委託を含む<span className="text-ink font-medium">約35名の体制</span>です。
-              </p>
-              <p>
-                清潔さ、対応の速さ、写真の印象、ゲストとの対話。その一つひとつが、レビューになり、売上になる。<span className="text-ink font-medium">現場の質が、そのまま宿の価値になる。</span>そんな前提で、日々改善を重ねています。
-              </p>
-            </div>
-
-            {/* Team roles — ledger band */}
-            <div className="mt-14 bg-paper border border-rule rounded-switch-lg overflow-hidden">
-              <div className="px-6 py-4 border-b border-rule flex items-center justify-between">
-                <p className="eyebrow-mono text-mid-gray">Team Composition</p>
-                <p className="font-sans font-light text-[22px] text-sekai-teal tabular-nums">35<span className="text-[14px] font-sans text-ink ml-1">名</span></p>
+                  <div className="flex justify-center lg:block">
+                    <img
+                      src={ABOUT_REASONS[0].img}
+                      alt="オーナー専用ダッシュボード"
+                      loading="lazy"
+                      className="block w-[70%] max-w-[300px] drop-shadow-[0_20px_50px_rgba(0,0,0,0.2)] sm:w-[48%] lg:absolute lg:-top-12 lg:right-[40px] lg:w-[340px] lg:max-w-none"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-5 bg-rule gap-px">
-                {teamRoles.map((t, i) => (
+
+              {/* 02・03: PCで横並び */}
+              <div className="grid gap-5 lg:grid-cols-2">
+                {ABOUT_REASONS.slice(1).map((r) => (
                   <div
-                    key={t}
-                    className="bg-paper px-4 py-6 text-center"
+                    key={r.no}
+                    className="reason-card rounded-[10px] px-7 py-11 sm:px-12 sm:py-14 lg:px-[60px] lg:py-[60px]"
                   >
-                    <p className="eyebrow-mono text-sekai-teal mb-2">{String(i + 1).padStart(2, '0')}</p>
-                    <p className="font-sans text-body-sm text-ink">{t}</p>
+                    <div className="flex items-baseline gap-4">
+                      <span className="font-grotesk text-[18px] font-bold tracking-[0.12em] text-ink">{r.no}</span>
+                      <p className="text-[clamp(1.25rem,2.2vw,1.5rem)] font-bold leading-[1.4] text-ink">{r.title}</p>
+                    </div>
+                    <p className="mt-6 text-[15px] leading-[1.9] text-ink/75 sm:text-[16px]">{r.body}</p>
                   </div>
                 ))}
               </div>
             </div>
-
-            <p className="font-sans text-caption text-mid-gray mt-6 leading-[1.85]">
-              属人的に回すのではなく、仕組みとチームで品質を支える。それが、安定した運用改善につながります。
-            </p>
           </div>
         </section>
 
-        {/* ─────────── Chapter Ⅶ. Credo ─────────── */}
-        <section className="section-xl bg-bone border-y border-rule">
-          <div className="container-edit px-5 md:px-8">
-            <div className="chapter-marker">
-              <span className="rule-teal-sm" />
-              <p className="eyebrow text-sekai-teal">Credo</p>
-            </div>
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
-              <h2 className="heading-section text-ink max-w-2xl">
-                私たちの、
-                <span className="font-sans text-sekai-teal">3つの約束。</span>
-              </h2>
-              <p className="font-sans text-body-sm text-dark-gray max-w-md leading-[1.95]">
-                SEKAI STAYが大切にしている運用哲学。すべての判断はここから始まります。
-              </p>
-            </div>
+        {/* ─── ミッション / ビジョン / バリュー ─── */}
+        <section className="w-full bg-navy section-2xl text-white">
+          <div className="container-edit">
+            <SectionHead light en="PHILOSOPHY" sub="ミッション / ビジョン / バリュー" />
 
-            <div className="bg-rule grid md:grid-cols-3 gap-px border border-rule rounded-switch-lg overflow-hidden">
-              {credo.map(c => (
-                <div
-                  key={c.num}
-                  className="bg-paper p-8 md:p-10"
-                >
-                  <div className="flex items-baseline gap-4 mb-6">
-                    <span className="font-sans font-light text-[44px] md:text-[56px] text-sekai-teal leading-none tabular-nums">
-                      {c.num}
-                    </span>
-                    <div className="flex-1 h-px bg-rule" />
-                  </div>
-                  <h3 className="font-sans font-medium text-[20px] md:text-[22px] text-ink mb-5 leading-snug">
-                    {c.title}
-                  </h3>
-                  <p className="font-sans text-body-sm text-dark-gray leading-[2]">
-                    {c.body}
-                  </p>
+            <div className="mt-12 grid gap-10 sm:mt-16 md:grid-cols-3 md:gap-8">
+              {MVV.map((m) => (
+                <div key={m.label} className="border-t border-white/20 pt-6">
+                  <p className="font-grotesk text-[13px] font-bold tracking-[0.16em] text-bright-teal">{m.label}</p>
+                  <p className="mt-1 text-[13px] font-bold text-white/70">{m.ja}</p>
+                  <p className="mt-6 text-[clamp(1.25rem,2vw,1.5rem)] font-bold leading-[1.5] text-white">{m.title}</p>
+                  <p className="mt-4 text-[14px] leading-[1.9] text-white/75">{m.body}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ─────────── Chapter Ⅷ. Closing CTA ─────────── */}
-        <section className="relative bg-ink text-ivory overflow-hidden">
-          <div
-            aria-hidden
-            className="absolute inset-0 opacity-50 pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(circle at 20% 0%, rgba(84,190,195,0.4), transparent 50%), radial-gradient(circle at 80% 100%, rgba(22,123,129,0.35), transparent 55%)',
-            }}
-          />
-          <div className="container-narrow relative px-5 md:px-8 section-xl">
-            <div className="chapter-marker">
-              <span className="h-px w-10 bg-bright-teal" />
-              <p className="eyebrow text-bright-teal">Begin</p>
-            </div>
-            <h2 className="font-sans font-bold text-[28px] md:text-[44px] leading-[1.3] mb-8 max-w-3xl">
-              まずは、あなたの宿の
-              <span className="block font-sans text-bright-teal mt-2">可能性を知るところから。</span>
-            </h2>
-            <p className="font-sans text-body md:text-[17px] text-ivory/80 leading-[1.95] mb-10 max-w-2xl">
-              運用を見直したい。今の委託先に違和感がある。そんな方は、まずご相談ください。宿の現状から改善の余地まで、無料で見にいきます。
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 mb-10">
-              <Link
-                href="/contact"
-                className="group inline-flex items-center justify-between gap-4 bg-ivory text-ink px-7 py-5 transition hover:bg-bright-teal"
-              >
-                <div>
-                  <p className="eyebrow-mono text-mid-gray mb-1">Path A</p>
-                  <p className="font-sans font-medium text-[15px]">無料で相談する</p>
-                </div>
-                <IconArrowRight size={14} className="group-hover:translate-x-1 transition" />
-              </Link>
-              <Link
-                href="/services#pricing"
-                className="group inline-flex items-center justify-between gap-4 border border-ivory/30 text-ivory px-7 py-5 transition hover:bg-ivory/5 hover:border-bright-teal"
-              >
-                <div>
-                  <p className="eyebrow-mono text-bright-teal mb-1">Path B</p>
-                  <p className="font-sans font-medium text-[15px]">収益シミュレーション</p>
-                </div>
-                <IconArrowRight size={14} className="group-hover:translate-x-1 transition" />
-              </Link>
-            </div>
-            <div className="pt-6 border-t border-ivory/10 flex flex-wrap items-center gap-x-6 gap-y-2 font-sans text-caption text-ivory/60">
-              <span className="inline-flex items-center gap-2"><IconCheck size={12} color="#54BEC3" /> 基本料金 8%＋月1万円</span>
-              <span className="inline-flex items-center gap-2"><IconCheck size={12} color="#54BEC3" /> 費用は事前見積もりで全提示</span>
+        {/* ─── 代表メッセージ（MESSAGE）— エディトリアル（sense-trust 基準） ─── */}
+        <section className="w-full bg-paper section-2xl">
+          <div className="container-edit">
+            <SectionHead en="MESSAGE" sub="代表メッセージ" />
 
-            </div>
+            {/* プルステートメント */}
+            <Reveal as="p" className="mt-10 max-w-3xl text-[clamp(1.5rem,3.4vw,2.625rem)] font-bold leading-[1.5] tracking-[-0.01em] text-ink sm:mt-14">
+              民泊代行の常識を、<br className="hidden sm:block" />数字と透明性で塗り替える。
+            </Reveal>
+
+            {/* CEO（劉 添毅）— 写真（元比率・左）｜ 役職・氏名・経歴・本文（右） */}
+            <Reveal as="div" className="mt-12 grid gap-8 sm:mt-16 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-12">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={FOUNDERS[0].img}
+                alt={`${FOUNDERS[0].name} — ${FOUNDERS[0].role}`}
+                loading="lazy"
+                className="w-full max-w-[280px] rounded-2xl lg:sticky lg:top-28"
+              />
+              <div>
+                <p className="text-[12px] font-bold tracking-[0.18em] text-sekai-teal">{FOUNDERS[0].role}</p>
+                <div className="mt-3 flex items-baseline gap-3">
+                  <p className="text-[clamp(1.5rem,2.6vw,2rem)] font-bold leading-none text-ink">{FOUNDERS[0].name}</p>
+                  <span className="text-[13px] tracking-wide text-ink/45">{FOUNDERS[0].romaji}</span>
+                </div>
+                <p className="mt-4 text-[12.5px] leading-[1.9] text-ink/55">{FOUNDERS[0].bio}</p>
+                <p className="mt-6 border-t border-rule pt-6 text-[clamp(1.0625rem,1.35vw,1.25rem)] leading-[2.05] text-ink">{FOUNDERS[0].comment}</p>
+              </div>
+            </Reveal>
+
+            {/* Co-CEO（明神 洸次郎）— 写真（元比率）＋ メッセージ本文 */}
+            <Reveal as="div" delay={0.05} className="mt-14 grid gap-8 border-t border-rule pt-12 sm:mt-16 sm:pt-14 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-12">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={FOUNDERS[1].img}
+                alt={`${FOUNDERS[1].name} — ${FOUNDERS[1].role}`}
+                loading="lazy"
+                className="w-full max-w-[280px] rounded-2xl lg:sticky lg:top-28"
+              />
+              <div>
+                <p className="text-[12px] font-bold tracking-[0.18em] text-sekai-teal">{FOUNDERS[1].role}</p>
+                <div className="mt-3 flex items-baseline gap-3">
+                  <p className="text-[clamp(1.5rem,2.6vw,2rem)] font-bold leading-none text-ink">{FOUNDERS[1].name}</p>
+                  <span className="text-[13px] tracking-wide text-ink/45">{FOUNDERS[1].romaji}</span>
+                </div>
+                <p className="mt-4 text-[12.5px] leading-[1.9] text-ink/55">{FOUNDERS[1].bio}</p>
+                <p className="mt-6 border-t border-rule pt-6 text-[clamp(1.0625rem,1.35vw,1.25rem)] leading-[2.05] text-ink">{FOUNDERS[1].comment}</p>
+              </div>
+            </Reveal>
           </div>
         </section>
+
+        {/* ─── 会社概要（COMPANY）— 2分割エディトリアル（sense-trust 基準） ─── */}
+        <section className="w-full bg-ivory section-2xl">
+          <div className="container-edit lg:grid lg:grid-cols-[0.62fr_1.38fr] lg:gap-16">
+            <div className="lg:sticky lg:top-28 lg:self-start">
+              <SectionHead
+                en="COMPANY"
+                sub="会社概要"
+                lead="住宅宿泊管理業 国土交通大臣(01)第F05780号。適正な体制のもと、民泊運用代行・宿泊施設運営を行っています。"
+              />
+            </div>
+            <dl className="mt-10 border-t border-rule lg:mt-0">
+              {COMPANY_INFO.map((row) => (
+                <div
+                  key={row.label}
+                  className="grid grid-cols-1 gap-1.5 border-b border-rule py-7 sm:grid-cols-[200px_1fr] sm:gap-10 sm:py-8"
+                >
+                  <dt className="text-[13px] font-bold tracking-[0.04em] text-ink/50 sm:text-[14px]">{row.label}</dt>
+                  <dd className="whitespace-pre-line text-[15px] leading-[1.9] text-ink sm:text-[16px]">
+                    {row.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+
+        {/* 関連ページ導線 */}
+        <section className="w-full bg-ivory">
+          <div className="container-edit border-t border-rule py-14">
+            <RelatedLinks items={[{ href: '/services', label: 'サービス内容' }, { href: '/case-studies', label: '実績・オーナーの声' }]} />
+          </div>
+        </section>
+
+        {/* ─── 末尾CTA — 共通 ContactSense（REPORT / CONTACT） ─── */}
+        <ContactSense />
       </main>
       <Footer />
     </>

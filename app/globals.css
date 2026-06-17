@@ -24,8 +24,10 @@
     font-feature-settings: "palt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    word-break: auto-phrase;
-    overflow-wrap: anywhere;
+    word-break: normal;
+    line-break: strict;
+    overflow-wrap: break-word;
+    text-wrap: pretty;
     overflow-x: hidden;
   }
 
@@ -35,8 +37,9 @@
     font-weight: 700;
     letter-spacing: 0.005em;
     line-break: strict;
-    word-break: auto-phrase;
+    word-break: normal;
     overflow-wrap: break-word;
+    text-wrap: balance;
     font-feature-settings: "palt" 1;
   }
   h1 { line-height: 1.4; }
@@ -182,6 +185,11 @@
 .section-xl {
   padding-top: clamp(4.5rem, 9vw, 7.5rem);
   padding-bottom: clamp(4.5rem, 9vw, 7.5rem);
+}
+/* sense-trust 風の大胆な縦余白（PCで約152px） */
+.section-2xl {
+  padding-top: clamp(4rem, 10vw, 9.5rem);
+  padding-bottom: clamp(4rem, 10vw, 9.5rem);
 }
 .section-lg {
   padding-top: clamp(3.5rem, 7vw, 5.5rem);
@@ -357,6 +365,28 @@
   color: #167B81;
   border-color: #167B81;
   gap: 0.75rem;
+}
+
+/* ══ CTA（収益診断・最重要CV）：オレンジ＋パルスで最も目立たせる ══ */
+@keyframes cta-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(242, 105, 27, 0.55); }
+  70% { box-shadow: 0 0 0 16px rgba(242, 105, 27, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(242, 105, 27, 0); }
+}
+.btn-cta {
+  background-color: #F2691B !important;
+  color: #ffffff !important;
+  border: 1px solid #F2691B !important;
+  animation: cta-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  transition: background-color 0.3s, transform 0.3s;
+}
+.btn-cta:hover {
+  background-color: #DA5710 !important;
+  border-color: #DA5710 !important;
+  transform: translateY(-2px) scale(1.02);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-cta { animation: none; }
 }
 
 /* ══ Cards ══ */
@@ -726,3 +756,258 @@
   padding: 8px 16px;
   border-radius: var(--switch-radius-md);
 }
+
+/* ─── Home Hero (Editorial × Living Data) ─────────────── */
+@keyframes heroKenBurns {
+  from { transform: scale(1.06) translateY(0); }
+  to   { transform: scale(1.14) translateY(-1.5%); }
+}
+.hero-kenburns {
+  animation: heroKenBurns 18s ease-out forwards;
+}
+@keyframes heroReveal {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-reveal {
+  opacity: 0;
+  animation: heroReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-kenburns, .hero-reveal { animation: none; opacity: 1; transform: none; }
+}
+
+/* ─── DESIGN.md ユーティリティ（Editorial Gallery） ─────── */
+/* 英ラベル・セクション番号: Space Mono / 大文字 / トラッキング */
+.eyebrow-mono {
+  font-family: var(--font-space-mono), 'SFMono-Regular', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 12px;
+  font-weight: 500;
+}
+/* 英数字を Archivo に（統計・%・見出し内の数字） */
+.font-grotesk {
+  font-family: var(--font-grotesk), var(--font-noto-sans-jp), sans-serif;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ─── sense-trust 参考のデザイン言語（teal版） ─────────────── */
+/* 巨大英語ラベル: Helvetica系グロテスク・太字・ネガティブトラッキング（nimbus-sans 相当） */
+.font-display {
+  font-family: "Helvetica Neue", "Arial", "Noto Sans JP", sans-serif;
+}
+.label-giant {
+  font-family: "Helvetica Neue", "Arial", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 0.92;
+}
+/* BusinessSlider: 右からワイプイン（背面の前画像は残るため左に背景が出ない） */
+@keyframes biz-wipe {
+  from { clip-path: inset(0 0 0 100%); transform: scale(1.12); }
+  to { clip-path: inset(0 0 0 0); transform: scale(1); }
+}
+
+/* sense-trust u-text-slide-up 踏襲: 行マスクで下からスライドアップ */
+.slide-up {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.08em;
+}
+.slide-up__inner {
+  display: inline-block;
+  transform: translateY(110%);
+  transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.slide-up.js-show .slide-up__inner {
+  transform: translateY(0);
+}
+
+/* 筆スローガン */
+.font-brush {
+  font-family: var(--font-brush), "Yu Mincho", "Hiragino Mincho ProN", serif;
+}
+
+/* 横スクロールのキネティック・マーキー */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-33.3333%); }
+}
+.marquee {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: marquee-x 22s linear infinite;
+  will-change: transform;
+}
+.marquee-fast { animation-duration: 18s; }
+@media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
+
+/* テック企業っぽい不規則アニメーション・グラデ背景（同系ティール blob mesh） */
+.tech-mesh { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.tech-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  will-change: transform;
+}
+.tech-blob-1 { width: 60vw; height: 60vw; top: -18%; left: -10%; background: #167B81; opacity: 0.75; animation: techDrift1 19s ease-in-out infinite alternate; }
+.tech-blob-2 { width: 55vw; height: 55vw; top: 5%; right: -12%; background: #54BEC3; opacity: 0.5; animation: techDrift2 24s ease-in-out infinite alternate; }
+.tech-blob-3 { width: 50vw; height: 50vw; bottom: -22%; left: 25%; background: #0E565A; opacity: 0.6; animation: techDrift3 28s ease-in-out infinite alternate; }
+@keyframes techDrift1 {
+  0%   { transform: translate(0,0) scale(1); }
+  40%  { transform: translate(22%,18%) scale(1.25); }
+  70%  { transform: translate(8%,-6%) scale(0.95); }
+  100% { transform: translate(-12%,26%) scale(1.15); }
+}
+@keyframes techDrift2 {
+  0%   { transform: translate(0,0) scale(1.1); }
+  45%  { transform: translate(-24%,12%) scale(0.9); }
+  100% { transform: translate(10%,28%) scale(1.3); }
+}
+@keyframes techDrift3 {
+  0%   { transform: translate(0,0) scale(1); }
+  55%  { transform: translate(18%,-20%) scale(1.2); }
+  100% { transform: translate(-16%,-8%) scale(0.92); }
+}
+/* SlideCarousel（ACHIEVEMENT型） */
+/* 右上の矢印スライドボタン */
+.st-car-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+  background: #167B81;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(14, 86, 90, 0.22);
+  transition: background 0.3s, transform 0.3s;
+}
+.st-car-btn:hover { background: #0E565A; transform: scale(1.06); }
+.st-car-btn:active { transform: scale(0.96); }
+/* 濃色背景（navy）上で使う明色ボタン */
+.st-car-btn--light { background: #fff; color: #167B81; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+.st-car-btn--light:hover { background: #F0EEE6; transform: scale(1.06); }
+
+/* REASONS カード — ティール基調の動的メッシュグラデーション（テック企業風・複数ブロブが有機的にドリフト） */
+@keyframes reasonMesh {
+  0%, 100% {
+    background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 50%;
+  }
+  50% {
+    background-position: 26% 20%, 76% 26%, 68% 78%, 22% 80%, 100% 50%;
+  }
+}
+.reason-card {
+  background-color: #D7ECEE;
+  background-image:
+    radial-gradient(circle at 50% 50%, #BBE2E5 0%, transparent 46%),
+    radial-gradient(circle at 50% 50%, #E6F4EF 0%, transparent 42%),
+    radial-gradient(circle at 50% 50%, #AEDCE0 0%, transparent 46%),
+    radial-gradient(circle at 50% 50%, #E9F6F1 0%, transparent 44%),
+    linear-gradient(120deg, #E0F1F1 0%, #CDE8EA 100%);
+  background-size: 160% 160%, 150% 150%, 175% 175%, 150% 150%, 220% 220%;
+  background-repeat: no-repeat;
+  animation: reasonMesh 22s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reason-card { animation: none; }
+}
+/* ドラッグ領域（デフォルトカーソルを隠す） */
+@media (hover: hover) {
+  .st-drag-area, .st-drag-area * { cursor: none; }
+}
+/* フルブリード: トラックを画面幅いっぱいに。左右とも画面端まで流す */
+.st-fullbleed-track {
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  padding-left: 0;
+  padding-right: 0;
+}
+/* マウス追従のドラッグカーソル */
+.st-drag-cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 9999px;
+  background: rgba(14, 86, 90, 0.82);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.st-drag-cursor.is-active { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+@media (hover: none) { .st-drag-cursor { display: none; } }
+@media (prefers-reduced-motion: reduce) { .st-drag-cursor { transition: opacity 0.15s; } }
+
+/* 中央デバイスの浮遊 */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-16px); }
+}
+.float-device { animation: floatY 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .tech-blob, .float-device { animation: none; }
+}
+
+/* スクロールリベール（IntersectionObserver と併用 or 単純フェード） */
+@keyframes stReveal {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.st-reveal { opacity: 0; animation: stReveal 1s cubic-bezier(0.22,1,0.36,1) forwards; }
+@media (prefers-reduced-motion: reduce) { .st-reveal { animation: none; opacity: 1; transform: none; } }
+
+/* 回転バッジ（sense-trust の fv-modal-spin 相当の連続回転） */
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+.spin-slow { animation: spin-slow 14s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .spin-slow { animation: none; } }
+
+/* マスク・リビール（行が下からせり上がる上質な演出） */
+@keyframes maskUp { from { transform: translateY(115%); } to { transform: translateY(0); } }
+.mask-line { overflow: hidden; }
+.mask-line > span { display: block; transform: translateY(115%); animation: maskUp 1s cubic-bezier(0.22,1,0.36,1) forwards; }
+/* 巨大ワードマークの横スライド・イン */
+@keyframes wordmarkIn { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.wordmark-in { opacity: 0; animation: wordmarkIn 1.2s cubic-bezier(0.22,1,0.36,1) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .mask-line > span, .wordmark-in { animation: none; opacity: 1; transform: none; }
+}
+
+/* なめらかな常時ドリフトズーム（再スタートしないのでカクつかない） */
+@keyframes heroDrift { 0% { transform: scale(1.04); } 100% { transform: scale(1.13); } }
+.hero-drift {
+  animation: heroDrift 22s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+@media (prefers-reduced-motion: reduce) { .hero-drift { animation: none; } }
+
+/* MAGAZINE カルーセル: 丸い矢印を右上に（sense-trust 準拠） */
+.st-magazine { position: relative; padding-top: 4.25rem; }
+.st-magazine .splide__arrows { position: absolute; top: 0; right: 0; display: flex; gap: 0.75rem; }
+.st-magazine .splide__arrow {
+  position: static; transform: none; width: 3.25rem; height: 3.25rem;
+  background: #ffffff; border: 1px solid #E6E1D6; border-radius: 9999px; opacity: 1;
+  transition: background 0.2s, color 0.2s;
+}
+.st-magazine .splide__arrow svg { width: 1.05rem; height: 1.05rem; fill: #003C87; }
+.st-magazine .splide__arrow:hover { background: #003C87; }
+.st-magazine .splide__arrow:hover svg { fill: #ffffff; }
+.st-magazine .splide__arrow:disabled { opacity: 0.35; }
+.st-magazine .splide__pagination { margin-top: 1.5rem; position: static; }
+.st-magazine .splide__pagination__page.is-active { background: #003C87; }
