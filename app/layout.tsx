@@ -63,7 +63,10 @@ const META_PIXEL_ID = '1658477098524563'
 // env 未設定時は対応スクリプトを emit せず、無害にフォールバック。
 const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || ''
 const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || ''
-const X_PIXEL_ID = process.env.NEXT_PUBLIC_X_PIXEL_ID || ''
+// X Ads ピクセル/イベントは直値で固定（env 未設定でも本番稼働させるため）。
+// X_PIXEL_ID と X_SITE_VISIT_EVENT_ID（tw-{pixel}-{event} 形式）は同一ピクセル rd63n に紐付く。
+const X_PIXEL_ID = 'rd63n'
+const X_SITE_VISIT_EVENT_ID = 'tw-rd63n-rd641'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -207,10 +210,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script id="meta-pixel-init" strategy="afterInteractive">
           {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL_ID}');fbq('track','PageView');`}
         </Script>
-        {/* X (Twitter) Universal Website Tag — X Ads コンバージョン */}
+        {/* X (Twitter) Universal Website Tag — X Ads コンバージョン。
+            config 直後に SiteVisit イベントを発火（全ページの初回ロードで計測）。 */}
         {X_PIXEL_ID && (
           <Script id="x-pixel-init" strategy="afterInteractive">
-            {`!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);},s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');twq('config','${X_PIXEL_ID}');`}
+            {`!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);},s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');twq('config','${X_PIXEL_ID}');twq('event','${X_SITE_VISIT_EVENT_ID}',{});`}
           </Script>
         )}
       </head>
