@@ -27,6 +27,7 @@ import SwitchStickyCTA from "@/components/switch/SwitchStickyCTA";
 import WaveDivider from "@/components/switch/deco/WaveDivider";
 import PageViewTracker from "@/components/switch/PageViewTracker";
 import EngagementTracker from "@/components/EngagementTracker";
+import Script from "next/script";
 
 export default function SwitchPage() {
   const handleApply = () => {
@@ -39,6 +40,10 @@ export default function SwitchPage() {
 
   return (
     <>
+      {/* X conversion tracking event code — /switch ページ到達で発火（ベースピクセル rd63n は app/layout.tsx で初期化済み） */}
+      <Script id="x-switch-conversion" strategy="afterInteractive">
+        {`twq('event', 'tw-rd63n-rd6oo', {});`}
+      </Script>
       <PageViewTracker lpVariant="switch" />
       <EngagementTracker lpVariant="switch" />
       <SwitchHeader />
