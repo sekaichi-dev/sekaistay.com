@@ -108,6 +108,9 @@ export async function forwardLeadToDiscord(leadId: string): Promise<ForwardOutco
     fields.push({ name: "課題・要望", value: r.complaints.slice(0, 1024), inline: false });
   }
   fields.push({ name: "LP", value: lpVariant, inline: true });
+  if (r.cta_source) {
+    fields.push({ name: "流入元", value: r.cta_source, inline: true });
+  }
   fields.push({ name: "計測", value: utmInfo, inline: true });
 
   const payload = {
@@ -137,14 +140,21 @@ export async function forwardLeadToDiscord(leadId: string): Promise<ForwardOutco
     });
     if (!resp.ok) {
       const text = await resp.text().catch(() => "");
-      return { ok: false, status: resp.status, error: `HTTP ${resp.status}: ${text.slice(0, 500)}` };
+      const errMsg = `HTTP ${resp.status}: ${text.slice(0, 500)}`;
+      await supabase.from("lead_submissions").update({ discord_error: errMsg }).eq("id", leadId);
+      return { ok: false, status: resp.status, error: errMsg };
     }
+    // 配信観測: Slack の slack_notified_at と対になる Discord 側のタイムスタンプ。
+    await supabase
+      .from("lead_submissions")
+      .update({ discord_notified_at: new Date().toISOString(), discord_error: null })
+      .eq("id", leadId);
     return { ok: true, status: resp.status };
   } catch (err: any) {
-    return {
-      ok: false,
-      error: err?.name === "AbortError" ? `timeout after ${FORWARD_TIMEOUT_MS}ms` : err?.message || String(err),
-    };
+    const errMsg =
+      err?.name === "AbortError" ? `timeout after ${FORWARD_TIMEOUT_MS}ms` : err?.message || String(err);
+    await supabase.from("lead_submissions").update({ discord_error: errMsg }).eq("id", leadId);
+    return { ok: false, error: errMsg };
   } finally {
     clearTimeout(timer);
   }
@@ -374,7 +384,7 @@ export async function forwardLeadToSlack(
     lines.push(`*想定年商:* 繁忙期 ${r.peak_revenue ?? "?"} / 閑散期 ${r.offpeak_revenue ?? "?"}`);
   }
   if (r.complaints) lines.push(`*課題・要望:* ${r.complaints.slice(0, 1500)}`);
-  lines.push(`*LP:* ${lpVariant}   *計測:* ${utmInfo}`);
+  lines.push(`*LP:* ${lpVariant}${r.cta_source ? `   *流入元:* ${r.cta_source}` : ""}   *計測:* ${utmInfo}`);
 
   const blocks: Array<Record<string, unknown>> = [
     {

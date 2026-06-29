@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { AuditReportRequestForm } from './AuditReportRequestForm'
 
-const AuditModalContext = createContext<{ open: () => void }>({ open: () => {} })
+const AuditModalContext = createContext<{ open: (source?: string) => void }>({ open: () => {} })
 
 export function useAuditModal() {
   return useContext(AuditModalContext)
@@ -11,6 +11,8 @@ export function useAuditModal() {
 
 export default function AuditModalProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
+  // どの CTA からモーダルを開いたか（流入元計測用）。リード送信時に cta_source として記録する。
+  const [ctaSource, setCtaSource] = useState<string | undefined>(undefined)
   const cardRef = useRef<HTMLDivElement>(null)
 
   // モーダル表示中は背面スクロールを固定＋フォーカストラップ
@@ -63,7 +65,7 @@ export default function AuditModalProvider({ children }: { children: React.React
   }, [isOpen])
 
   return (
-    <AuditModalContext.Provider value={{ open: () => setIsOpen(true) }}>
+    <AuditModalContext.Provider value={{ open: (source?: string) => { setCtaSource(source); setIsOpen(true) } }}>
       {children}
       {isOpen && (
         <div
@@ -96,7 +98,7 @@ export default function AuditModalProvider({ children }: { children: React.React
             </p>
 
             <div className="mt-7">
-              <AuditReportRequestForm />
+              <AuditReportRequestForm ctaSource={ctaSource ?? 'modal'} />
             </div>
           </div>
         </div>

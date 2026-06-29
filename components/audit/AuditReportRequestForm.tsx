@@ -137,7 +137,7 @@ function trackFunnel(eventName: string, params: Record<string, unknown>): void {
 
 const LP_VARIANT = "audit";
 
-export function AuditReportRequestForm() {
+export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {}) {
   const [step, setStep] = useState<Step>(1);
   const rootRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState<FormState>(INITIAL);
@@ -254,6 +254,7 @@ export function AuditReportRequestForm() {
         complaints: complaintsOut,
         totalProperties: 1,
         lpVariant: LP_VARIANT,
+        ctaSource: ctaSource || "audit-page",
         // 新フィールド (API schema 未対応・将来拡張用)
         feePct: skipEstimate ? undefined : form.feePct,
         monthlyRevenueMan: skipEstimate ? undefined : form.monthlyRev,

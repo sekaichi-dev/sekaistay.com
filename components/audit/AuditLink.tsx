@@ -11,12 +11,14 @@ export default function AuditLink({
   ...rest
 }: { children: ReactNode; className?: string } & AnchorHTMLAttributes<HTMLAnchorElement>) {
   const { open } = useAuditModal()
+  // data-cta-label を流入元 (cta_source) としてモーダルへ渡す。リード送信時に記録される。
+  const ctaSource = (rest as Record<string, unknown>)['data-cta-label']
   return (
     <a
       href="/audit"
       onClick={(e) => {
         e.preventDefault()
-        open()
+        open(typeof ctaSource === 'string' ? ctaSource : undefined)
       }}
       className={className}
       {...rest}

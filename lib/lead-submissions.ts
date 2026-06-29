@@ -28,6 +28,8 @@ export type SubmitPayload = {
   // A/B test
   lpVariant?: string;
   formVariant?: "default" | "lite";
+  // どの CTA からフォームを開いたか (例: floating / header / pricing-campaign / audit-page)
+  ctaSource?: string;
 };
 
 export type LeadSubmissionRow = {
@@ -55,10 +57,13 @@ export type LeadSubmissionRow = {
   referrer: string | null;
   lp_variant: string | null;
   form_variant: string;
+  cta_source: string | null;
   kind: "real" | "test";
   forwarded_at: string | null;
   forward_error: string | null;
   forward_retry_count: number;
+  discord_notified_at: string | null;
+  discord_error: string | null;
   client_ip: string | null;
   user_agent: string | null;
 };
@@ -95,6 +100,7 @@ export async function insertLeadSubmission(input: {
     referrer: payload.referrer ?? null,
     lp_variant: payload.lpVariant ?? null,
     form_variant: payload.formVariant ?? "default",
+    cta_source: payload.ctaSource ?? null,
     kind,
     client_ip: clientIp ?? null,
     user_agent: userAgent ?? null,
