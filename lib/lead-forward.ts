@@ -415,8 +415,10 @@ export async function forwardLeadToSlack(
   };
   if (options.threadTs) {
     payload.thread_ts = options.threadTs;
-    // チャンネルにも broadcast したいケースは reply_broadcast=true。
-    // ここでは TimeRex スレッド内だけに静かに足す（営業はスレッドを開けば見える）。
+    // TimeRex 予約スレッドへの返信だが、reply_broadcast=true で #402 本流にも 1 件表示する。
+    // これがないと予約済みリード（全体の約半数）はスレッドに埋もれ「Slack に通知が来ない」
+    // ように見える（2026-06-29 ヨシト指摘で本流表示に方針変更）。
+    payload.reply_broadcast = true;
   }
 
   const ac = new AbortController();
