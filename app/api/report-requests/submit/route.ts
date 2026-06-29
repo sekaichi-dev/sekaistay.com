@@ -36,6 +36,7 @@ const MAX_LENGTHS: Record<string, number> = {
   landingUrl: 1000,
   referrer: 1000,
   lpVariant: 100,
+  ctaSource: 60,
 };
 
 const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
@@ -155,6 +156,7 @@ export async function POST(req: NextRequest) {
     referrer: trim(body.referrer, MAX_LENGTHS.referrer) || undefined,
     lpVariant: trim(body.lpVariant, MAX_LENGTHS.lpVariant) || undefined,
     formVariant: body.formVariant === "lite" ? "lite" : "default",
+    ctaSource: trim(body.ctaSource, MAX_LENGTHS.ctaSource) || undefined,
   };
 
   const kind = classifyKind(name, email);
