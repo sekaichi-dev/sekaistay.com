@@ -21,6 +21,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { forwardLeadToSlack } from "@/lib/lead-forward";
+import {
+  isTimerexBookingMessage,
+  messageHaystack,
+  type SlackMessage,
+} from "@/lib/timerex-classify";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -30,42 +35,6 @@ const SLACK_LOOKBACK_MS = 35 * 60_000; // Slack #402 を直近 35 分まで遡�
 const PROCESS_LIMIT = 20;
 const TIME_BUDGET_MS = 50_000;
 const MAX_ATTEMPTS = 5;
-
-type SlackBlockElement = {
-  type?: string;
-  text?: string | { text?: string };
-  elements?: SlackBlockElement[];
-  fields?: Array<{ text?: string }>;
-};
-
-type SlackMessage = {
-  type: string;
-  ts: string;
-  user?: string;
-  bot_id?: string;
-  username?: string;
-  bot_profile?: { name?: string };
-  app_id?: string;
-  text?: string;
-  attachments?: Array<{ text?: string; fallback?: string; pretext?: string; title?: string }>;
-  blocks?: SlackBlockElement[];
-};
-
-function extractBlockText(node: unknown): string {
-  if (!node) return "";
-  if (typeof node === "string") return node;
-  if (Array.isArray(node)) return node.map(extractBlockText).join(" ");
-  if (typeof node === "object") {
-    const obj = node as Record<string, unknown>;
-    const parts: string[] = [];
-    for (const v of Object.values(obj)) {
-      if (typeof v === "string") parts.push(v);
-      else if (v && (Array.isArray(v) || typeof v === "object")) parts.push(extractBlockText(v));
-    }
-    return parts.join(" ");
-  }
-  return "";
-}
 
 async function fetchSlackHistory(token: string, channelId: string, sinceMs: number): Promise<SlackMessage[]> {
   const oldest = (sinceMs / 1000).toFixed(6);
@@ -83,36 +52,6 @@ async function fetchSlackHistory(token: string, channelId: string, sinceMs: numb
     throw new Error(`slack history error: ${json?.error || "unknown"}`);
   }
   return json.messages || [];
-}
-
-/**
- * TimeRex の予約完了投稿を判定。
- * 観測サンプル (2026-05-22 #402):
- *   - "○○さんよりご予約をいただきました。"
- *   - "○○さんが予定を追加しました。" (新形式 / blocks に格納)
- * Slack の bot 投稿は本文が `blocks` にしかないケースが多いので、
- * text / attachments / blocks / bot_profile.name の全てを haystack に集めて判定する。
- */
-function messageHaystack(msg: SlackMessage): string {
-  const parts: string[] = [
-    msg.text || "",
-    msg.username || "",
-    msg.bot_profile?.name || "",
-  ];
-  for (const a of msg.attachments || []) {
-    parts.push(a.text || "", a.fallback || "", a.pretext || "", a.title || "");
-  }
-  parts.push(extractBlockText(msg.blocks));
-  return parts.join("\n");
-}
-
-function isTimerexBookingMessage(msg: SlackMessage): boolean {
-  const haystack = messageHaystack(msg).toLowerCase();
-  if (haystack.includes("timerex")) return true;
-  // 文言ベースの fallback: 予約確定パターン
-  if (haystack.includes("ご予約をいただきました")) return true;
-  if (haystack.includes("予定を追加しました")) return true;
-  return false;
 }
 
 /**
