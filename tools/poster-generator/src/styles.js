@@ -3,7 +3,7 @@ export function baseCss() {
     :root{
       --white:#FFFFFF; --cloud:#F7F8FA; --black:#000000; --charcoal:#2D2D2D;
       --deep-teal:#167B81; --teal:#259DA3; --bright-teal:#54BEC3; --teal-tint:#E5F4F5;
-      --mid-gray:#9AA0A6; --light-gray:#DADCE0;
+      --dark-gray:#5F6368; --mid-gray:#9AA0A6; --light-gray:#DADCE0;
     }
     *{ box-sizing:border-box; margin:0; padding:0; }
     html,body{
