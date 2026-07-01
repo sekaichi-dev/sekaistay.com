@@ -63,35 +63,5 @@ export async function notifyReferralRegistered(input: {
   if (!res.ok) console.warn(`[referral] slack notify (registered) failed: ${res.error}`);
 }
 
-export async function notifyReferredLead(input: {
-  name: string;
-  email: string;
-  referrerCode?: string;
-  referrerName?: string;
-  match: string | null;
-  leadId: string;
-}): Promise<void> {
-  const matchLabel =
-    input.match === "code"
-      ? "✅ コード一致"
-      : input.match === "name_candidate"
-        ? "🔎 名前のみ(要確認)"
-        : input.match === "unmatched"
-          ? "⚠️ コード不一致(要確認)"
-          : "(紹介者情報なし)";
-  const lines = [
-    `*🤝 紹介付きリード*`,
-    `*見込み客:* ${input.name} / ${input.email}`,
-    `*紹介コード:* ${input.referrerCode || "(なし)"}`,
-    `*紹介者名:* ${input.referrerName || "(なし)"}`,
-    `*突合:* ${matchLabel}`,
-  ];
-  const res = await postToSlack(REFERRAL_CHANNEL(), {
-    text: `🤝 紹介付きリード: ${input.name}`,
-    blocks: [
-      { type: "section", text: { type: "mrkdwn", text: lines.join("\n") } },
-      { type: "context", elements: [{ type: "mrkdwn", text: `Lead ID: \`${input.leadId}\`` }] },
-    ],
-  });
-  if (!res.ok) console.warn(`[referral] slack notify (lead) failed: ${res.error}`);
-}
+// 紹介付きリードの通知は #402-面談申込 の forwardLeadToSlack（🤝 紹介者行）に内包したため、
+// #404 への個別通知（旧 notifyReferredLead）は廃止した。

@@ -7,7 +7,6 @@ import { classifyKind } from "@/lib/test-classifier";
 import { appendLeadToSheet } from "@/lib/sheets-backup";
 import { resolveReferrerMatch } from "@/lib/referrer-match";
 import { findReferrerByCode } from "@/lib/referrers";
-import { notifyReferredLead } from "@/lib/slack-notify";
 
 export const runtime = "nodejs";
 
@@ -200,15 +199,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const row = await insertLeadSubmission({ payload, kind, clientIp: ip, userAgent });
-    if (kind === "real" && referrerMatch.match) {
-      await notifyReferredLead({
-        name, email,
-        referrerCode: referrerCodeIn || undefined,
-        referrerName: referrerNameIn || undefined,
-        match: referrerMatch.match,
-        leadId: row.id,
-      }).catch(() => {});
-    }
+    // 紹介付きリードは #402-面談申込 の Jennie 自走送信（forwardLeadToSlack の 🤝 紹介者行）に内包する。
+    // #404 への個別通知は行わない（#404 は新規紹介者登録のみ）。referrer_* は lead に保存済み。
     // 3 系統並列で forward (吉蔵 CRM + sekaistay 営業ポータル + Meta CAPI)。
     // いずれかが失敗してもクライアントへの応答は 200 を返す（lead は Supabase に保存済み）。
     // test 振分けポリシー:
