@@ -62,11 +62,14 @@ export async function insertReferrer(
 ): Promise<{ row: ReferrerRow; created: boolean }> {
   const supabase = getSupabaseAdmin();
 
+  // email は lower(email) UNIQUE index に合わせて小文字正規化して保存・照合する
+  const emailLower = input.email.toLowerCase();
+
   // 冪等: 同一 active メールがあれば既存を返す
   const { data: existing, error: exErr } = await supabase
     .from("referrers")
     .select("*")
-    .ilike("email", input.email)
+    .eq("email", emailLower)
     .eq("status", "active")
     .maybeSingle();
   if (exErr) throw new Error(`insertReferrer lookup failed: ${exErr.message}`);
@@ -74,9 +77,10 @@ export async function insertReferrer(
 
   const base = {
     name: input.name,
-    email: input.email,
+    email: emailLower,
     phone: input.phone,
     is_owner: input.isOwner,
+    status: "active",
     bank_name: input.bankName,
     bank_code: input.bankCode ?? null,
     branch_name: input.branchName,
@@ -103,14 +107,15 @@ export async function insertReferrer(
     if (!error) return { row: data as ReferrerRow, created: true };
     // 23505 = unique_violation。email 衝突（並行登録）なら既存返す。
     if (error.code === "23505") {
-      const { data: raced } = await supabase
+      const { data: raced, error: racedErr } = await supabase
         .from("referrers")
         .select("*")
-        .ilike("email", input.email)
+        .eq("email", emailLower)
         .eq("status", "active")
         .maybeSingle();
+      if (racedErr) throw new Error(`insertReferrer race lookup failed: ${racedErr.message}`);
       if (raced) return { row: raced as ReferrerRow, created: false };
-      continue; // code 衝突なら別コードで再試行
+      continue; // email 衝突でなく code 衝突なら別コードで再試行
     }
     throw new Error(`insertReferrer failed: ${error.message}`);
   }
