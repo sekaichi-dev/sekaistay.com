@@ -5,7 +5,7 @@ import { classifyKind } from "@/lib/test-classifier";
 
 export const runtime = "nodejs";
 
-const TERMS_VERSION = "2026-07-01";
+const TERMS_VERSION = "2026-07-01-v2";
 
 const ALLOWED_HOSTS = new Set([
   "sekaistay.com",
