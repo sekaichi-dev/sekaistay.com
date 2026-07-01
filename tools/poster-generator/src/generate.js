@@ -18,11 +18,12 @@ export async function generateAll({ propertiesPath, contactsPath, logoPath, outD
   const logoSvg = `<img alt="SEKAI STAY" src="data:image/png;base64,${logoB64}">`;
   const written = [];
 
-  const stickerPath = join(outDir, 'sticker-A5.pdf');
-  await htmlToPdf(stickerHtml({ logoSvg }), stickerPath);
-  written.push(stickerPath);
-
   for (const property of properties) {
+    // 外壁ステッカーは物件名を表示するため物件ごとに生成する。
+    const stickerPath = join(outDir, `sticker-${property.id}.pdf`);
+    await htmlToPdf(stickerHtml({ logoSvg, property }), stickerPath);
+    written.push(stickerPath);
+
     const qr = {
       line: await qrDataUrl(contacts.lineUrl),
       manual: await qrDataUrl(property.houseManualUrl),

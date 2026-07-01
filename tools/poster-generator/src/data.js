@@ -1,7 +1,9 @@
 // src/data.js
 import { readFileSync } from 'node:fs';
 
-const REQUIRED = ['id', 'addressJa', 'addressRomaji', 'wifiSsid', 'wifiPassword', 'checkoutTime', 'houseManualUrl'];
+// name = 外壁ステッカーに表示する物件名。addressJa より後に置き、既存テストの
+// 「最初に欠落する必須フィールド= addressJa」の順序を保つ。
+const REQUIRED = ['id', 'addressJa', 'addressRomaji', 'wifiSsid', 'wifiPassword', 'checkoutTime', 'houseManualUrl', 'name'];
 
 export function loadProperties(path) {
   const props = JSON.parse(readFileSync(path, 'utf8'));
