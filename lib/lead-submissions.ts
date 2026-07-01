@@ -28,6 +28,11 @@ export type SubmitPayload = {
   // A/B test
   lpVariant?: string;
   formVariant?: "default" | "lite";
+  // referrer attribution (Phase 1)
+  referrerCode?: string;
+  referrerName?: string;
+  referrerId?: string;
+  referrerMatch?: "code" | "name_candidate" | "unmatched";
 };
 
 export type LeadSubmissionRow = {
@@ -61,6 +66,10 @@ export type LeadSubmissionRow = {
   forward_retry_count: number;
   client_ip: string | null;
   user_agent: string | null;
+  referrer_code: string | null;
+  referrer_name: string | null;
+  referrer_id: string | null;
+  referrer_match: string | null;
 };
 
 export async function insertLeadSubmission(input: {
@@ -98,6 +107,10 @@ export async function insertLeadSubmission(input: {
     kind,
     client_ip: clientIp ?? null,
     user_agent: userAgent ?? null,
+    referrer_code: payload.referrerCode ?? null,
+    referrer_name: payload.referrerName ?? null,
+    referrer_id: payload.referrerId ?? null,
+    referrer_match: payload.referrerMatch ?? null,
   };
 
   const { data, error } = await supabase
