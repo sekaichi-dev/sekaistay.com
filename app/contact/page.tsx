@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
 import { IconCheck, IconArrowRight } from '@/components/Icons'
+import { isValidReferralCodeFormat, normalizeReferralCode } from '@/lib/referral-code'
 
 const inputCls =
   'w-full bg-mist border border-rule px-5 py-4 text-[15px] font-sans text-ink placeholder:text-mid-gray/70 outline-none transition focus:border-sekai-teal focus:bg-paper'
@@ -30,8 +31,13 @@ export default function ContactPage() {
     const email = String(data.get('email') || '').trim()
     const phone = String(data.get('phone') || '').trim()
     const message = String(data.get('message') || '').trim()
-    const referrerCode = String(data.get('referrerCode') || '').trim()
-    const referrerName = String(data.get('referrerName') || '').trim()
+    // 紹介者コードとお名前は1項目に統合。コード形式(SS-XXXXXX)なら code、
+    // それ以外はお名前として送信し、バックエンドの突合ロジックをそのまま維持する。
+    const referrerInfo = String(data.get('referrerInfo') || '').trim()
+    const normalizedCode = normalizeReferralCode(referrerInfo)
+    const isReferrerCode = isValidReferralCodeFormat(normalizedCode)
+    const referrerCode = isReferrerCode ? normalizedCode : ''
+    const referrerName = isReferrerCode ? '' : referrerInfo
 
     try {
       // /api/report-requests/submit に統一 (2026-05-14)
@@ -193,13 +199,9 @@ export default function ContactPage() {
                   <p className="font-sans text-caption text-mid-gray -mb-2">
                     SEKAI STAY の紹介者から紹介された方は、以下にご記入ください。
                   </p>
-                  <Field number="05" label="紹介者コード（任意）">
-                    <input type="text" name="referrerCode" className={inputCls}
-                      placeholder="SS-XXXXXX" />
-                  </Field>
-                  <Field number="06" label="紹介者のお名前（任意）">
-                    <input type="text" name="referrerName" className={inputCls}
-                      placeholder="紹介してくれた方のお名前" />
+                  <Field number="05" label="紹介者コード または お名前（任意）">
+                    <input type="text" name="referrerInfo" className={inputCls}
+                      placeholder="紹介コード（SS-XXXXXX）または紹介者のお名前" />
                   </Field>
 
                   <div className="pt-4 space-y-3">
