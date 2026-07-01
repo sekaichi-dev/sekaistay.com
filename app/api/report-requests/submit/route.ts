@@ -5,6 +5,9 @@ import { forwardLead, forwardLeadToSalesPortal, forwardLeadToDiscord } from "@/l
 import { sendMetaCapiLead } from "@/lib/meta-capi";
 import { classifyKind } from "@/lib/test-classifier";
 import { appendLeadToSheet } from "@/lib/sheets-backup";
+import { resolveReferrerMatch } from "@/lib/referrer-match";
+import { findReferrerByCode } from "@/lib/referrers";
+import { notifyReferredLead } from "@/lib/slack-notify";
 
 export const runtime = "nodejs";
 
@@ -37,6 +40,8 @@ const MAX_LENGTHS: Record<string, number> = {
   referrer: 1000,
   lpVariant: 100,
   ctaSource: 60,
+  referrerCode: 20,
+  referrerName: 100,
 };
 
 const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
@@ -133,6 +138,24 @@ export async function POST(req: NextRequest) {
     totalProperties = Math.max(1, Math.min(30, Math.floor(body.totalProperties)));
   }
 
+  const referrerCodeIn = trim(body.referrerCode, MAX_LENGTHS.referrerCode);
+  const referrerNameIn = trim(body.referrerName, MAX_LENGTHS.referrerName);
+  // 紹介者突合は付加情報。Supabase ルックアップ失敗でリード本体を落とさないよう
+  // 突合失敗時は中立デフォルトに degrade する（attribution だけ失う）。
+  let referrerMatch: Awaited<ReturnType<typeof resolveReferrerMatch>> = {
+    referrerId: null,
+    match: null,
+  };
+  try {
+    referrerMatch = await resolveReferrerMatch({
+      code: referrerCodeIn || undefined,
+      name: referrerNameIn || undefined,
+      lookupByCode: findReferrerByCode,
+    });
+  } catch (err: any) {
+    console.warn(`[submit] referrer match failed (non-fatal): ${err?.message || err}`);
+  }
+
   const payload: SubmitPayload = {
     name,
     email,
@@ -157,6 +180,10 @@ export async function POST(req: NextRequest) {
     lpVariant: trim(body.lpVariant, MAX_LENGTHS.lpVariant) || undefined,
     formVariant: body.formVariant === "lite" ? "lite" : "default",
     ctaSource: trim(body.ctaSource, MAX_LENGTHS.ctaSource) || undefined,
+    referrerCode: referrerCodeIn || undefined,
+    referrerName: referrerNameIn || undefined,
+    referrerId: referrerMatch.referrerId || undefined,
+    referrerMatch: referrerMatch.match || undefined,
   };
 
   const kind = classifyKind(name, email);
@@ -173,6 +200,15 @@ export async function POST(req: NextRequest) {
 
   try {
     const row = await insertLeadSubmission({ payload, kind, clientIp: ip, userAgent });
+    if (kind === "real" && referrerMatch.match) {
+      await notifyReferredLead({
+        name, email,
+        referrerCode: referrerCodeIn || undefined,
+        referrerName: referrerNameIn || undefined,
+        match: referrerMatch.match,
+        leadId: row.id,
+      }).catch(() => {});
+    }
     // 3 系統並列で forward (吉蔵 CRM + sekaistay 営業ポータル + Meta CAPI)。
     // いずれかが失敗してもクライアントへの応答は 200 を返す（lead は Supabase に保存済み）。
     // test 振分けポリシー:
