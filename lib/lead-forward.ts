@@ -375,6 +375,18 @@ export async function forwardLeadToSlack(
   lines.push(`*👤 名前:* ${r.name || "(未入力)"}`);
   lines.push(`*📧 Email:* ${r.email || "(未入力)"}`);
   lines.push(`*📞 電話:* ${r.phone || "(未入力)"}`);
+  if (r.referrer_match) {
+    const refLabel =
+      r.referrer_match === "code"
+        ? "✅ コード一致"
+        : r.referrer_match === "name_candidate"
+          ? "🔎 名前のみ(要確認)"
+          : r.referrer_match === "unmatched"
+            ? "⚠️ コード不一致(要確認)"
+            : r.referrer_match;
+    const refParts = [r.referrer_code, r.referrer_name].filter(Boolean).join(" / ");
+    lines.push(`*🤝 紹介者:* ${refParts || "(記入あり)"}  ${refLabel}`);
+  }
   if (r.company_name) lines.push(`*🏢 会社:* ${r.company_name}`);
   if (r.airbnb_url) lines.push(`*🏠 Airbnb URL:* ${r.airbnb_url}`);
   if (typeof r.total_properties === "number") lines.push(`*物件数:* ${r.total_properties} 棟`);
