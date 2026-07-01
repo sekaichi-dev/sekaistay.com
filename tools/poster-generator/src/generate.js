@@ -44,5 +44,6 @@ if (isMain) {
     contactsPath: join(root, '..', 'config', 'contacts.json'),
     logoPath: join(repo, 'public', 'images', 'switch', 'logo-symbol.svg'),
     outDir: join(root, '..', 'out'),
-  }).then((p) => console.log(`生成完了 (${p.length}件):\n` + p.join('\n')));
+  }).then((p) => console.log(`生成完了 (${p.length}件):\n` + p.join('\n')))
+    .catch((e) => { console.error(e); process.exit(1); });
 }
