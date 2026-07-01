@@ -52,6 +52,7 @@ export async function findReferrerByCode(code: string): Promise<{ id: string } |
     .select("id")
     .eq("code", code)
     .eq("status", "active")
+    .eq("kind", "real") // test 種別の紹介コードが実リードに誤帰属しないよう除外
     .maybeSingle();
   if (error) throw new Error(`findReferrerByCode failed: ${error.message}`);
   return data ? { id: (data as { id: string }).id } : null;
