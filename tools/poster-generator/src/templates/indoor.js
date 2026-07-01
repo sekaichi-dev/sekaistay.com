@@ -2,6 +2,8 @@
 import { baseCss } from '../styles.js';
 import { PICTOGRAMS } from '../pictograms.js';
 
+const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
 const RULES = [
   { key: 'noise', ja: '夜間は静かに', en: 'Keep quiet at night' },
   { key: 'trash', ja: 'ゴミは分別', en: 'Sort the trash' },
@@ -96,13 +98,13 @@ ${baseCss()}
       <div class="contact-row">
         <div class="contact">
           <div class="ico">${PICTOGRAMS.phone}</div>
-          <div><div class="v">${contacts.associationPhone}</div>
+          <div><div class="v">${esc(contacts.associationPhone)}</div>
             <div class="s">運営の困りごと（24h）/ Support 24h</div></div>
         </div>
         <div class="contact">
           <div class="ico">${PICTOGRAMS.line}</div>
           <div><div class="v">SEKAI STAY LINE</div>
-            <div class="s">一次窓口 ${contacts.lineHours} / First contact</div></div>
+            <div class="s">一次窓口 ${esc(contacts.lineHours)} / First contact</div></div>
           <div class="qr"><img src="${qr.line}" alt="LINE QR"></div>
         </div>
       </div>
@@ -113,10 +115,10 @@ ${baseCss()}
     <div class="section-title">📶 この物件 <span class="en">THIS PROPERTY</span></div>
     <div class="info">
       <div class="info-main">
-        <div class="addr-ja">${property.addressJa}</div>
-        <div class="addr-ro en">${property.addressRomaji}</div>
-        <div class="wifi-line"><b>WiFi</b> ${property.wifiSsid} / <b>PW</b> ${property.wifiPassword}</div>
-        <div class="checkout-line"><b style="color:var(--deep-teal)">Check-out</b> ${property.checkoutTime}</div>
+        <div class="addr-ja">${esc(property.addressJa)}</div>
+        <div class="addr-ro en">${esc(property.addressRomaji)}</div>
+        <div class="wifi-line"><b>WiFi</b> ${esc(property.wifiSsid)} / <b>PW</b> ${esc(property.wifiPassword)}</div>
+        <div class="checkout-line"><b style="color:var(--deep-teal)">Check-out</b> ${esc(property.checkoutTime)}</div>
       </div>
       <div class="info-wifiqr">
         <img src="${qr.wifi}" alt="WiFi QR">

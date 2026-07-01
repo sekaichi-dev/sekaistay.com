@@ -30,3 +30,10 @@ test('indoor html does NOT mention kurasheed24 / seed24', () => {
   assert.doesNotMatch(html, /seed24/i);
   assert.doesNotMatch(html, /くらし[ーし]ど/);
 });
+
+test('indoor html escapes ampersand in interpolated values', () => {
+  const p = { ...property, addressJa: 'A&B ビル 3-4-18' };
+  const html = indoorHtml({ property: p, contacts, logoSvg: '<svg></svg>', qr });
+  assert.match(html, /A&amp;B ビル/);
+  assert.doesNotMatch(html, /A&B ビル/);
+});

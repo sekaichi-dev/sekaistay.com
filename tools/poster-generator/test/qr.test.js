@@ -10,3 +10,7 @@ test('qrDataUrl returns a png data url', async () => {
   const url = await qrDataUrl('https://example.com');
   assert.match(url, /^data:image\/png;base64,/);
 });
+
+test('wifiPayload escapes reserved characters', () => {
+  assert.equal(wifiPayload('My;Net', 'pa:ss\\word'), 'WIFI:T:WPA;S:My\\;Net;P:pa\\:ss\\\\word;;');
+});
