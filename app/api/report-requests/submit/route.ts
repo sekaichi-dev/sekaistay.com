@@ -139,11 +139,21 @@ export async function POST(req: NextRequest) {
 
   const referrerCodeIn = trim(body.referrerCode, MAX_LENGTHS.referrerCode);
   const referrerNameIn = trim(body.referrerName, MAX_LENGTHS.referrerName);
-  const referrerMatch = await resolveReferrerMatch({
-    code: referrerCodeIn || undefined,
-    name: referrerNameIn || undefined,
-    lookupByCode: findReferrerByCode,
-  });
+  // 紹介者突合は付加情報。Supabase ルックアップ失敗でリード本体を落とさないよう
+  // 突合失敗時は中立デフォルトに degrade する（attribution だけ失う）。
+  let referrerMatch: Awaited<ReturnType<typeof resolveReferrerMatch>> = {
+    referrerId: null,
+    match: null,
+  };
+  try {
+    referrerMatch = await resolveReferrerMatch({
+      code: referrerCodeIn || undefined,
+      name: referrerNameIn || undefined,
+      lookupByCode: findReferrerByCode,
+    });
+  } catch (err: any) {
+    console.warn(`[submit] referrer match failed (non-fatal): ${err?.message || err}`);
+  }
 
   const payload: SubmitPayload = {
     name,
