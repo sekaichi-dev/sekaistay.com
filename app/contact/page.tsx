@@ -176,11 +176,11 @@ export default function ContactPage() {
                   <p className="font-sans text-caption text-mid-gray -mb-2">
                     SEKAI STAY の紹介者から紹介された方は、以下にご記入ください。
                   </p>
-                  <Field number="05" label="紹介者コード（任意）">
+                  <Field label="紹介者コード（任意）">
                     <input type="text" name="referrerCode" className={inputCls}
                       placeholder="SS-XXXXXX" />
                   </Field>
-                  <Field number="06" label="紹介者のお名前（任意）">
+                  <Field label="紹介者のお名前（任意）">
                     <input type="text" name="referrerName" className={inputCls}
                       placeholder="紹介してくれた方のお名前" />
                   </Field>
