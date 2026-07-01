@@ -5,13 +5,14 @@ import { PICTOGRAMS } from '../pictograms.js';
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 const RULES = [
-  { key: 'noise', ja: '夜間は静かに', en: 'Keep quiet at night' },
-  { key: 'trash', ja: 'ゴミは分別', en: 'Sort the trash' },
-  { key: 'nosmoking', ja: '禁煙', en: 'No smoking' },
-  { key: 'capacity', ja: '定員厳守・来訪者不可', en: 'No extra guests' },
-  { key: 'checkout', ja: '時間内に退室', en: 'Check out on time' },
-  { key: 'commonarea', ja: '共用部は静かに', en: 'Respect shared areas' },
-  { key: 'equipment', ja: '設備は丁寧に', en: 'Use facilities with care' },
+  { key: 'noise', ja: '夜間は静かに', en: 'Quiet at night', detail: '22時〜翌8時は特にご配慮を' },
+  { key: 'noparty', ja: '目的外利用の禁止', en: 'No parties', detail: 'パーティー・撮影・商用は不可' },
+  { key: 'capacity', ja: '定員厳守', en: 'No extra guests', detail: '来訪・追加宿泊はできません' },
+  { key: 'nosmoking', ja: '禁煙', en: 'No smoking', detail: '全室禁煙です' },
+  { key: 'trash', ja: 'ゴミは分別', en: 'Sort the trash', detail: '分別・収集日はマニュアル参照' },
+  { key: 'commonarea', ja: '共用部は静かに', en: 'Quiet in shared areas', detail: '廊下・エレベーターではお静かに' },
+  { key: 'checkout', ja: '時間内に退室', en: 'Check out on time', detail: '退室時刻を厳守ください' },
+  { key: 'equipment', ja: '設備は丁寧に', en: 'Handle with care', detail: '破損時はLINEでご連絡を' },
 ];
 
 const ruleCard = (r) => `
@@ -19,6 +20,7 @@ const ruleCard = (r) => `
     <div class="rule-ico">${PICTOGRAMS[r.key]}</div>
     <div class="rule-ja">${r.ja}</div>
     <div class="rule-en en">${r.en}</div>
+    <div class="rule-detail">${r.detail}</div>
   </div>`;
 
 export function indoorHtml({ property, contacts, logoSvg, qr }) {
@@ -26,8 +28,8 @@ export function indoorHtml({ property, contacts, logoSvg, qr }) {
 <style>
 ${baseCss()}
 @page{ size:A4; margin:0; }
-.sheet{ width:210mm; height:297mm; padding:14mm 14mm 10mm; background:var(--white);
-  display:flex; flex-direction:column; gap:6mm; }
+.sheet{ width:210mm; height:297mm; padding:14mm 14mm 12mm; background:var(--white);
+  display:flex; flex-direction:column; justify-content:space-between; }
 .header{ display:flex; align-items:center; justify-content:space-between;
   border-bottom:2px solid var(--light-gray); padding-bottom:4mm; }
 .header .logo{ width:42mm; }
@@ -66,13 +68,15 @@ ${baseCss()}
 .info-wifiqr img{ width:26mm; height:26mm; }
 .info-wifiqr .c{ font-size:7.5pt; color:var(--mid-gray); }
 
-.rules{ display:grid; grid-template-columns:repeat(7,1fr); gap:2mm; }
+.rules{ display:grid; grid-template-columns:repeat(4,1fr); gap:5mm 4mm;
+  background:var(--cloud); border-radius:3mm; padding:6mm 5mm; }
 .rule{ text-align:center; }
-.rule-ico{ width:13mm; height:13mm; margin:0 auto 1.5mm; color:var(--deep-teal); }
-.rule-ja{ font-size:8.5pt; font-weight:700; line-height:1.3; }
-.rule-en{ font-size:7pt; line-height:1.2; }
+.rule-ico{ width:15mm; height:15mm; margin:0 auto 2mm; color:var(--deep-teal); }
+.rule-ja{ font-size:10.5pt; font-weight:700; line-height:1.35; }
+.rule-en{ font-size:7.5pt; line-height:1.2; margin-bottom:1.5mm; }
+.rule-detail{ font-size:8pt; color:var(--dark-gray); line-height:1.45; }
 
-.footer{ margin-top:auto; display:flex; align-items:center; justify-content:space-between;
+.footer{ display:flex; align-items:center; justify-content:space-between;
   border-top:1px solid var(--light-gray); padding-top:3mm; }
 .footer .manual{ display:flex; align-items:center; gap:3mm; }
 .footer .manual img{ width:18mm; height:18mm; }

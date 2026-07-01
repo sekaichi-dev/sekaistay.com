@@ -12,4 +12,5 @@ export const PICTOGRAMS = {
   line: w('<rect x="6" y="9" width="36" height="26" rx="8"/><path d="M16 41l8-6"/><line x1="15" y1="20" x2="15" y2="26"/><path d="M22 26v-6l5 6v-6"/><line x1="32" y1="20" x2="32" y2="26"/>'),
   manual: w('<path d="M10 8h18a4 4 0 0 1 4 4v28H14a4 4 0 0 1-4-4z"/><path d="M32 12h6v28H14"/><line x1="16" y1="16" x2="26" y2="16"/><line x1="16" y1="22" x2="26" y2="22"/>'),
   wifi: w('<path d="M6 18a26 26 0 0 1 36 0"/><path d="M13 26a16 16 0 0 1 22 0"/><path d="M19 33a7 7 0 0 1 10 0"/><circle cx="24" cy="39" r="1.5" fill="currentColor"/>'),
+  noparty: w('<circle cx="24" cy="24" r="17"/><line x1="12" y1="12" x2="36" y2="36"/><path d="M15 33l5-12 7 7-12 5z"/><path d="M30 14l1 4M34 18l4 1M31 22l4-1"/>'),
 };
