@@ -23,7 +23,7 @@ export default function ReferralsAdminPage() {
 
   const load = async () => {
     setError('')
-    const res = await fetch(`/api/admin/referrers?key=${encodeURIComponent(key)}`)
+    const res = await fetch('/api/admin/referrers', { headers: { 'x-admin-key': key } })
     if (!res.ok) { setError('認証に失敗しました'); return }
     const data = await res.json()
     setReferrers(data.referrers); setLeads(data.leads); setLoaded(true)
