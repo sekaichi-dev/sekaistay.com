@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listReferrers } from "@/lib/referrers";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { isValidAdminKey } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
+// キーは URL クエリではなく x-admin-key ヘッダでのみ受け取る（ログ漏れ回避・定数時間比較）
 function authed(req: NextRequest): boolean {
-  const key = (process.env.X_CONTENT_ADMIN_KEY || "").trim();
-  const given = req.nextUrl.searchParams.get("key") || req.headers.get("x-admin-key") || "";
-  return !!key && given === key;
+  return isValidAdminKey(req.headers.get("x-admin-key"));
 }
 
 function mask(numberEnc: string): string {

@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { decryptReferrerBank } from "@/lib/referrers";
 import type { ReferrerRow } from "@/lib/referrers";
+import { isValidAdminKey } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
 function authed(req: NextRequest, key?: string): boolean {
-  const admin = (process.env.X_CONTENT_ADMIN_KEY || "").trim();
-  return !!admin && (key || req.headers.get("x-admin-key") || "") === admin;
+  return isValidAdminKey(key || req.headers.get("x-admin-key"));
 }
 
 export async function POST(req: NextRequest) {
