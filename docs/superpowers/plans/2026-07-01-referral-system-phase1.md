@@ -17,7 +17,7 @@
 - **暗号化形式**: `ivHex:tagHex:cipherHex`（ops `credential-cipher.ts` と同形式）。
 - **test 判定**: 既存 `lib/test-classifier.ts` の `classifyKind(name, email)` を流用。`kind==='test'` は Slack 通知を skip。
 - **秘密値をコード/ログに出さない**。復号値はサーバ内のみ、クライアントに平文口座を返さない。
-- **Node 25** はデフォルトで TS の型注釈を strip する。テストは `node --test --experimental-strip-types` で実行（フラグは冗長でも害なし）。
+- **Node 26** はデフォルトで TS の型注釈を strip する。テストは `node --test "lib/**/*.test.ts"` で実行（`--experimental-strip-types` フラグは不要）。`npm test` が実際にテストを discover・実行することを各 Task で確認する。
 
 ---
 
@@ -71,7 +71,7 @@
 `scripts` ブロックに次の1行を追加（末尾カンマ整合に注意）:
 
 ```json
-    "test": "node --test --experimental-strip-types \"lib/**/*.test.ts\""
+    "test": "node --test \"lib/**/*.test.ts\""
 ```
 
 - [ ] **Step 2: 失敗するテストを書く** — `lib/crypto.test.ts`
