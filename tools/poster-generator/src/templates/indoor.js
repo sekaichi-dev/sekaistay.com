@@ -30,8 +30,8 @@ ${baseCss()}
   display:flex; flex-direction:column; gap:6mm; }
 .header{ display:flex; align-items:center; justify-content:space-between;
   border-bottom:2px solid var(--light-gray); padding-bottom:4mm; }
-.header .logo{ width:46mm; color:var(--black); }
-.header .logo svg{ width:100%; height:auto; }
+.header .logo{ width:42mm; }
+.header .logo img, .header .logo svg{ width:100%; height:auto; display:block; }
 .welcome{ text-align:right; }
 .welcome b{ font-size:16pt; } .welcome .en{ font-size:10pt; }
 

@@ -12,7 +12,10 @@ import { htmlToPdf } from './render.js';
 export async function generateAll({ propertiesPath, contactsPath, logoPath, outDir }) {
   const properties = loadProperties(propertiesPath);
   const contacts = loadContacts(contactsPath);
-  const logoSvg = readFileSync(logoPath, 'utf8');
+  // ロゴは PNG フルロゴ(シンボル＋SEKAI STAYワードマーク)を base64 <img> で埋め込む。
+  // テンプレは logoSvg にこの markup を差し込む(名称は歴史的経緯・実体はロゴ markup)。
+  const logoB64 = readFileSync(logoPath).toString('base64');
+  const logoSvg = `<img alt="SEKAI STAY" src="data:image/png;base64,${logoB64}">`;
   const written = [];
 
   const stickerPath = join(outDir, 'sticker-A5.pdf');
@@ -42,7 +45,7 @@ if (isMain) {
   generateAll({
     propertiesPath,
     contactsPath: join(root, '..', 'config', 'contacts.json'),
-    logoPath: join(repo, 'public', 'images', 'switch', 'logo-symbol.svg'),
+    logoPath: join(repo, 'public', 'images', 'switch', 'logo-full.png'),
     outDir: join(root, '..', 'out'),
   }).then((p) => console.log(`生成完了 (${p.length}件):\n` + p.join('\n')))
     .catch((e) => { console.error(e); process.exit(1); });

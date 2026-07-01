@@ -15,7 +15,7 @@ test('generateAll produces sticker + one indoor pdf', async () => {
   const pdfs = await generateAll({
     propertiesPath: join(root, 'properties.sample.json'),
     contactsPath: join(root, 'config', 'contacts.json'),
-    logoPath: join(repo, 'public', 'images', 'switch', 'logo-symbol.svg'),
+    logoPath: join(repo, 'public', 'images', 'switch', 'logo-full.png'),
     outDir,
   });
   assert.ok(pdfs.some((p) => p.includes('sticker')));

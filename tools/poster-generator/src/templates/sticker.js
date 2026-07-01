@@ -6,14 +6,13 @@ export function stickerHtml({ logoSvg }) {
 ${baseCss()}
 @page{ size:A5; margin:0; }
 .sheet{ width:148mm; height:210mm; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:14mm; background:var(--white); }
-.logo{ width:78mm; color:var(--black); }
-.logo svg{ width:100%; height:auto; }
-.tag{ font-size:15pt; letter-spacing:.18em; color:var(--charcoal); font-weight:700; }
-.tag .en{ display:block; font-size:9pt; letter-spacing:.22em; margin-top:3mm; }
+  align-items:center; justify-content:center; gap:10mm; background:var(--white); }
+.logo{ width:88mm; }
+.logo img, .logo svg{ width:100%; height:auto; display:block; }
+.tag{ font-size:13pt; letter-spacing:.28em; color:var(--mid-gray); font-weight:700; }
 </style></head>
 <body><div class="sheet">
   <div class="logo">${logoSvg}</div>
-  <div class="tag">管理物件<span class="en">MANAGED BY SEKAI STAY</span></div>
+  <div class="tag">管理物件</div>
 </div></body></html>`;
 }
