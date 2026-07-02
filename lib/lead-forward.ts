@@ -427,10 +427,9 @@ export async function forwardLeadToSlack(
   };
   if (options.threadTs) {
     payload.thread_ts = options.threadTs;
-    // TimeRex 予約スレッドへの返信だが、reply_broadcast=true で #402 本流にも 1 件表示する。
-    // これがないと予約済みリード（全体の約半数）はスレッドに埋もれ「Slack に通知が来ない」
-    // ように見える（2026-06-29 ヨシト指摘で本流表示に方針変更）。
-    payload.reply_broadcast = true;
+    // reply_broadcast は付けない。付けると TimeRex スレッド返信が #402 本流にも
+    // 二重表示され「同じリードが2回来た」ように見える（2026-07-02 テンイチ指摘で撤回。
+    // 2026-06-29 ヨシト指摘の「スレッドに埋もれて見えない」とはトレードオフ）。
   }
 
   const ac = new AbortController();
