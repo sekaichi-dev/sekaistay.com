@@ -24,7 +24,10 @@ import { forwardLeadToSlack } from "@/lib/lead-forward";
 import {
   isTimerexBookingMessage,
   messageHaystack,
+  hasOwnLeadNotificationReply,
+  findTimerexCandidatesByTime,
   type SlackMessage,
+  type TimerexCandidate,
 } from "@/lib/timerex-classify";
 
 export const runtime = "nodejs";
@@ -87,27 +90,26 @@ function nameMatches(leadName: string | null | undefined, haystack: string): boo
 }
 
 /**
- * 名前マッチが外れた場合の時間窓フォールバック。
- * フォーム送信時刻 ±TIME_WINDOW_MS 以内のTimeRex投稿が「ちょうど1つ」で、
- * かつその投稿が他のリードの名前マッチに使われていないなら、それを採用する。
- *
- * 主な狙い: 漢字↔かなの揺れ（岩崎健佑 ↔ いわさきけんすけ）で名前マッチが失敗する事故の救済。
- * 誤接続リスク: 同時間窓に複数リードがあり全員かな表記でマッチ外れの場合のみ。実運用では低頻度。
+ * 予約投稿スレッドが過去の cron 実行で既に別リードに使用済みか判定。
+ * claimedTs はバッチ内でしか効かない（リードは1件ずつ別々の cron 実行で処理される）ため、
+ * スレッド返信に bot 自身のリード通知が付いているかを Slack 側に問い合わせて判定する。
+ * → 2026-07-03 カノウ誤接続インシデント（佐藤愛美の予約スレッドへ誤返信）の再発防止。
  */
-const TIME_WINDOW_MS = 15 * 60_000;
-
-function findTimerexMatchByTime(
-  leadCreatedAt: string,
-  timerexMessages: Array<{ ts: string; haystack: string }>,
-  claimedTs: Set<string>,
-): { ts: string; haystack: string } | null {
-  const leadMs = new Date(leadCreatedAt).getTime();
-  const candidates = timerexMessages.filter((m) => {
-    if (claimedTs.has(m.ts)) return false;
-    const tsMs = parseFloat(m.ts) * 1000;
-    return Math.abs(tsMs - leadMs) <= TIME_WINDOW_MS;
-  });
-  return candidates.length === 1 ? candidates[0] : null;
+async function isBookingThreadClaimed(token: string, channelId: string, ts: string): Promise<boolean> {
+  const url = `https://slack.com/api/conversations.replies?channel=${encodeURIComponent(channelId)}&ts=${encodeURIComponent(ts)}&limit=20`;
+  const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!resp.ok) {
+    throw new Error(`slack replies HTTP ${resp.status}`);
+  }
+  const json = (await resp.json().catch(() => null)) as
+    | { ok?: boolean; error?: string; messages?: SlackMessage[] }
+    | null;
+  if (!json?.ok) {
+    throw new Error(`slack replies error: ${json?.error || "unknown"}`);
+  }
+  // conversations.replies は先頭に親メッセージ自身を含むので除外
+  const replies = (json.messages || []).filter((m) => m.ts !== ts);
+  return hasOwnLeadNotificationReply(replies);
 }
 
 export async function GET(req: NextRequest) {
@@ -155,9 +157,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: `slack history fetch failed: ${err?.message || err}` }, { status: 500 });
   }
 
-  const timerexMessages = history.filter(isTimerexBookingMessage).map((m) => ({
+  const timerexMessages: TimerexCandidate[] = history.filter(isTimerexBookingMessage).map((m) => ({
     ts: m.ts,
     haystack: messageHaystack(m),
+    replyCount: m.reply_count ?? 0,
   }));
 
   const startedAt = Date.now();
@@ -165,7 +168,7 @@ export async function GET(req: NextRequest) {
 
   // 2-pass: まず name match で claimed ts を確定させ、残りを time-window で救済する
   const leads = data as Array<{ id: string; created_at: string; name: string | null; email: string | null; slack_attempt_count: number }>;
-  const nameMatched = new Map<string, { ts: string; haystack: string }>();
+  const nameMatched = new Map<string, TimerexCandidate>();
   const claimedTs = new Set<string>();
   for (const lead of leads) {
     const m = timerexMessages.find((tm) => nameMatches(lead.name, tm.haystack));
@@ -181,14 +184,30 @@ export async function GET(req: NextRequest) {
       continue;
     }
 
-    let matched: { ts: string; haystack: string } | null = nameMatched.get(lead.id) || null;
+    let matched: TimerexCandidate | null = nameMatched.get(lead.id) || null;
     let matchMethod: "name" | "time_window" | null = matched ? "name" : null;
     if (!matched) {
-      const tw = findTimerexMatchByTime(lead.created_at, timerexMessages, claimedTs);
-      if (tw) {
-        matched = tw;
+      const candidates = findTimerexCandidatesByTime(lead.created_at, timerexMessages, claimedTs);
+      // 過去の cron 実行で使用済みのスレッド（bot のリード通知返信あり）を除外してから採用判定
+      const unclaimed: TimerexCandidate[] = [];
+      for (const c of candidates) {
+        if ((c.replyCount ?? 0) > 0) {
+          try {
+            if (await isBookingThreadClaimed(slackToken, slackChannel, c.ts)) {
+              claimedTs.add(c.ts);
+              continue;
+            }
+          } catch {
+            // 判定不能な投稿は採用しない（誤接続より standalone 通知の方が安全側）
+            continue;
+          }
+        }
+        unclaimed.push(c);
+      }
+      if (unclaimed.length === 1) {
+        matched = unclaimed[0];
         matchMethod = "time_window";
-        claimedTs.add(tw.ts);
+        claimedTs.add(matched.ts);
       }
     }
 
