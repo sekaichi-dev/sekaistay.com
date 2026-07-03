@@ -1,6 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isTimerexBookingMessage, type SlackMessage } from "./timerex-classify.ts";
+import {
+  isTimerexBookingMessage,
+  hasOwnLeadNotificationReply,
+  findTimerexCandidatesByTime,
+  type SlackMessage,
+} from "./timerex-classify.ts";
 
 // 本物の TimeRex 予約投稿（TimeRex bot が text に出す新形式）
 const realTimerexBooking: SlackMessage = {
@@ -63,4 +68,72 @@ test("bot 自身の『予約済み』リード通知も TimeRex 予約投稿に�
 
 test("無関係なチャット投稿は予約投稿でない", () => {
   assert.equal(isTimerexBookingMessage(unrelatedChatter), false);
+});
+
+// ---- 2026-07-03 カノウ誤接続インシデントの回帰テスト ----
+// 佐藤愛美の TimeRex 予約投稿 (09:35:31 JST) に、カノウのリード (09:45:38 JST 送信・予約なし) が
+// 時間窓フォールバックで誤接続された。原因: 前回 cron 実行で佐藤愛美リードに使用済みの予約投稿が
+// バッチ内 claimedTs では除外できない（リードは1件ずつ別の cron 実行で処理されるため）。
+
+// 佐藤愛美の予約投稿スレッドに付いていた bot 自身のリード通知返信（実データ形）
+const satoLeadReplyInThread: SlackMessage = {
+  ts: "1783038940.700000",
+  bot_profile: { name: "Jennie" },
+  text: "🔔 新規リード: 佐藤愛美",
+  blocks: [
+    { type: "header", text: "🏡 新規リード: 佐藤愛美" },
+    { type: "section", text: "✅ *TimeRex 予約済み* — フォーム回答を共有します。" },
+    { type: "section", text: "*👤 名前:* 佐藤愛美\n*📧 Email:* aimeizuoteng33@gmail.com" },
+    { type: "context", elements: [{ type: "mrkdwn", text: "Lead ID: `80650787-b035-4059-8d74-d0a508d8f5a3` · 2026-07-03T00:15:21.38558+00:00" }] },
+  ],
+};
+
+const satoTimerexBooking: SlackMessage = {
+  ts: "1783038931.064759", // 2026-07-03 00:35:31 UTC
+  bot_profile: { name: "TimeRex" },
+  text: "佐藤愛美さんが予定を追加しました。",
+  reply_count: 2,
+};
+
+const humanChatterReply: SlackMessage = {
+  ts: "1783039000.000000",
+  user: "UQL194ULT",
+  text: "この方、私が対応します！",
+};
+
+test("bot のリード通知返信が付いたスレッドは使用済みと判定される（カノウ誤接続の真因）", () => {
+  assert.equal(hasOwnLeadNotificationReply([satoLeadReplyInThread]), true);
+  assert.equal(hasOwnLeadNotificationReply([humanChatterReply, satoLeadReplyInThread]), true);
+});
+
+test("人間のコメントだけのスレッドは使用済みと判定されない（漢字↔かな救済は維持）", () => {
+  assert.equal(hasOwnLeadNotificationReply([humanChatterReply]), false);
+  assert.equal(hasOwnLeadNotificationReply([]), false);
+});
+
+test("時間窓候補: カノウのリード時刻から佐藤愛美の予約投稿が候補に挙がる（±15分内・10分差）", () => {
+  const candidates = findTimerexCandidatesByTime(
+    "2026-07-03T00:45:38.30655+00:00", // カノウ created_at
+    [{ ts: satoTimerexBooking.ts, haystack: satoTimerexBooking.text! }],
+    new Set(),
+  );
+  assert.equal(candidates.length, 1);
+});
+
+test("時間窓候補: バッチ内 claimedTs に載っている投稿は除外される", () => {
+  const candidates = findTimerexCandidatesByTime(
+    "2026-07-03T00:45:38.30655+00:00",
+    [{ ts: satoTimerexBooking.ts, haystack: satoTimerexBooking.text! }],
+    new Set([satoTimerexBooking.ts]),
+  );
+  assert.equal(candidates.length, 0);
+});
+
+test("時間窓候補: 窓外(±15分超)の投稿は候補にならない", () => {
+  const candidates = findTimerexCandidatesByTime(
+    "2026-07-03T01:00:00+00:00", // 予約投稿から24分29秒後
+    [{ ts: satoTimerexBooking.ts, haystack: satoTimerexBooking.text! }],
+    new Set(),
+  );
+  assert.equal(candidates.length, 0);
 });

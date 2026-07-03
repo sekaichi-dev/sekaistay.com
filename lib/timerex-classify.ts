@@ -27,6 +27,7 @@ export type SlackMessage = {
   text?: string;
   attachments?: Array<{ text?: string; fallback?: string; pretext?: string; title?: string }>;
   blocks?: SlackBlockElement[];
+  reply_count?: number;
 };
 
 export function extractBlockText(node: unknown): string {
@@ -66,6 +67,43 @@ export function messageHaystack(msg: SlackMessage): string {
 export function isOwnLeadNotification(haystack: string): boolean {
   const lower = haystack.toLowerCase();
   return lower.includes("lead id:") || haystack.includes("新規リード");
+}
+
+/**
+ * TimeRex 予約投稿のスレッド返信一覧に、bot 自身のリード通知が既に付いているか判定。
+ *
+ * 重要な注意 (2026-07-03 incident):
+ *   時間窓フォールバックの「使用済み投稿の除外」(claimedTs) は同一 cron 実行のバッチ内でしか
+ *   効かない。cron は毎分起動しリードは 1 件ずつ別々の実行で処理されるため、前回以前の実行で
+ *   別リード（佐藤愛美）に使用済みの予約投稿が「未使用」に見え、±15分内に送信された無関係な
+ *   離脱リード（カノウ）がそのスレッドへ誤接続 +「予約済み」誤ラベルされた。
+ *   → スレッド返信に bot のリード通知が付いていれば cron 実行をまたいだ「使用済み」とみなす。
+ */
+export function hasOwnLeadNotificationReply(replies: SlackMessage[]): boolean {
+  return replies.some((r) => isOwnLeadNotification(messageHaystack(r)));
+}
+
+export type TimerexCandidate = { ts: string; haystack: string; replyCount?: number };
+
+export const TIME_WINDOW_MS = 15 * 60_000;
+
+/**
+ * 名前マッチが外れたリードに対する時間窓フォールバックの候補列挙（純粋関数）。
+ * フォーム送信時刻 ±15分以内の TimeRex 投稿のうち、バッチ内で他リードに使用済み (claimedTs) の
+ * ものを除いて返す。呼び出し側はさらに Slack スレッド返信の使用済み判定
+ * (hasOwnLeadNotificationReply) を通した上で「ちょうど1件」の場合のみ採用すること。
+ */
+export function findTimerexCandidatesByTime(
+  leadCreatedAt: string,
+  timerexMessages: TimerexCandidate[],
+  claimedTs: Set<string>,
+): TimerexCandidate[] {
+  const leadMs = new Date(leadCreatedAt).getTime();
+  return timerexMessages.filter((m) => {
+    if (claimedTs.has(m.ts)) return false;
+    const tsMs = parseFloat(m.ts) * 1000;
+    return Math.abs(tsMs - leadMs) <= TIME_WINDOW_MS;
+  });
 }
 
 export function isTimerexBookingMessage(msg: SlackMessage): boolean {
