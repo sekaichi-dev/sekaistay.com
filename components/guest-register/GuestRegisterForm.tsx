@@ -97,6 +97,7 @@ const T = {
     photoAttached: "添付済み",
     photoHint: "顔写真のあるページを撮影してください。画像は自動で圧縮されます。",
     photoTooLarge: "画像が大きすぎます。設定を下げて撮影するか、スクリーンショットをお試しください。",
+    photosTotalTooLarge: "写真の合計サイズが大きすぎます。JPEG形式の小さめの画像に変更してお試しください。",
     optionalTitle: "追加情報（任意・自治体条例対応）",
     gender: "性別",
     genderOptions: ["", "男", "女", "その他"],
@@ -176,6 +177,7 @@ const T = {
     photoAttached: "Attached",
     photoHint: "Take a photo of the page with your portrait. The image is compressed automatically.",
     photoTooLarge: "The image is too large. Please try a smaller photo or a screenshot.",
+    photosTotalTooLarge: "The combined size of the photos is too large. Please use smaller JPEG images.",
     optionalTitle: "Additional details (optional)",
     gender: "Gender",
     genderOptions: ["", "男", "女", "その他"],
@@ -353,6 +355,12 @@ export default function GuestRegisterForm() {
     const validationError = validate();
     if (validationError) {
       setError(validationError);
+      return;
+    }
+    // Vercel のリクエスト上限 ~4.5MB 対策: 圧縮できなかった写真の合計が超えそうなら送信前に弾く
+    const totalPhotoBytes = guests.reduce((sum, g) => sum + (needsPassport(g) && g.photo ? g.photo.size : 0), 0);
+    if (totalPhotoBytes > 3_800_000) {
+      setError(t.photosTotalTooLarge);
       return;
     }
     setSubmitting(true);
