@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
     photoLinks = await Promise.all(
       photos.map((photo, i) => {
         if (!photo) return Promise.resolve(null);
-        const ext = photo.mime === "image/png" ? "png" : photo.mime === "image/webp" ? "webp" : "jpg";
+        const ext = { "image/png": "png", "image/webp": "webp", "image/heic": "heic", "image/heif": "heif" }[photo.mime] || "jpg";
         const filename = `${property.id}_${input.checkin.replaceAll("-", "")}_${sanitizeFilePart(input.guests[i].name)}_${groupId}.${ext}`;
         return uploadPassportPhoto(photo.buffer, photo.mime, filename);
       }),

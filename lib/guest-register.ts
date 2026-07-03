@@ -208,7 +208,7 @@ export function buildRyokanRows(
     g.nationality === "日本" ? "（日本）" : g.nationality,
     needsPassport(g) ? escapeCell(g.passportNo) : "－",
     photoLinks[i] ? "有" : "－",
-    g.gender,
+    escapeCell(g.gender),
     escapeCell(g.age),
     escapeCell(g.prevStay),
     escapeCell(g.nextDest),
