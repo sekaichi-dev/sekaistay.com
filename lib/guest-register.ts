@@ -4,7 +4,8 @@
 // 集計式は 民泊用!A6:A505 参照のため、追記行が505行を超えたら式レンジの拡張が必要。
 
 const SHEET_ID = (process.env.GUEST_REGISTER_SHEET_ID || "1K-Lg7OVO_J4l1IKolJhGx1SsICIhBjK0XIPlQ0unU1Y").trim();
-const DRIVE_FOLDER_ID = (process.env.GUEST_REGISTER_DRIVE_FOLDER_ID || "143iVqGvfRWIBjwfuqLsjV0_6G3h2ZnMG").trim();
+// 共有ドライブ「14_SEKAI STAY」内の 宿泊者名簿_旅券写し フォルダ
+const DRIVE_FOLDER_ID = (process.env.GUEST_REGISTER_DRIVE_FOLDER_ID || "13KKai6VLzaeapuDd60phwEBtoWRyVS9e").trim();
 const API_TIMEOUT_MS = 15_000;
 
 export const NATIONALITIES = [
@@ -180,7 +181,7 @@ export function buildMinpakuRows(
     escapeCell(g.occupation),
     escapeCell(g.contact),
     g.nationality,
-    needsPassport(g) ? escapeCell(g.passportNo) : "－",
+    g.passportNo ? escapeCell(g.passportNo) : "－",
     formatDateSlash(input.checkin),
     "",
     formatDateSlash(input.checkout),
@@ -206,7 +207,7 @@ export function buildRyokanRows(
     escapeCell(g.address),
     escapeCell(g.contact),
     g.nationality === "日本" ? "（日本）" : g.nationality,
-    needsPassport(g) ? escapeCell(g.passportNo) : "－",
+    g.passportNo ? escapeCell(g.passportNo) : "－",
     photoLinks[i] ? "有" : "－",
     escapeCell(g.gender),
     escapeCell(g.age),
@@ -290,7 +291,7 @@ export async function uploadPassportPhoto(buffer: Buffer, mimeType: string, file
   const tail = Buffer.from(`\r\n--${boundary}--`, "utf8");
   const body = Buffer.concat([head, buffer, tail]);
   const resp = await fetchWithTimeout(
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink",
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink&supportsAllDrives=true",
     {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": `multipart/related; boundary=${boundary}` },

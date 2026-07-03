@@ -118,8 +118,9 @@ export async function POST(req: NextRequest) {
       photos.push(null);
       continue;
     }
-    if (!needsPassport(guest)) {
-      photos.push(null); // 不要なゲストの添付は保存しない
+    // 外国籍ゲストは任意添付も保存する（国内住所なしは必須・日本国籍の添付は保存しない）
+    if (guest.nationality === "日本") {
+      photos.push(null);
       continue;
     }
     if (file.size > MAX_PHOTO_BYTES) {

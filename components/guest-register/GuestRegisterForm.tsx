@@ -8,6 +8,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import SearchSelect from "./SearchSelect";
 
 const MAX_GUESTS = 8;
 
@@ -45,13 +46,19 @@ const emptyGuest = (): GuestForm => ({
   photo: null, photoName: "", gender: "", age: "", prevStay: "", nextDest: "",
 });
 
-const NATIONALITY_LABELS: [string, string][] = [
-  ["日本", "Japan"], ["韓国", "South Korea"], ["台湾", "Taiwan"], ["香港", "Hong Kong"],
-  ["中国", "China"], ["タイ", "Thailand"], ["シンガポール", "Singapore"], ["マレーシア", "Malaysia"],
-  ["インドネシア", "Indonesia"], ["フィリピン", "Philippines"], ["ベトナム", "Vietnam"], ["インド", "India"],
-  ["英国", "United Kingdom"], ["ドイツ", "Germany"], ["フランス", "France"], ["イタリア", "Italy"],
-  ["スペイン", "Spain"], ["ロシア", "Russia"], ["米国", "United States"], ["カナダ", "Canada"],
-  ["オーストラリア", "Australia"], ["その他", "Other"],
+// [スプシ格納値(ja), 英語表示, 検索用エイリアス] — 格納値は定期報告の国籍別集計が参照するため変更不可
+const NATIONALITY_LABELS: [string, string, string][] = [
+  ["日本", "Japan", "japan nihon jp"], ["韓国", "South Korea", "korea kr かんこく"], ["台湾", "Taiwan", "taiwan tw たいわん"],
+  ["香港", "Hong Kong", "hongkong hk ほんこん"], ["中国", "China", "china cn ちゅうごく"], ["タイ", "Thailand", "thailand th"],
+  ["シンガポール", "Singapore", "singapore sg"], ["マレーシア", "Malaysia", "malaysia my"],
+  ["インドネシア", "Indonesia", "indonesia id"], ["フィリピン", "Philippines", "philippines ph"],
+  ["ベトナム", "Vietnam", "vietnam vn"], ["インド", "India", "india in"],
+  ["英国", "United Kingdom", "uk united kingdom britain england scotland wales えいこく イギリス"],
+  ["ドイツ", "Germany", "germany deutschland de"], ["フランス", "France", "france fr"],
+  ["イタリア", "Italy", "italy italia it"], ["スペイン", "Spain", "spain espana es"],
+  ["ロシア", "Russia", "russia ru"], ["米国", "United States", "usa united states america us べいこく アメリカ"],
+  ["カナダ", "Canada", "canada ca"], ["オーストラリア", "Australia", "australia au"],
+  ["その他", "Other", "other そのた"],
 ];
 
 const T = {
@@ -61,18 +68,20 @@ const T = {
     lede: "日本の法令（旅館業法・住宅宿泊事業法）により、ご宿泊者全員の名簿登録が義務付けられています。チェックイン前のご登録にご協力ください。",
     sec1: "ご宿泊情報",
     property: "ご宿泊施設",
-    propertyPlaceholder: "施設を選択してください",
+    propertyPlaceholder: "施設を選択（入力で検索）",
     propertyLoading: "読み込み中…",
     propertyError: "施設一覧を取得できませんでした。再読み込みしてください。",
+    searchPlaceholder: "入力して検索…",
+    noResults: "該当なし",
     checkin: "チェックイン日",
     checkout: "チェックアウト日",
     nights: (n: number) => `${n}泊`,
+    guestCount: "ご予約の宿泊人数（ご本人を含む）",
+    guestCountUnit: (n: number) => `${n}名`,
     sec2: "宿泊者情報",
     repBadge: "代表者",
     compBadge: (i: number) => `同行者 ${i}`,
-    addGuest: "＋ 同行者を追加",
-    removeGuest: "削除",
-    guestNote: "ご宿泊者全員（お子様を含む）のご登録が必要です。",
+    guestNote: "ご予約人数分の入力欄が表示されます。お子様を含む全員のご登録が必要です。",
     name: "氏名",
     namePh: "山田 太郎 / TARO YAMADA",
     nameHint: "外国籍の方はパスポート表記と同じローマ字でご記入ください。",
@@ -80,7 +89,7 @@ const T = {
     residenceJa: "日本国内に住所がある",
     residenceAbroad: "日本国外に居住",
     nationality: "国籍",
-    nationalityPh: "選択してください",
+    nationalityPh: "選択（入力で検索）",
     address: "住所",
     addressPh: "都道府県から番地まで / Full home address",
     sameAsRep: "代表者と同じ",
@@ -90,6 +99,8 @@ const T = {
     contactPh: "090-1234-5678 / name@example.com",
     passportTitle: "パスポート情報",
     passportWhy: "日本国内に住所をお持ちでない外国籍のお客様は、法令によりパスポート番号の記録と写しの保管が必要です。",
+    passportWhyOptional: "日本国内に住所をお持ちの方は任意です。ご協力いただける場合はご記入・添付ください。",
+    optionalSuffix: "（任意）",
     passportNo: "パスポート番号",
     passportPhoto: "パスポート写真ページの画像",
     photoSelect: "画像を選択",
@@ -107,9 +118,7 @@ const T = {
     prevStayPh: "例: 自宅、東京都内ホテル",
     nextDest: "行先地",
     nextDestPh: "例: 京都、帰国",
-    sec3: "確認・送信",
-    note: "備考（任意）",
-    notePh: "運営への連絡事項があればご記入ください",
+    sec3: "同意・送信",
     consent: "入力した情報が旅館業法・住宅宿泊事業法に基づく宿泊者名簿として3年間保管され、法令に基づき行政機関等へ提示・報告される場合があることに同意します。",
     privacy: "プライバシーポリシー",
     submit: "登録する",
@@ -141,18 +150,20 @@ const T = {
     lede: "Japanese law (Hotel Business Act / Private Lodging Business Act) requires all guests to be registered before check-in. Please complete this form for every member of your party.",
     sec1: "Your Stay",
     property: "Property",
-    propertyPlaceholder: "Select your property",
+    propertyPlaceholder: "Select your property (type to search)",
     propertyLoading: "Loading…",
     propertyError: "Could not load the property list. Please reload the page.",
+    searchPlaceholder: "Type to search…",
+    noResults: "No matches",
     checkin: "Check-in date",
     checkout: "Check-out date",
     nights: (n: number) => `${n} night${n > 1 ? "s" : ""}`,
+    guestCount: "Number of guests in your booking (including yourself)",
+    guestCountUnit: (n: number) => `${n} guest${n > 1 ? "s" : ""}`,
     sec2: "Guest Details",
     repBadge: "Lead guest",
     compBadge: (i: number) => `Guest ${i + 1}`,
-    addGuest: "+ Add another guest",
-    removeGuest: "Remove",
-    guestNote: "Every guest, including children, must be registered.",
+    guestNote: "A form is shown for each guest in your booking. Every guest, including children, must be registered.",
     name: "Full name",
     namePh: "TARO YAMADA",
     nameHint: "Please write your name exactly as it appears in your passport.",
@@ -160,7 +171,7 @@ const T = {
     residenceJa: "I have an address in Japan",
     residenceAbroad: "I live outside Japan",
     nationality: "Nationality",
-    nationalityPh: "Select",
+    nationalityPh: "Select (type to search)",
     address: "Home address",
     addressPh: "Full home address",
     sameAsRep: "Same as lead guest",
@@ -170,6 +181,8 @@ const T = {
     contactPh: "+81-90-1234-5678 / name@example.com",
     passportTitle: "Passport",
     passportWhy: "Guests of foreign nationality without an address in Japan are required by law to provide their passport number and a copy of their passport.",
+    passportWhyOptional: "Optional for guests with an address in Japan — please provide it if you can.",
+    optionalSuffix: " (optional)",
     passportNo: "Passport number",
     passportPhoto: "Photo of your passport ID page",
     photoSelect: "Choose image",
@@ -187,9 +200,7 @@ const T = {
     prevStayPh: "e.g. Home, hotel in Tokyo",
     nextDest: "Next destination",
     nextDestPh: "e.g. Kyoto, returning home",
-    sec3: "Review & Submit",
-    note: "Notes (optional)",
-    notePh: "Anything you would like us to know",
+    sec3: "Consent & Submit",
     consent: "I agree that this information will be kept for 3 years as the official guest register required by Japanese law, and may be disclosed to government authorities as required by law.",
     privacy: "Privacy Policy",
     submit: "Register",
@@ -272,7 +283,6 @@ export default function GuestRegisterForm() {
   const [checkin, setCheckin] = useState("");
   const [checkout, setCheckout] = useState("");
   const [guests, setGuests] = useState<GuestForm[]>([emptyGuest()]);
-  const [note, setNote] = useState("");
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -309,6 +319,15 @@ export default function GuestRegisterForm() {
 
   const updateGuest = useCallback((index: number, patch: Partial<GuestForm>) => {
     setGuests((prev) => prev.map((g, i) => (i === index ? { ...g, ...patch } : g)));
+  }, []);
+
+  // 予約人数に合わせて入力ブロックを増減（入力済みデータは維持）
+  const setGuestCount = useCallback((n: number) => {
+    setGuests((prev) => {
+      const next = prev.slice(0, n);
+      while (next.length < n) next.push(emptyGuest());
+      return next;
+    });
   }, []);
 
   const needsPassport = (g: GuestForm) => g.jaResident === false && g.nationality !== "" && g.nationality !== "日本";
@@ -358,7 +377,8 @@ export default function GuestRegisterForm() {
       return;
     }
     // Vercel のリクエスト上限 ~4.5MB 対策: 圧縮できなかった写真の合計が超えそうなら送信前に弾く
-    const totalPhotoBytes = guests.reduce((sum, g) => sum + (needsPassport(g) && g.photo ? g.photo.size : 0), 0);
+    const totalPhotoBytes = guests.reduce(
+      (sum, g) => sum + (g.photo && g.nationality && g.nationality !== "日本" ? g.photo.size : 0), 0);
     if (totalPhotoBytes > 3_800_000) {
       setError(t.photosTotalTooLarge);
       return;
@@ -370,7 +390,7 @@ export default function GuestRegisterForm() {
         propertyId,
         checkin,
         checkout,
-        note,
+        note: "",
         guests: guests.map((g, i) => ({
           name: g.name,
           jaResident: g.jaResident === true,
@@ -389,7 +409,7 @@ export default function GuestRegisterForm() {
       form.set("payload", JSON.stringify(payload));
       form.set("website", (document.getElementById("gr-website") as HTMLInputElement)?.value || "");
       guests.forEach((g, i) => {
-        if (needsPassport(g) && g.photo) form.set(`photo_${i}`, g.photo);
+        if (g.photo && g.nationality && g.nationality !== "日本") form.set(`photo_${i}`, g.photo);
       });
       const res = await fetch("/api/guest-register", { method: "POST", body: form });
       const data = await res.json().catch(() => ({}));
@@ -408,7 +428,6 @@ export default function GuestRegisterForm() {
 
   function resetForNext() {
     setGuests([emptyGuest()]);
-    setNote("");
     setConsent(false);
     setReceiptId("");
     setError("");
@@ -486,21 +505,19 @@ export default function GuestRegisterForm() {
               <div className="space-y-5">
                 <div>
                   <label htmlFor="gr-property" className={labelCls}>{t.property}{requiredMark}</label>
-                  <select
+                  <SearchSelect
                     id="gr-property"
                     value={propertyId}
-                    onChange={(e) => setPropertyId(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="">
-                      {propertiesError ? t.propertyError : properties === null ? t.propertyLoading : t.propertyPlaceholder}
-                    </option>
-                    {(properties || []).map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {lang === "en" && p.nameEn ? p.nameEn : p.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setPropertyId}
+                    placeholder={propertiesError ? t.propertyError : properties === null ? t.propertyLoading : t.propertyPlaceholder}
+                    searchPlaceholder={t.searchPlaceholder}
+                    noResultsText={t.noResults}
+                    options={(properties || []).map((p) => ({
+                      value: p.id,
+                      label: lang === "en" && p.nameEn ? p.nameEn : p.name,
+                      keywords: `${p.name} ${p.nameEn}`,
+                    }))}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -515,6 +532,19 @@ export default function GuestRegisterForm() {
                 {nights > 0 && (
                   <p className="text-[12px] text-deep-teal font-semibold">{t.nights(nights)}</p>
                 )}
+                <div>
+                  <label htmlFor="gr-guest-count" className={labelCls}>{t.guestCount}{requiredMark}</label>
+                  <select
+                    id="gr-guest-count"
+                    value={guests.length}
+                    onChange={(e) => setGuestCount(Number(e.target.value))}
+                    className={inputCls}
+                  >
+                    {Array.from({ length: MAX_GUESTS }, (_, i) => i + 1).map((n) => (
+                      <option key={n} value={n}>{t.guestCountUnit(n)}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </section>
 
@@ -526,19 +556,10 @@ export default function GuestRegisterForm() {
               <div className="space-y-8">
                 {guests.map((g, i) => (
                   <div key={i} className={i > 0 ? "border-t border-rule pt-7" : ""}>
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="mb-4">
                       <span className={`inline-block rounded-pill px-3 py-1 text-[11px] font-bold tracking-wide ${i === 0 ? "bg-deep-teal text-white" : "bg-teal-tint text-deep-teal"}`}>
                         {i === 0 ? t.repBadge : t.compBadge(i)}
                       </span>
-                      {i > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setGuests((prev) => prev.filter((_, j) => j !== i))}
-                          className="text-[12px] text-ink/50 hover:text-danger underline underline-offset-2"
-                        >
-                          {t.removeGuest}
-                        </button>
-                      )}
                     </div>
 
                     <div className="space-y-4">
@@ -569,12 +590,18 @@ export default function GuestRegisterForm() {
                         </div>
                         <div>
                           <label className={labelCls}>{t.nationality}{requiredMark}</label>
-                          <select value={g.nationality} onChange={(e) => updateGuest(i, { nationality: e.target.value })} className={inputCls}>
-                            <option value="">{t.nationalityPh}</option>
-                            {NATIONALITY_LABELS.map(([ja, en]) => (
-                              <option key={ja} value={ja}>{lang === "en" ? en : ja}</option>
-                            ))}
-                          </select>
+                          <SearchSelect
+                            value={g.nationality}
+                            onChange={(v) => updateGuest(i, { nationality: v })}
+                            placeholder={t.nationalityPh}
+                            searchPlaceholder={t.searchPlaceholder}
+                            noResultsText={t.noResults}
+                            options={NATIONALITY_LABELS.map(([ja, en, aliases]) => ({
+                              value: ja,
+                              label: lang === "en" ? en : ja,
+                              keywords: `${ja} ${en} ${aliases}`,
+                            }))}
+                          />
                         </div>
                       </div>
 
@@ -621,18 +648,20 @@ export default function GuestRegisterForm() {
                         </div>
                       </div>
 
-                      {needsPassport(g) && (
+                      {g.nationality !== "" && g.nationality !== "日本" && (
                         <div className="rounded-switch-md border border-brass/40 bg-brass/5 p-4 sm:p-5">
                           <p className="text-[13px] font-bold text-ink mb-1">{t.passportTitle}</p>
-                          <p className="text-[11.5px] text-ink/60 leading-relaxed mb-4">{t.passportWhy}</p>
+                          <p className="text-[11.5px] text-ink/60 leading-relaxed mb-4">
+                            {needsPassport(g) ? t.passportWhy : t.passportWhyOptional}
+                          </p>
                           <div className="space-y-4">
                             <div>
-                              <label className={labelCls}>{t.passportNo}{requiredMark}</label>
+                              <label className={labelCls}>{t.passportNo}{needsPassport(g) ? requiredMark : t.optionalSuffix}</label>
                               <input type="text" value={g.passportNo} maxLength={30} placeholder="XX1234567"
                                 onChange={(e) => updateGuest(i, { passportNo: e.target.value })} className={inputCls} />
                             </div>
                             <div>
-                              <label className={labelCls}>{t.passportPhoto}{requiredMark}</label>
+                              <label className={labelCls}>{t.passportPhoto}{needsPassport(g) ? requiredMark : t.optionalSuffix}</label>
                               <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.photo ? "border-sekai-teal bg-teal-tint text-deep-teal" : "border-switch-stone-border bg-white text-ink hover:bg-switch-stone-over"}`}>
                                 <input
                                   type="file"
@@ -686,26 +715,12 @@ export default function GuestRegisterForm() {
                 ))}
               </div>
 
-              {guests.length < MAX_GUESTS && (
-                <button
-                  type="button"
-                  onClick={() => setGuests((prev) => [...prev, emptyGuest()])}
-                  className="mt-7 w-full rounded-switch-md border border-dashed border-switch-stone-03 bg-white py-3.5 text-[14px] font-semibold text-deep-teal hover:bg-teal-tint/40 hover:border-sekai-teal transition-colors"
-                >
-                  {t.addGuest}
-                </button>
-              )}
             </section>
 
             {/* 03 確認・送信 */}
             <section className="bg-paper border border-rule rounded-switch-lg shadow-switch-card p-6 sm:p-8">
               {sectionHead("03", t.sec3)}
               <div className="space-y-5">
-                <div>
-                  <label htmlFor="gr-note" className={labelCls}>{t.note}</label>
-                  <textarea id="gr-note" value={note} maxLength={500} rows={3} placeholder={t.notePh}
-                    onChange={(e) => setNote(e.target.value)} className={inputCls} />
-                </div>
                 <label className="flex items-start gap-3 rounded-switch-md border border-rule bg-mist/60 p-4 cursor-pointer">
                   <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)}
                     className="mt-0.5 accent-[#167B81] shrink-0" />
