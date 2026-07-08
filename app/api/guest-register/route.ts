@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
   const guestError = validateGuests(input, property.type);
   if (guestError) return NextResponse.json({ error: guestError }, { status: 400 });
 
-  // 旅券写真の検証（国内住所なし外国籍ゲストは必須）
+  // 旅券写真の検証（国内住所なし外国籍ゲストは必須・その他のゲストも任意で添付可）
   const photos: ({ buffer: Buffer; mime: string } | null)[] = [];
   for (let i = 0; i < input.guests.length; i++) {
     const guest = input.guests[i];
@@ -116,10 +116,6 @@ export async function POST(req: NextRequest) {
         );
       }
       photos.push(null);
-      continue;
-    }
-    if (!needsPassport(guest)) {
-      photos.push(null); // 不要なゲストの添付は保存しない
       continue;
     }
     if (file.size > MAX_PHOTO_BYTES) {
