@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { resolveAttribution } from "@/lib/attribution";
 
 type PropertySearchResult = {
   source: "airbnb" | "other";
@@ -213,22 +214,10 @@ export function ReportRequestForm({ lpVariant, embed = false }: ReportRequestFor
   const [annualLoss, setAnnualLoss] = useState<number | null>(null);
   const [attribution, setAttribution] = useState<AdAttribution>({});
 
-  // attribution capture
+  // attribution capture: 現 URL 優先 → 欠けた項目は 90 日クッキー (ss_attr) から復元
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const get = (k: string) => params.get(k)?.slice(0, 200) || undefined;
-    setAttribution({
-      utmSource: get("utm_source"),
-      utmMedium: get("utm_medium"),
-      utmCampaign: get("utm_campaign"),
-      utmContent: get("utm_content"),
-      utmTerm: get("utm_term"),
-      gclid: get("gclid"),
-      fbclid: get("fbclid"),
-      landingUrl: params.get("landing_url")?.slice(0, 1000) || window.location.href.slice(0, 1000),
-      referrer: document.referrer ? document.referrer.slice(0, 1000) : undefined,
-    });
+    setAttribution(resolveAttribution());
   }, []);
 
   // iframe height notify

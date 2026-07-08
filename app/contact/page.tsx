@@ -5,16 +5,13 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
 import AuditLink from '@/components/audit/AuditLink'
+import { resolveAttribution } from '@/lib/attribution'
 import { isValidReferralCodeFormat, normalizeReferralCode } from '@/lib/referral-code'
 
 const inputCls =
   'w-full rounded-md border border-rule bg-paper px-4 py-3 text-[15px] text-ink outline-none transition placeholder:text-ink/40 focus:border-sekai-teal'
 
 const MEETING_URL = 'https://timerex.net/s/sekai-stay/d61b424d'
-
-const getUtm = (k: string) => {
-  try { return typeof window !== 'undefined' ? sessionStorage.getItem(k) || '' : '' } catch { return '' }
-}
 
 /* 相談で話せること */
 const TALK_POINTS = [
@@ -66,15 +63,8 @@ export default function ContactPage() {
           complaints: message,
           lpVariant: 'contact',
           formVariant: 'default',
-          utmSource: getUtm('utm_source') || undefined,
-          utmMedium: getUtm('utm_medium') || undefined,
-          utmCampaign: getUtm('utm_campaign') || undefined,
-          utmContent: getUtm('utm_content') || undefined,
-          utmTerm: getUtm('utm_term') || undefined,
-          gclid: getUtm('gclid') || undefined,
-          fbclid: getUtm('fbclid') || undefined,
-          landingUrl: typeof window !== 'undefined' ? window.location.href : undefined,
-          referrer: typeof document !== 'undefined' ? document.referrer || undefined : undefined,
+          // 現 URL 優先 → 90 日クッキー (ss_attr) から復元 (旧 sessionStorage 方式はタブを閉じると消えるため置換 2026-07-08)
+          ...resolveAttribution(),
           referrerCode: referrerCode || undefined,
           referrerName: referrerName || undefined,
         }),
