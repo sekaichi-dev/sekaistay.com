@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { resolveLpVariant } from '@/lib/lp-variant'
+import { captureAttribution } from '@/lib/attribution'
 
 // Next.js の App Router はクライアント遷移で layout が再マウントされないため、
 // Meta Pixel と GA4 の PageView は明示的に再発火する必要がある。
@@ -36,6 +37,11 @@ export default function AnalyticsRouteTracker() {
     if (lastTrackedPath.current === pathname) return
     const isInitial = lastTrackedPath.current === null
     lastTrackedPath.current = pathname
+
+    // 属性の 90 日ファーストパーティ保存 (初回着地含む毎遷移)。
+    // utm/gclid/fbclid が URL から消えた後のフォーム送信でも参照元を復元できるようにする。
+    captureAttribution()
+
     if (isInitial) return // 初回は layout.tsx が lp_variant 込みで既に発火済み
 
     const query = searchParams?.toString()
