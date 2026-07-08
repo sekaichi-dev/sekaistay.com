@@ -185,10 +185,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }),
           }}
         />
-        {/* UTM パラメータの sessionStorage 保存 */}
-        <Script id="utm-save" strategy="afterInteractive">
-          {`var _p=new URLSearchParams(location.search);['utm_source','utm_medium','utm_campaign','utm_term','utm_content','gclid','fbclid'].forEach(function(k){var v=_p.get(k);if(v)sessionStorage.setItem(k,v)});`}
-        </Script>
+        {/* UTM の永続化は lib/attribution.ts (90日クッキー ss_attr) に移行 (2026-07-08)。
+            旧 sessionStorage 方式はタブを閉じると消える + 読み手が contact のみだったため削除。 */}
         {/* Google tag (gtag.js) — GA4 + Google Ads コンバージョン */}
         <Script
           id="ga4-loader"

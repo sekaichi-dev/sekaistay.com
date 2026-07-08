@@ -49,11 +49,24 @@ function readCookie(): StoredAttribution | null {
   }
 }
 
+// encodeURIComponent 後のバイト長がブラウザ上限 (4KB) に近いと無言で破棄される。
+// 超過時は landingUrl → referrer の順に落として utm/gclid を最優先で残す。
+const COOKIE_VALUE_MAX = 3800;
+
 function writeCookie(attr: StoredAttribution): void {
   if (typeof document === "undefined") return;
   try {
-    const value = encodeURIComponent(JSON.stringify(attr));
-    // 4KB 制限対策: 属性値は capture 時点で各 200 文字 / URL 1000 文字に clip 済み
+    let payload: StoredAttribution = attr;
+    let value = encodeURIComponent(JSON.stringify(payload));
+    if (value.length > COOKIE_VALUE_MAX) {
+      payload = { ...payload, landingUrl: undefined };
+      value = encodeURIComponent(JSON.stringify(payload));
+    }
+    if (value.length > COOKIE_VALUE_MAX) {
+      payload = { ...payload, referrer: undefined };
+      value = encodeURIComponent(JSON.stringify(payload));
+    }
+    if (value.length > COOKIE_VALUE_MAX) return; // それでも超過なら保存断念 (従来どおり URL のみ計測)
     document.cookie = `${COOKIE_NAME}=${value}; max-age=${MAX_AGE_SECONDS}; path=/; SameSite=Lax; Secure`;
   } catch {
     // クッキー無効環境では静かに諦める (従来どおり現 URL のみの計測になる)
@@ -143,6 +156,9 @@ export function resolveAttribution(): StoredAttribution {
       clip(params.get("landing_url"), 1000) ||
       (urlHasSignal ? clip(window.location.href, 1000) : stored.landingUrl) ||
       clip(window.location.href, 1000),
-    referrer: clip(document.referrer, 1000) || stored.referrer,
+    // クッキー復元経路では保存時の referrer を優先 (現ページの referrer は内部遷移で上書きされているため)
+    referrer: urlHasSignal
+      ? clip(document.referrer, 1000) || stored.referrer
+      : stored.referrer || clip(document.referrer, 1000),
   };
 }
