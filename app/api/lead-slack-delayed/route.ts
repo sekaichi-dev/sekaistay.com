@@ -21,6 +21,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { forwardLeadToSlack } from "@/lib/lead-forward";
+import {
+  isTimerexBookingMessage,
+  messageHaystack,
+  hasOwnLeadNotificationReply,
+  findTimerexCandidatesByTime,
+  type SlackMessage,
+  type TimerexCandidate,
+} from "@/lib/timerex-classify";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -30,42 +38,6 @@ const SLACK_LOOKBACK_MS = 35 * 60_000; // Slack #402 を直近 35 分まで遡�
 const PROCESS_LIMIT = 20;
 const TIME_BUDGET_MS = 50_000;
 const MAX_ATTEMPTS = 5;
-
-type SlackBlockElement = {
-  type?: string;
-  text?: string | { text?: string };
-  elements?: SlackBlockElement[];
-  fields?: Array<{ text?: string }>;
-};
-
-type SlackMessage = {
-  type: string;
-  ts: string;
-  user?: string;
-  bot_id?: string;
-  username?: string;
-  bot_profile?: { name?: string };
-  app_id?: string;
-  text?: string;
-  attachments?: Array<{ text?: string; fallback?: string; pretext?: string; title?: string }>;
-  blocks?: SlackBlockElement[];
-};
-
-function extractBlockText(node: unknown): string {
-  if (!node) return "";
-  if (typeof node === "string") return node;
-  if (Array.isArray(node)) return node.map(extractBlockText).join(" ");
-  if (typeof node === "object") {
-    const obj = node as Record<string, unknown>;
-    const parts: string[] = [];
-    for (const v of Object.values(obj)) {
-      if (typeof v === "string") parts.push(v);
-      else if (v && (Array.isArray(v) || typeof v === "object")) parts.push(extractBlockText(v));
-    }
-    return parts.join(" ");
-  }
-  return "";
-}
 
 async function fetchSlackHistory(token: string, channelId: string, sinceMs: number): Promise<SlackMessage[]> {
   const oldest = (sinceMs / 1000).toFixed(6);
@@ -83,36 +55,6 @@ async function fetchSlackHistory(token: string, channelId: string, sinceMs: numb
     throw new Error(`slack history error: ${json?.error || "unknown"}`);
   }
   return json.messages || [];
-}
-
-/**
- * TimeRex の予約完了投稿を判定。
- * 観測サンプル (2026-05-22 #402):
- *   - "○○さんよりご予約をいただきました。"
- *   - "○○さんが予定を追加しました。" (新形式 / blocks に格納)
- * Slack の bot 投稿は本文が `blocks` にしかないケースが多いので、
- * text / attachments / blocks / bot_profile.name の全てを haystack に集めて判定する。
- */
-function messageHaystack(msg: SlackMessage): string {
-  const parts: string[] = [
-    msg.text || "",
-    msg.username || "",
-    msg.bot_profile?.name || "",
-  ];
-  for (const a of msg.attachments || []) {
-    parts.push(a.text || "", a.fallback || "", a.pretext || "", a.title || "");
-  }
-  parts.push(extractBlockText(msg.blocks));
-  return parts.join("\n");
-}
-
-function isTimerexBookingMessage(msg: SlackMessage): boolean {
-  const haystack = messageHaystack(msg).toLowerCase();
-  if (haystack.includes("timerex")) return true;
-  // 文言ベースの fallback: 予約確定パターン
-  if (haystack.includes("ご予約をいただきました")) return true;
-  if (haystack.includes("予定を追加しました")) return true;
-  return false;
 }
 
 /**
@@ -148,27 +90,26 @@ function nameMatches(leadName: string | null | undefined, haystack: string): boo
 }
 
 /**
- * 名前マッチが外れた場合の時間窓フォールバック。
- * フォーム送信時刻 ±TIME_WINDOW_MS 以内のTimeRex投稿が「ちょうど1つ」で、
- * かつその投稿が他のリードの名前マッチに使われていないなら、それを採用する。
- *
- * 主な狙い: 漢字↔かなの揺れ（岩崎健佑 ↔ いわさきけんすけ）で名前マッチが失敗する事故の救済。
- * 誤接続リスク: 同時間窓に複数リードがあり全員かな表記でマッチ外れの場合のみ。実運用では低頻度。
+ * 予約投稿スレッドが過去の cron 実行で既に別リードに使用済みか判定。
+ * claimedTs はバッチ内でしか効かない（リードは1件ずつ別々の cron 実行で処理される）ため、
+ * スレッド返信に bot 自身のリード通知が付いているかを Slack 側に問い合わせて判定する。
+ * → 2026-07-03 カノウ誤接続インシデント（佐藤愛美の予約スレッドへ誤返信）の再発防止。
  */
-const TIME_WINDOW_MS = 15 * 60_000;
-
-function findTimerexMatchByTime(
-  leadCreatedAt: string,
-  timerexMessages: Array<{ ts: string; haystack: string }>,
-  claimedTs: Set<string>,
-): { ts: string; haystack: string } | null {
-  const leadMs = new Date(leadCreatedAt).getTime();
-  const candidates = timerexMessages.filter((m) => {
-    if (claimedTs.has(m.ts)) return false;
-    const tsMs = parseFloat(m.ts) * 1000;
-    return Math.abs(tsMs - leadMs) <= TIME_WINDOW_MS;
-  });
-  return candidates.length === 1 ? candidates[0] : null;
+async function isBookingThreadClaimed(token: string, channelId: string, ts: string): Promise<boolean> {
+  const url = `https://slack.com/api/conversations.replies?channel=${encodeURIComponent(channelId)}&ts=${encodeURIComponent(ts)}&limit=20`;
+  const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!resp.ok) {
+    throw new Error(`slack replies HTTP ${resp.status}`);
+  }
+  const json = (await resp.json().catch(() => null)) as
+    | { ok?: boolean; error?: string; messages?: SlackMessage[] }
+    | null;
+  if (!json?.ok) {
+    throw new Error(`slack replies error: ${json?.error || "unknown"}`);
+  }
+  // conversations.replies は先頭に親メッセージ自身を含むので除外
+  const replies = (json.messages || []).filter((m) => m.ts !== ts);
+  return hasOwnLeadNotificationReply(replies);
 }
 
 export async function GET(req: NextRequest) {
@@ -216,9 +157,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: `slack history fetch failed: ${err?.message || err}` }, { status: 500 });
   }
 
-  const timerexMessages = history.filter(isTimerexBookingMessage).map((m) => ({
+  const timerexMessages: TimerexCandidate[] = history.filter(isTimerexBookingMessage).map((m) => ({
     ts: m.ts,
     haystack: messageHaystack(m),
+    replyCount: m.reply_count ?? 0,
   }));
 
   const startedAt = Date.now();
@@ -226,7 +168,7 @@ export async function GET(req: NextRequest) {
 
   // 2-pass: まず name match で claimed ts を確定させ、残りを time-window で救済する
   const leads = data as Array<{ id: string; created_at: string; name: string | null; email: string | null; slack_attempt_count: number }>;
-  const nameMatched = new Map<string, { ts: string; haystack: string }>();
+  const nameMatched = new Map<string, TimerexCandidate>();
   const claimedTs = new Set<string>();
   for (const lead of leads) {
     const m = timerexMessages.find((tm) => nameMatches(lead.name, tm.haystack));
@@ -242,14 +184,30 @@ export async function GET(req: NextRequest) {
       continue;
     }
 
-    let matched: { ts: string; haystack: string } | null = nameMatched.get(lead.id) || null;
+    let matched: TimerexCandidate | null = nameMatched.get(lead.id) || null;
     let matchMethod: "name" | "time_window" | null = matched ? "name" : null;
     if (!matched) {
-      const tw = findTimerexMatchByTime(lead.created_at, timerexMessages, claimedTs);
-      if (tw) {
-        matched = tw;
+      const candidates = findTimerexCandidatesByTime(lead.created_at, timerexMessages, claimedTs);
+      // 過去の cron 実行で使用済みのスレッド（bot のリード通知返信あり）を除外してから採用判定
+      const unclaimed: TimerexCandidate[] = [];
+      for (const c of candidates) {
+        if ((c.replyCount ?? 0) > 0) {
+          try {
+            if (await isBookingThreadClaimed(slackToken, slackChannel, c.ts)) {
+              claimedTs.add(c.ts);
+              continue;
+            }
+          } catch {
+            // 判定不能な投稿は採用しない（誤接続より standalone 通知の方が安全側）
+            continue;
+          }
+        }
+        unclaimed.push(c);
+      }
+      if (unclaimed.length === 1) {
+        matched = unclaimed[0];
         matchMethod = "time_window";
-        claimedTs.add(tw.ts);
+        claimedTs.add(matched.ts);
       }
     }
 

@@ -375,6 +375,18 @@ export async function forwardLeadToSlack(
   lines.push(`*👤 名前:* ${r.name || "(未入力)"}`);
   lines.push(`*📧 Email:* ${r.email || "(未入力)"}`);
   lines.push(`*📞 電話:* ${r.phone || "(未入力)"}`);
+  if (r.referrer_match) {
+    const refLabel =
+      r.referrer_match === "code"
+        ? "✅ コード一致"
+        : r.referrer_match === "name_candidate"
+          ? "🔎 名前のみ(要確認)"
+          : r.referrer_match === "unmatched"
+            ? "⚠️ コード不一致(要確認)"
+            : r.referrer_match;
+    const refParts = [r.referrer_code, r.referrer_name].filter(Boolean).join(" / ");
+    lines.push(`*🤝 紹介者:* ${refParts || "(記入あり)"}  ${refLabel}`);
+  }
   if (r.company_name) lines.push(`*🏢 会社:* ${r.company_name}`);
   if (r.airbnb_url) lines.push(`*🏠 Airbnb URL:* ${r.airbnb_url}`);
   if (typeof r.total_properties === "number") lines.push(`*物件数:* ${r.total_properties} 棟`);
@@ -415,10 +427,9 @@ export async function forwardLeadToSlack(
   };
   if (options.threadTs) {
     payload.thread_ts = options.threadTs;
-    // TimeRex 予約スレッドへの返信だが、reply_broadcast=true で #402 本流にも 1 件表示する。
-    // これがないと予約済みリード（全体の約半数）はスレッドに埋もれ「Slack に通知が来ない」
-    // ように見える（2026-06-29 ヨシト指摘で本流表示に方針変更）。
-    payload.reply_broadcast = true;
+    // reply_broadcast は付けない。付けると TimeRex スレッド返信が #402 本流にも
+    // 二重表示され「同じリードが2回来た」ように見える（2026-07-02 テンイチ指摘で撤回。
+    // 2026-06-29 ヨシト指摘の「スレッドに埋もれて見えない」とはトレードオフ）。
   }
 
   const ac = new AbortController();
