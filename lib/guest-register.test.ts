@@ -148,6 +148,32 @@ test("buildMinpakuRows: 連絡先の + がエスケープされる", () => {
   assert.equal(rows[0][6], "'+44-20-1234-5678");
 });
 
+test("buildMinpakuRows: 任意提供の旅券番号・写しも記録される（国内住所あり）", () => {
+  const rows = buildMinpakuRows(
+    input({ guests: [guest({ jaResident: true, passportNo: "P7654321B" })] }) as never,
+    property() as never,
+    "G-1",
+    ["https://drive.google.com/opt"],
+    "2026/07/03 14:00",
+  );
+  assert.equal(rows[0][8], "P7654321B"); // I 旅券番号（needsPassport でなくても提供があれば記録）
+  assert.equal(rows[0][14], "有"); // O 旅券写し
+  assert.equal(rows[0][17], "https://drive.google.com/opt"); // R Driveリンク
+});
+
+test("buildRyokanRows: 任意提供の旅券番号・写しも記録される（日本人ゲスト）", () => {
+  const rows = buildRyokanRows(
+    input({ guests: [guest({ nationality: "日本", jaResident: true, passportNo: "TK1234567" })] }) as never,
+    property({ type: "旅館業", licenseNo: "" }) as never,
+    "G-1",
+    ["https://drive.google.com/opt"],
+    "2026/07/03 14:00",
+  );
+  assert.equal(rows[0][6], "TK1234567"); // G 旅券番号
+  assert.equal(rows[0][7], "有"); // H 旅券写し
+  assert.equal(rows[0][17], "https://drive.google.com/opt"); // R Driveリンク
+});
+
 test("sanitizeFilePart: 記号・空白を除去", () => {
   assert.equal(sanitizeFilePart("John / Smith:*?"), "John_Smith_");
   assert.equal(sanitizeFilePart(""), "guest");

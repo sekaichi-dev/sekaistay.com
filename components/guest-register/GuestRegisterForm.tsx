@@ -4,6 +4,7 @@
  * 物件マスタの形態（民泊/旅館業）で必須項目を自動分岐:
  *  - 民泊: 氏名・住所・職業・連絡先・宿泊日・国籍（+国内住所なし外国籍は旅券番号/写し）
  *  - 旅館業: 氏名・住所・連絡先・宿泊日（+同上。性別/年齢/前泊地/行先地は条例上乗せ・任意）
+ * パスポート欄は全ゲストに常時表示（国内住所なし外国籍は必須・それ以外は任意添付）。
  * パスポート写真はクライアントで最大1600px/450KB程度に圧縮してから送信（Vercelの4.5MB制限対策）。
  */
 
@@ -90,10 +91,13 @@ const T = {
     contactPh: "090-1234-5678 / name@example.com",
     passportTitle: "パスポート情報",
     passportWhy: "日本国内に住所をお持ちでない外国籍のお客様は、法令によりパスポート番号の記録と写しの保管が必要です。",
+    passportTitleOptional: "パスポート情報（任意）",
+    passportWhyOptional: "パスポートをお持ちの方は、ご本人確認のため写しのご登録にご協力ください。",
     passportNo: "パスポート番号",
     passportPhoto: "パスポート写真ページの画像",
     photoSelect: "画像を選択",
     photoRetake: "画像を変更",
+    photoRemove: "削除",
     photoAttached: "添付済み",
     photoHint: "顔写真のあるページを撮影してください。画像は自動で圧縮されます。",
     photoTooLarge: "画像が大きすぎます。設定を下げて撮影するか、スクリーンショットをお試しください。",
@@ -170,10 +174,13 @@ const T = {
     contactPh: "+81-90-1234-5678 / name@example.com",
     passportTitle: "Passport",
     passportWhy: "Guests of foreign nationality without an address in Japan are required by law to provide their passport number and a copy of their passport.",
+    passportTitleOptional: "Passport (optional)",
+    passportWhyOptional: "If you have a passport, we would appreciate a copy of it for identity verification.",
     passportNo: "Passport number",
     passportPhoto: "Photo of your passport ID page",
     photoSelect: "Choose image",
     photoRetake: "Change image",
+    photoRemove: "Remove",
     photoAttached: "Attached",
     photoHint: "Take a photo of the page with your portrait. The image is compressed automatically.",
     photoTooLarge: "The image is too large. Please try a smaller photo or a screenshot.",
@@ -358,7 +365,7 @@ export default function GuestRegisterForm() {
       return;
     }
     // Vercel のリクエスト上限 ~4.5MB 対策: 圧縮できなかった写真の合計が超えそうなら送信前に弾く
-    const totalPhotoBytes = guests.reduce((sum, g) => sum + (needsPassport(g) && g.photo ? g.photo.size : 0), 0);
+    const totalPhotoBytes = guests.reduce((sum, g) => sum + (g.photo ? g.photo.size : 0), 0);
     if (totalPhotoBytes > 3_800_000) {
       setError(t.photosTotalTooLarge);
       return;
@@ -389,7 +396,7 @@ export default function GuestRegisterForm() {
       form.set("payload", JSON.stringify(payload));
       form.set("website", (document.getElementById("gr-website") as HTMLInputElement)?.value || "");
       guests.forEach((g, i) => {
-        if (needsPassport(g) && g.photo) form.set(`photo_${i}`, g.photo);
+        if (g.photo) form.set(`photo_${i}`, g.photo);
       });
       const res = await fetch("/api/guest-register", { method: "POST", body: form });
       const data = await res.json().catch(() => ({}));
@@ -621,35 +628,43 @@ export default function GuestRegisterForm() {
                         </div>
                       </div>
 
-                      {needsPassport(g) && (
-                        <div className="rounded-switch-md border border-brass/40 bg-brass/5 p-4 sm:p-5">
-                          <p className="text-[13px] font-bold text-ink mb-1">{t.passportTitle}</p>
-                          <p className="text-[11.5px] text-ink/60 leading-relaxed mb-4">{t.passportWhy}</p>
-                          <div className="space-y-4">
-                            <div>
-                              <label className={labelCls}>{t.passportNo}{requiredMark}</label>
-                              <input type="text" value={g.passportNo} maxLength={30} placeholder="XX1234567"
-                                onChange={(e) => updateGuest(i, { passportNo: e.target.value })} className={inputCls} />
-                            </div>
-                            <div>
-                              <label className={labelCls}>{t.passportPhoto}{requiredMark}</label>
-                              <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.photo ? "border-sekai-teal bg-teal-tint text-deep-teal" : "border-switch-stone-border bg-white text-ink hover:bg-switch-stone-over"}`}>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) => onPhotoChange(i, e.target.files?.[0] || null)}
-                                />
-                                {photoBusy === i ? "…" : g.photo ? `✓ ${t.photoAttached}` : t.photoSelect}
-                              </label>
-                              {g.photo && (
-                                <span className="ml-3 text-[12px] text-ink/55 break-all">{g.photoName}</span>
-                              )}
-                              <p className="mt-1.5 text-[11px] text-ink/45">{t.photoHint}</p>
-                            </div>
+                      <div className={`rounded-switch-md border p-4 sm:p-5 ${needsPassport(g) ? "border-brass/40 bg-brass/5" : "border-rule bg-mist/60"}`}>
+                        <p className="text-[13px] font-bold text-ink mb-1">{needsPassport(g) ? t.passportTitle : t.passportTitleOptional}</p>
+                        <p className="text-[11.5px] text-ink/60 leading-relaxed mb-4">{needsPassport(g) ? t.passportWhy : t.passportWhyOptional}</p>
+                        <div className="space-y-4">
+                          <div>
+                            <label className={labelCls}>{t.passportNo}{needsPassport(g) && requiredMark}</label>
+                            <input type="text" value={g.passportNo} maxLength={30} placeholder="XX1234567"
+                              onChange={(e) => updateGuest(i, { passportNo: e.target.value })} className={inputCls} />
+                          </div>
+                          <div>
+                            <label className={labelCls}>{t.passportPhoto}{needsPassport(g) && requiredMark}</label>
+                            <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.photo ? "border-sekai-teal bg-teal-tint text-deep-teal" : "border-switch-stone-border bg-white text-ink hover:bg-switch-stone-over"}`}>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
+                                onChange={(e) => onPhotoChange(i, e.target.files?.[0] || null)}
+                              />
+                              {photoBusy === i ? "…" : g.photo ? `✓ ${t.photoAttached}` : t.photoSelect}
+                            </label>
+                            {g.photo && (
+                              <span className="ml-3 text-[12px] text-ink/55">
+                                <span className="break-all">{g.photoName}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => updateGuest(i, { photo: null, photoName: "" })}
+                                  className="ml-2 underline underline-offset-2 hover:text-danger"
+                                >
+                                  {t.photoRemove}
+                                </button>
+                              </span>
+                            )}
+                            <p className="mt-1.5 text-[11px] text-ink/45">{t.photoHint}</p>
                           </div>
                         </div>
-                      )}
+                      </div>
 
                       {property?.type === "旅館業" && (
                         <details className="rounded-switch-md border border-rule bg-mist/60 px-4 py-3">
