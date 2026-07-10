@@ -280,10 +280,74 @@ export async function appendRows(tab: "旅館業用" | "民泊用", rows: unknow
   }
 }
 
-export async function uploadPassportPhoto(buffer: Buffer, mimeType: string, filename: string): Promise<string> {
+// ─── 旅券写しの保管フォルダ階層: 報告期間 / 物件 / 予約（受付ID_代表者） ───────
+
+// 民泊定期報告の2ヶ月区切り（2-3月/4-5月/…/12-1月）で期間ラベルを作る。旅館業物件も同じ区切りで揃える。
+export function reportPeriodLabel(checkinIso: string): string {
+  const m = checkinIso.match(/^(\d{4})-(\d{2})/);
+  if (!m) return "期間不明";
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  if (month === 12) return `${year}年12月-${year + 1}年1月`;
+  if (month === 1) return `${year - 1}年12月-${year}年1月`;
+  const start = month % 2 === 0 ? month : month - 1;
+  return `${year}年${start}-${start + 1}月`;
+}
+
+// Drive のフォルダ名に使えるようにだけ整える（スペース・日本語はそのまま可）
+export function sanitizeFolderName(s: string): string {
+  return s.replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "不明";
+}
+
+const folderCache = new Map<string, string>(); // `${parentId}/${name}` → folderId
+
+async function findOrCreateFolder(name: string, parentId: string): Promise<string> {
+  const token = await getAccessToken();
+  const q = encodeURIComponent(
+    `name = '${name.replaceAll("'", "\\'")}' and '${parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+  );
+  const found = await fetchWithTimeout(
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&pageSize=1`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (found.ok) {
+    const data = (await found.json()) as { files?: { id: string }[] };
+    if (data.files?.[0]?.id) return data.files[0].id;
+  } else {
+    const text = await found.text().catch(() => "");
+    throw new Error(`drive folder search ${found.status}: ${text.slice(0, 200)}`);
+  }
+  const created = await fetchWithTimeout("https://www.googleapis.com/drive/v3/files?fields=id", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ name, parents: [parentId], mimeType: "application/vnd.google-apps.folder" }),
+  });
+  if (!created.ok) {
+    const text = await created.text().catch(() => "");
+    throw new Error(`drive folder create ${created.status}: ${text.slice(0, 200)}`);
+  }
+  return ((await created.json()) as { id: string }).id;
+}
+
+/** 報告期間/物件/予約 の3階層を（無ければ作りつつ）辿り、末端フォルダIDを返す。 */
+export async function ensurePassportFolder(checkin: string, propertyName: string, bookingLabel: string): Promise<string> {
+  let parent = DRIVE_FOLDER_ID;
+  for (const name of [reportPeriodLabel(checkin), sanitizeFolderName(propertyName), sanitizeFolderName(bookingLabel)]) {
+    const key = `${parent}/${name}`;
+    let id = folderCache.get(key);
+    if (!id) {
+      id = await findOrCreateFolder(name, parent);
+      folderCache.set(key, id);
+    }
+    parent = id;
+  }
+  return parent;
+}
+
+export async function uploadPassportPhoto(buffer: Buffer, mimeType: string, filename: string, parentId: string = DRIVE_FOLDER_ID): Promise<string> {
   const token = await getAccessToken();
   const boundary = "gr_boundary_" + Math.random().toString(36).slice(2);
-  const metadata = JSON.stringify({ name: filename, parents: [DRIVE_FOLDER_ID] });
+  const metadata = JSON.stringify({ name: filename, parents: [parentId] });
   const head = Buffer.from(
     `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n` +
     `--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`, "utf8");

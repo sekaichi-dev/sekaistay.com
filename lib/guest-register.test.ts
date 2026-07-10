@@ -4,7 +4,25 @@ import assert from "node:assert/strict";
 const {
   calcNights, needsPassport, parseRegisterInput, validateGuests,
   buildMinpakuRows, buildRyokanRows, makeGroupId, sanitizeFilePart, escapeCell,
+  reportPeriodLabel, sanitizeFolderName,
 } = await import("./guest-register.ts");
+
+test("reportPeriodLabel: 民泊定期報告の2ヶ月区切り", () => {
+  assert.equal(reportPeriodLabel("2026-07-14"), "2026年6-7月");
+  assert.equal(reportPeriodLabel("2026-06-01"), "2026年6-7月");
+  assert.equal(reportPeriodLabel("2026-04-30"), "2026年4-5月");
+  assert.equal(reportPeriodLabel("2026-02-15"), "2026年2-3月");
+  assert.equal(reportPeriodLabel("2026-12-31"), "2026年12月-2027年1月");
+  assert.equal(reportPeriodLabel("2027-01-05"), "2026年12月-2027年1月");
+  assert.equal(reportPeriodLabel("bad"), "期間不明");
+});
+
+test("sanitizeFolderName: 禁止文字のみ除去しスペース・ハイフンは保持", () => {
+  assert.equal(sanitizeFolderName("オグラビル 203"), "オグラビル 203");
+  assert.equal(sanitizeFolderName("G-260710-XXZF_Martin_Chroust"), "G-260710-XXZF_Martin_Chroust");
+  assert.equal(sanitizeFolderName("a/b:c*d"), "a b c d");
+  assert.equal(sanitizeFolderName(""), "不明");
+});
 
 const guest = (over: Record<string, unknown> = {}) => ({
   name: "John Smith",
