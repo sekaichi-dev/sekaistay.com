@@ -375,7 +375,7 @@ export default function GuestRegisterForm() {
       return;
     }
     // Vercel のリクエスト上限 ~4.5MB 対策: 圧縮できなかった写真の合計が超えそうなら送信前に弾く
-    const totalPhotoBytes = guests.reduce((sum, g) => sum + (g.photo ? g.photo.size : 0), 0);
+    const totalPhotoBytes = guests.reduce((sum, g) => sum + (g.jaResident === false && g.photo ? g.photo.size : 0), 0);
     if (totalPhotoBytes > 3_800_000) {
       setError(t.photosTotalTooLarge);
       return;
@@ -397,7 +397,7 @@ export default function GuestRegisterForm() {
           nationality: g.nationality,
           occupation: g.occupation,
           contact: i > 0 && g.sameContact ? rep.contact : g.contact,
-          passportNo: g.passportNo,
+          passportNo: g.jaResident === false ? g.passportNo : "", // 国内住所ありはパスポート情報を送らない（欄も非表示）
           gender: g.gender,
           age: g.age,
           prevStay: g.prevStay,
@@ -408,7 +408,7 @@ export default function GuestRegisterForm() {
       form.set("payload", JSON.stringify(payload));
       form.set("website", (document.getElementById("gr-website") as HTMLInputElement)?.value || "");
       guests.forEach((g, i) => {
-        if (g.photo) form.set(`photo_${i}`, g.photo);
+        if (g.jaResident === false && g.photo) form.set(`photo_${i}`, g.photo);
       });
       const res = await fetch("/api/guest-register", { method: "POST", body: form });
       const data = await res.json().catch(() => ({}));
@@ -661,6 +661,8 @@ export default function GuestRegisterForm() {
                         </div>
                       </div>
 
+                      {/* パスポート欄は国外居住を選んだ時だけ表示（国内住所ありは法定不要）。外国籍は必須・国外居住の日本人は任意 */}
+                      {g.jaResident === false && (
                       <div className={`rounded-switch-md border p-4 sm:p-5 ${needsPassport(g) ? "border-brass/40 bg-brass/5" : "border-rule bg-mist/60"}`}>
                         <p className="text-[13px] font-bold text-ink mb-1">{needsPassport(g) ? t.passportTitle : t.passportTitleOptional}</p>
                         <p className="text-[11.5px] text-ink/60 leading-relaxed mb-4">{needsPassport(g) ? t.passportWhy : t.passportWhyOptional}</p>
@@ -698,6 +700,7 @@ export default function GuestRegisterForm() {
                           </div>
                         </div>
                       </div>
+                      )}
 
                       {property?.type === "旅館業" && (
                         <details className="rounded-switch-md border border-rule bg-mist/60 px-4 py-3">
