@@ -299,24 +299,29 @@ export function sanitizeFolderName(s: string): string {
   return s.replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "不明";
 }
 
-const folderCache = new Map<string, string>(); // `${parentId}/${name}` → folderId
+// Promise をキャッシュして同一インスタンス内の同時リクエストを直列化（重複作成防止）
+const folderCache = new Map<string, Promise<string>>(); // `${parentId}/${name}` → folderId
 
-async function findOrCreateFolder(name: string, parentId: string): Promise<string> {
-  const token = await getAccessToken();
+async function searchFolder(name: string, parentId: string, token: string): Promise<string | null> {
   const q = encodeURIComponent(
     `name = '${name.replaceAll("'", "\\'")}' and '${parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
   );
-  const found = await fetchWithTimeout(
-    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&pageSize=1`,
+  const res = await fetchWithTimeout(
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&orderBy=createdTime&pageSize=1`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
-  if (found.ok) {
-    const data = (await found.json()) as { files?: { id: string }[] };
-    if (data.files?.[0]?.id) return data.files[0].id;
-  } else {
-    const text = await found.text().catch(() => "");
-    throw new Error(`drive folder search ${found.status}: ${text.slice(0, 200)}`);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`drive folder search ${res.status}: ${text.slice(0, 200)}`);
   }
+  const data = (await res.json()) as { files?: { id: string }[] };
+  return data.files?.[0]?.id || null;
+}
+
+async function findOrCreateFolder(name: string, parentId: string): Promise<string> {
+  const token = await getAccessToken();
+  const existing = await searchFolder(name, parentId, token);
+  if (existing) return existing;
   const created = await fetchWithTimeout("https://www.googleapis.com/drive/v3/files?fields=id", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -326,7 +331,10 @@ async function findOrCreateFolder(name: string, parentId: string): Promise<strin
     const text = await created.text().catch(() => "");
     throw new Error(`drive folder create ${created.status}: ${text.slice(0, 200)}`);
   }
-  return ((await created.json()) as { id: string }).id;
+  // 別インスタンスと同時作成した場合に備え、createdTime 最古の同名フォルダへ収束させる
+  // （自分の作成分が最古でなければそちらを使う。余った空フォルダは実害なし）
+  const canonical = await searchFolder(name, parentId, token).catch(() => null);
+  return canonical || ((await created.json()) as { id: string }).id;
 }
 
 /** 報告期間/物件/予約 の3階層を（無ければ作りつつ）辿り、末端フォルダIDを返す。 */
@@ -334,12 +342,13 @@ export async function ensurePassportFolder(checkin: string, propertyName: string
   let parent = DRIVE_FOLDER_ID;
   for (const name of [reportPeriodLabel(checkin), sanitizeFolderName(propertyName), sanitizeFolderName(bookingLabel)]) {
     const key = `${parent}/${name}`;
-    let id = folderCache.get(key);
-    if (!id) {
-      id = await findOrCreateFolder(name, parent);
-      folderCache.set(key, id);
+    let promise = folderCache.get(key);
+    if (!promise) {
+      promise = findOrCreateFolder(name, parent);
+      folderCache.set(key, promise);
+      promise.catch(() => folderCache.delete(key)); // 失敗を居座らせない
     }
-    parent = id;
+    parent = await promise;
   }
   return parent;
 }
