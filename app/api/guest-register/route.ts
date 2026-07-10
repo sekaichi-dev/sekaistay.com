@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   parseRegisterInput, validateGuests, needsPassport, makeGroupId, nowJstString,
-  buildMinpakuRows, buildRyokanRows, appendRows, uploadPassportPhoto,
+  buildMinpakuRows, buildRyokanRows, appendRows, uploadPassportPhoto, ensurePassportFolder,
   fetchProperties, sanitizeFilePart, MAX_PHOTO_BYTES,
 } from "@/lib/guest-register";
 
@@ -138,12 +138,21 @@ export async function POST(req: NextRequest) {
 
   let photoLinks: (string | null)[];
   try {
+    // 保管先: 報告期間（2ヶ月区切り）/ 物件 / 予約（受付ID_代表者）。フォルダ作成に失敗しても登録は止めない。
+    let folderId: string | undefined;
+    if (photos.some(Boolean)) {
+      try {
+        folderId = await ensurePassportFolder(input.checkin, property.name, `${groupId}_${sanitizeFilePart(input.guests[0].name)}`);
+      } catch (e) {
+        console.error("[guest-register] passport folder ensure failed (fallback to root):", e);
+      }
+    }
     photoLinks = await Promise.all(
       photos.map((photo, i) => {
         if (!photo) return Promise.resolve(null);
         const ext = { "image/png": "png", "image/webp": "webp", "image/heic": "heic", "image/heif": "heif" }[photo.mime] || "jpg";
         const filename = `${property.id}_${input.checkin.replaceAll("-", "")}_${sanitizeFilePart(input.guests[i].name)}_${groupId}.${ext}`;
-        return uploadPassportPhoto(photo.buffer, photo.mime, filename);
+        return uploadPassportPhoto(photo.buffer, photo.mime, filename, folderId);
       }),
     );
   } catch (e) {

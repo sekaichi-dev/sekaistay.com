@@ -280,10 +280,83 @@ export async function appendRows(tab: "旅館業用" | "民泊用", rows: unknow
   }
 }
 
-export async function uploadPassportPhoto(buffer: Buffer, mimeType: string, filename: string): Promise<string> {
+// ─── 旅券写しの保管フォルダ階層: 報告期間 / 物件 / 予約（受付ID_代表者） ───────
+
+// 民泊定期報告の2ヶ月区切り（2-3月/4-5月/…/12-1月）で期間ラベルを作る。旅館業物件も同じ区切りで揃える。
+export function reportPeriodLabel(checkinIso: string): string {
+  const m = checkinIso.match(/^(\d{4})-(\d{2})/);
+  if (!m) return "期間不明";
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  if (month === 12) return `${year}年12月-${year + 1}年1月`;
+  if (month === 1) return `${year - 1}年12月-${year}年1月`;
+  const start = month % 2 === 0 ? month : month - 1;
+  return `${year}年${start}-${start + 1}月`;
+}
+
+// Drive のフォルダ名に使えるようにだけ整える（スペース・日本語はそのまま可）
+export function sanitizeFolderName(s: string): string {
+  return s.replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "不明";
+}
+
+// Promise をキャッシュして同一インスタンス内の同時リクエストを直列化（重複作成防止）
+const folderCache = new Map<string, Promise<string>>(); // `${parentId}/${name}` → folderId
+
+async function searchFolder(name: string, parentId: string, token: string): Promise<string | null> {
+  const q = encodeURIComponent(
+    `name = '${name.replaceAll("'", "\\'")}' and '${parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+  );
+  const res = await fetchWithTimeout(
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&orderBy=createdTime&pageSize=1`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`drive folder search ${res.status}: ${text.slice(0, 200)}`);
+  }
+  const data = (await res.json()) as { files?: { id: string }[] };
+  return data.files?.[0]?.id || null;
+}
+
+async function findOrCreateFolder(name: string, parentId: string): Promise<string> {
+  const token = await getAccessToken();
+  const existing = await searchFolder(name, parentId, token);
+  if (existing) return existing;
+  const created = await fetchWithTimeout("https://www.googleapis.com/drive/v3/files?fields=id", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ name, parents: [parentId], mimeType: "application/vnd.google-apps.folder" }),
+  });
+  if (!created.ok) {
+    const text = await created.text().catch(() => "");
+    throw new Error(`drive folder create ${created.status}: ${text.slice(0, 200)}`);
+  }
+  // 別インスタンスと同時作成した場合に備え、createdTime 最古の同名フォルダへ収束させる
+  // （自分の作成分が最古でなければそちらを使う。余った空フォルダは実害なし）
+  const canonical = await searchFolder(name, parentId, token).catch(() => null);
+  return canonical || ((await created.json()) as { id: string }).id;
+}
+
+/** 報告期間/物件/予約 の3階層を（無ければ作りつつ）辿り、末端フォルダIDを返す。 */
+export async function ensurePassportFolder(checkin: string, propertyName: string, bookingLabel: string): Promise<string> {
+  let parent = DRIVE_FOLDER_ID;
+  for (const name of [reportPeriodLabel(checkin), sanitizeFolderName(propertyName), sanitizeFolderName(bookingLabel)]) {
+    const key = `${parent}/${name}`;
+    let promise = folderCache.get(key);
+    if (!promise) {
+      promise = findOrCreateFolder(name, parent);
+      folderCache.set(key, promise);
+      promise.catch(() => folderCache.delete(key)); // 失敗を居座らせない
+    }
+    parent = await promise;
+  }
+  return parent;
+}
+
+export async function uploadPassportPhoto(buffer: Buffer, mimeType: string, filename: string, parentId: string = DRIVE_FOLDER_ID): Promise<string> {
   const token = await getAccessToken();
   const boundary = "gr_boundary_" + Math.random().toString(36).slice(2);
-  const metadata = JSON.stringify({ name: filename, parents: [DRIVE_FOLDER_ID] });
+  const metadata = JSON.stringify({ name: filename, parents: [parentId] });
   const head = Buffer.from(
     `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n` +
     `--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`, "utf8");
