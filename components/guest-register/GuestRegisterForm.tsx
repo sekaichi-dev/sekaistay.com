@@ -9,6 +9,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { FREQUENT_NATIONALITIES, OTHER_NATIONALITIES, FALLBACK_NATIONALITIES } from "@/lib/nationalities";
 
 const MAX_GUESTS = 8;
 
@@ -46,15 +47,6 @@ const emptyGuest = (): GuestForm => ({
   photo: null, photoName: "", gender: "", age: "", prevStay: "", nextDest: "",
 });
 
-const NATIONALITY_LABELS: [string, string][] = [
-  ["日本", "Japan"], ["韓国", "South Korea"], ["台湾", "Taiwan"], ["香港", "Hong Kong"],
-  ["中国", "China"], ["タイ", "Thailand"], ["シンガポール", "Singapore"], ["マレーシア", "Malaysia"],
-  ["インドネシア", "Indonesia"], ["フィリピン", "Philippines"], ["ベトナム", "Vietnam"], ["インド", "India"],
-  ["英国", "United Kingdom"], ["ドイツ", "Germany"], ["フランス", "France"], ["イタリア", "Italy"],
-  ["スペイン", "Spain"], ["ロシア", "Russia"], ["米国", "United States"], ["カナダ", "Canada"],
-  ["オーストラリア", "Australia"], ["その他", "Other"],
-];
-
 const T = {
   ja: {
     eyebrow: "GUEST REGISTRATION",
@@ -67,6 +59,9 @@ const T = {
     propertyError: "施設一覧を取得できませんでした。再読み込みしてください。",
     checkin: "チェックイン日",
     checkout: "チェックアウト日",
+    checkinTime: "チェックイン予定時刻（任意）",
+    checkoutTime: "チェックアウト予定時刻（任意）",
+    timeHint: "わかる場合のみご記入ください。",
     nights: (n: number) => `${n}泊`,
     sec2: "宿泊者情報",
     repBadge: "代表者",
@@ -82,6 +77,8 @@ const T = {
     residenceAbroad: "日本国外に居住",
     nationality: "国籍",
     nationalityPh: "選択してください",
+    natFrequent: "よく選ばれる国・地域",
+    natAll: "すべての国・地域",
     address: "住所",
     addressPh: "都道府県から番地まで / Full home address",
     sameAsRep: "代表者と同じ",
@@ -150,6 +147,9 @@ const T = {
     propertyError: "Could not load the property list. Please reload the page.",
     checkin: "Check-in date",
     checkout: "Check-out date",
+    checkinTime: "Planned check-in time (optional)",
+    checkoutTime: "Planned check-out time (optional)",
+    timeHint: "Only if already known.",
     nights: (n: number) => `${n} night${n > 1 ? "s" : ""}`,
     sec2: "Guest Details",
     repBadge: "Lead guest",
@@ -165,6 +165,8 @@ const T = {
     residenceAbroad: "I live outside Japan",
     nationality: "Nationality",
     nationalityPh: "Select",
+    natFrequent: "Frequently selected",
+    natAll: "All countries & regions",
     address: "Home address",
     addressPh: "Full home address",
     sameAsRep: "Same as lead guest",
@@ -278,6 +280,8 @@ export default function GuestRegisterForm() {
   const [propertyId, setPropertyId] = useState("");
   const [checkin, setCheckin] = useState("");
   const [checkout, setCheckout] = useState("");
+  const [checkinTime, setCheckinTime] = useState("");
+  const [checkoutTime, setCheckoutTime] = useState("");
   const [guests, setGuests] = useState<GuestForm[]>([emptyGuest()]);
   const [note, setNote] = useState("");
   const [consent, setConsent] = useState(false);
@@ -319,6 +323,12 @@ export default function GuestRegisterForm() {
   }, []);
 
   const needsPassport = (g: GuestForm) => g.jaResident === false && g.nationality !== "" && g.nationality !== "日本";
+
+  // 「すべての国・地域」は表示言語の呼び名で並べ替え（無国籍/その他は常に最後）
+  const otherNationalities = useMemo(() => {
+    const idx = lang === "en" ? 1 : 0;
+    return [...OTHER_NATIONALITIES].sort((a, b) => a[idx].localeCompare(b[idx], lang === "en" ? "en" : "ja"));
+  }, [lang]);
 
   async function onPhotoChange(index: number, file: File | null) {
     if (!file) return;
@@ -377,6 +387,8 @@ export default function GuestRegisterForm() {
         propertyId,
         checkin,
         checkout,
+        checkinTime,
+        checkoutTime,
         note,
         guests: guests.map((g, i) => ({
           name: g.name,
@@ -522,6 +534,17 @@ export default function GuestRegisterForm() {
                 {nights > 0 && (
                   <p className="text-[12px] text-deep-teal font-semibold">{t.nights(nights)}</p>
                 )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="gr-checkin-time" className={labelCls}>{t.checkinTime}</label>
+                    <input id="gr-checkin-time" type="time" value={checkinTime} onChange={(e) => setCheckinTime(e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label htmlFor="gr-checkout-time" className={labelCls}>{t.checkoutTime}</label>
+                    <input id="gr-checkout-time" type="time" value={checkoutTime} onChange={(e) => setCheckoutTime(e.target.value)} className={inputCls} />
+                  </div>
+                </div>
+                <p className="-mt-3 text-[11px] text-ink/45">{t.timeHint}</p>
               </div>
             </section>
 
@@ -578,9 +601,19 @@ export default function GuestRegisterForm() {
                           <label className={labelCls}>{t.nationality}{requiredMark}</label>
                           <select value={g.nationality} onChange={(e) => updateGuest(i, { nationality: e.target.value })} className={inputCls}>
                             <option value="">{t.nationalityPh}</option>
-                            {NATIONALITY_LABELS.map(([ja, en]) => (
-                              <option key={ja} value={ja}>{lang === "en" ? en : ja}</option>
-                            ))}
+                            <optgroup label={t.natFrequent}>
+                              {FREQUENT_NATIONALITIES.map(([ja, en]) => (
+                                <option key={ja} value={ja}>{lang === "en" ? en : ja}</option>
+                              ))}
+                            </optgroup>
+                            <optgroup label={t.natAll}>
+                              {otherNationalities.map(([ja, en]) => (
+                                <option key={ja} value={ja}>{lang === "en" ? en : ja}</option>
+                              ))}
+                              {FALLBACK_NATIONALITIES.map(([ja, en]) => (
+                                <option key={ja} value={ja}>{lang === "en" ? en : ja}</option>
+                              ))}
+                            </optgroup>
                           </select>
                         </div>
                       </div>

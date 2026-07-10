@@ -4,8 +4,55 @@ import assert from "node:assert/strict";
 const {
   calcNights, needsPassport, parseRegisterInput, validateGuests,
   buildMinpakuRows, buildRyokanRows, makeGroupId, sanitizeFilePart, escapeCell,
-  reportPeriodLabel, sanitizeFolderName,
+  reportPeriodLabel, sanitizeFolderName, NATIONALITIES,
 } = await import("./guest-register.ts");
+
+test("NATIONALITIES: 網羅リスト（190超・重複なし・最後はその他）", () => {
+  assert.ok(NATIONALITIES.length > 190, `length=${NATIONALITIES.length}`);
+  assert.equal(new Set(NATIONALITIES).size, NATIONALITIES.length);
+  for (const c of ["オーストリア", "チェコ", "ウクライナ", "南アフリカ", "無国籍"]) {
+    assert.ok(NATIONALITIES.includes(c), c);
+  }
+  assert.equal(NATIONALITIES[NATIONALITIES.length - 1], "その他");
+});
+
+test("validateGuests: 新リストの国籍（オーストリア）を受理・リスト外は拒否", () => {
+  const at = { ...input(), guests: [guest({ nationality: "オーストリア" })] };
+  assert.equal(validateGuests(at, "民泊"), null);
+  const bad = { ...input(), guests: [guest({ nationality: "イギリス" })] };
+  assert.match(validateGuests(bad, "民泊")!, /国籍/);
+});
+
+test("parseRegisterInput: 予定時刻は HH:MM のみ受理・不正は空で通す", () => {
+  const ok = parseRegisterInput(input({ checkinTime: "15:30", checkoutTime: "10:00" }));
+  assert.equal(ok.input!.checkinTime, "15:30");
+  assert.equal(ok.input!.checkoutTime, "10:00");
+  const ng = parseRegisterInput(input({ checkinTime: "9:00", checkoutTime: "25:00" }));
+  assert.equal(ng.error, undefined);
+  assert.equal(ng.input!.checkinTime, "");
+  assert.equal(ng.input!.checkoutTime, "");
+});
+
+test("buildMinpakuRows: 予定時刻が K/M 列に入る（未入力は空欄）", () => {
+  const withTime = buildMinpakuRows(
+    input({ checkinTime: "15:30", checkoutTime: "10:00" }) as never,
+    property() as never, "G-1", [null], "2026/07/03 14:00",
+  );
+  assert.equal(withTime[0][10], "15:30"); // K 開始時刻
+  assert.equal(withTime[0][12], "10:00"); // M 終了時刻
+  const noTime = buildMinpakuRows(input() as never, property() as never, "G-1", [null], "2026/07/03 14:00");
+  assert.equal(noTime[0][10], "");
+  assert.equal(noTime[0][12], "");
+});
+
+test("buildRyokanRows: 予定時刻が 到着日時/出発日時 列に日付付きで入る", () => {
+  const rows = buildRyokanRows(
+    input({ checkinTime: "15:30", checkoutTime: "10:00" }) as never,
+    property({ type: "旅館業", licenseNo: "" }) as never, "G-1", [null], "2026/07/03 14:00",
+  );
+  assert.equal(rows[0][12], "2026/07/15 15:30"); // M 到着日時
+  assert.equal(rows[0][13], "2026/07/17 10:00"); // N 出発日時
+});
 
 test("reportPeriodLabel: 民泊定期報告の2ヶ月区切り", () => {
   assert.equal(reportPeriodLabel("2026-07-14"), "2026年6-7月");
