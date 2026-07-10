@@ -7,11 +7,9 @@ const SHEET_ID = (process.env.GUEST_REGISTER_SHEET_ID || "1K-Lg7OVO_J4l1IKolJhGx
 const DRIVE_FOLDER_ID = (process.env.GUEST_REGISTER_DRIVE_FOLDER_ID || "143iVqGvfRWIBjwfuqLsjV0_6G3h2ZnMG").trim();
 const API_TIMEOUT_MS = 15_000;
 
-export const NATIONALITIES = [
-  "日本", "韓国", "台湾", "香港", "中国", "タイ", "シンガポール", "マレーシア",
-  "インドネシア", "フィリピン", "ベトナム", "インド", "英国", "ドイツ", "フランス",
-  "イタリア", "スペイン", "ロシア", "米国", "カナダ", "オーストラリア", "その他",
-] as const;
+import { ALL_NATIONALITY_JA } from "./nationalities.ts";
+
+export const NATIONALITIES: readonly string[] = ALL_NATIONALITY_JA;
 
 export type PropertyType = "民泊" | "旅館業";
 
@@ -42,6 +40,8 @@ export interface RegisterInput {
   propertyId: string;
   checkin: string; // yyyy-mm-dd
   checkout: string; // yyyy-mm-dd
+  checkinTime: string; // HH:MM or ""（条例上乗せ・わかる場合のみ）
+  checkoutTime: string; // HH:MM or ""
   note: string;
   guests: GuestInput[];
 }
@@ -54,7 +54,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const FIELD_MAX: Record<string, number> = {
   name: 100,
   address: 300,
-  nationality: 20,
+  nationality: 30,
   occupation: 100,
   contact: 200,
   passportNo: 30,
@@ -88,6 +88,10 @@ export function parseRegisterInput(raw: unknown): { input?: RegisterInput; error
   const propertyId = trimTo(r.propertyId, 50);
   const checkin = trimTo(r.checkin, 10);
   const checkout = trimTo(r.checkout, 10);
+  // 条例上乗せの任意時刻。形式不正は黙って落とす（登録をブロックしない）
+  const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+  const checkinTime = TIME_RE.test(trimTo(r.checkinTime, 5)) ? trimTo(r.checkinTime, 5) : "";
+  const checkoutTime = TIME_RE.test(trimTo(r.checkoutTime, 5)) ? trimTo(r.checkoutTime, 5) : "";
   const note = trimTo(r.note, FIELD_MAX.note);
   if (!propertyId) return { error: "宿泊施設を選択してください / Please select the property" };
   if (!DATE_RE.test(checkin) || !DATE_RE.test(checkout)) {
@@ -117,7 +121,7 @@ export function parseRegisterInput(raw: unknown): { input?: RegisterInput; error
       nextDest: trimTo(g.nextDest, FIELD_MAX.nextDest),
     });
   }
-  return { input: { propertyId, checkin, checkout, note, guests } };
+  return { input: { propertyId, checkin, checkout, checkinTime, checkoutTime, note, guests } };
 }
 
 // 法定必須項目の充足チェック（民泊=職業必須 / 旅館業=連絡先必須・両方とも氏名住所連絡先は取る）
@@ -182,9 +186,9 @@ export function buildMinpakuRows(
     g.nationality,
     g.passportNo ? escapeCell(g.passportNo) : "－",
     formatDateSlash(input.checkin),
-    "",
+    input.checkinTime || "",
     formatDateSlash(input.checkout),
-    "",
+    input.checkoutTime || "",
     nights,
     photoLinks[i] ? "有" : "－",
     escapeCell(input.note),
@@ -212,8 +216,8 @@ export function buildRyokanRows(
     escapeCell(g.age),
     escapeCell(g.prevStay),
     escapeCell(g.nextDest),
-    "",
-    "",
+    input.checkinTime ? `${formatDateSlash(input.checkin)} ${input.checkinTime}` : "",
+    input.checkoutTime ? `${formatDateSlash(input.checkout)} ${input.checkoutTime}` : "",
     "",
     escapeCell([input.note, `受付ID: ${groupId}`].filter(Boolean).join("｜")),
     property.name,
