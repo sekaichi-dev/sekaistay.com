@@ -65,8 +65,9 @@ const FIELD_MAX: Record<string, number> = {
   note: 500,
 };
 
+// 国内住所なしは国籍を問わず旅券必須（2026-07-10 テンイチ指示。外国籍は法令上の義務・日本国籍は運用上の必須）
 export function needsPassport(guest: Pick<GuestInput, "jaResident" | "nationality">): boolean {
-  return !guest.jaResident && guest.nationality !== "日本";
+  return !guest.jaResident;
 }
 
 export function calcNights(checkin: string, checkout: string): number {

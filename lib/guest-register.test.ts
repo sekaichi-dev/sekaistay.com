@@ -107,10 +107,11 @@ test("calcNights: 月跨ぎ・不正値", () => {
   assert.ok(Number.isNaN(calcNights("bad", "2026-08-02")));
 });
 
-test("needsPassport: 国内住所なし外国籍のみ true", () => {
+test("needsPassport: 国内住所なしなら国籍を問わず true", () => {
   assert.equal(needsPassport({ jaResident: false, nationality: "英国" }), true);
   assert.equal(needsPassport({ jaResident: true, nationality: "英国" }), false);
-  assert.equal(needsPassport({ jaResident: false, nationality: "日本" }), false);
+  assert.equal(needsPassport({ jaResident: false, nationality: "日本" }), true); // 日本国籍でも国外居住は必須（運用上）
+  assert.equal(needsPassport({ jaResident: true, nationality: "日本" }), false);
 });
 
 test("parseRegisterInput: 正常系", () => {
