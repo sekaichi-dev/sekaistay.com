@@ -87,9 +87,7 @@ const T = {
     contact: "連絡先（電話またはメール）",
     contactPh: "090-1234-5678 / name@example.com",
     passportTitle: "パスポート情報",
-    passportWhy: "日本国内に住所をお持ちでない外国籍のお客様は、法令によりパスポート番号の記録と写しの保管が必要です。",
-    passportTitleOptional: "パスポート情報（任意）",
-    passportWhyOptional: "パスポートをお持ちの方は、ご本人確認のため写しのご登録にご協力ください。",
+    passportWhy: "日本国内に住所をお持ちでないお客様には、パスポート番号のご記入と写しのご提出をお願いしています（外国籍のお客様は法令上の義務です）。",
     passportNo: "パスポート番号",
     passportPhoto: "パスポート写真ページの画像",
     photoSelect: "画像を選択",
@@ -175,9 +173,7 @@ const T = {
     contact: "Contact (phone or email)",
     contactPh: "+81-90-1234-5678 / name@example.com",
     passportTitle: "Passport",
-    passportWhy: "Guests of foreign nationality without an address in Japan are required by law to provide their passport number and a copy of their passport.",
-    passportTitleOptional: "Passport (optional)",
-    passportWhyOptional: "If you have a passport, we would appreciate a copy of it for identity verification.",
+    passportWhy: "Guests without an address in Japan are required to provide their passport number and a copy of their passport (a legal requirement for guests of foreign nationality).",
     passportNo: "Passport number",
     passportPhoto: "Photo of your passport ID page",
     photoSelect: "Choose image",
@@ -322,7 +318,8 @@ export default function GuestRegisterForm() {
     setGuests((prev) => prev.map((g, i) => (i === index ? { ...g, ...patch } : g)));
   }, []);
 
-  const needsPassport = (g: GuestForm) => g.jaResident === false && g.nationality !== "" && g.nationality !== "日本";
+  // 国外居住なら国籍を問わずパスポート必須（2026-07-10 テンイチ指示）
+  const needsPassport = (g: GuestForm) => g.jaResident === false;
 
   // 「すべての国・地域」は表示言語の呼び名で並べ替え（無国籍/その他は常に最後）
   const otherNationalities = useMemo(() => {
@@ -661,19 +658,19 @@ export default function GuestRegisterForm() {
                         </div>
                       </div>
 
-                      {/* パスポート欄は国外居住を選んだ時だけ表示（国内住所ありは法定不要）。外国籍は必須・国外居住の日本人は任意 */}
+                      {/* パスポート欄は国外居住を選んだ時だけ表示（国内住所ありは法定不要）。表示時は国籍を問わず必須 */}
                       {g.jaResident === false && (
-                      <div className={`rounded-switch-md border p-4 sm:p-5 ${needsPassport(g) ? "border-brass/40 bg-brass/5" : "border-rule bg-mist/60"}`}>
-                        <p className="text-[13px] font-bold text-ink mb-1">{needsPassport(g) ? t.passportTitle : t.passportTitleOptional}</p>
-                        <p className="text-[11.5px] text-ink/60 leading-relaxed mb-4">{needsPassport(g) ? t.passportWhy : t.passportWhyOptional}</p>
+                      <div className="rounded-switch-md border p-4 sm:p-5 border-brass/40 bg-brass/5">
+                        <p className="text-[13px] font-bold text-ink mb-1">{t.passportTitle}</p>
+                        <p className="text-[11.5px] text-ink/60 leading-relaxed mb-4">{t.passportWhy}</p>
                         <div className="space-y-4">
                           <div>
-                            <label className={labelCls}>{t.passportNo}{needsPassport(g) && requiredMark}</label>
+                            <label className={labelCls}>{t.passportNo}{requiredMark}</label>
                             <input type="text" value={g.passportNo} maxLength={30} placeholder="XX1234567"
                               onChange={(e) => updateGuest(i, { passportNo: e.target.value })} className={inputCls} />
                           </div>
                           <div>
-                            <label className={labelCls}>{t.passportPhoto}{needsPassport(g) && requiredMark}</label>
+                            <label className={labelCls}>{t.passportPhoto}{requiredMark}</label>
                             <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.photo ? "border-sekai-teal bg-teal-tint text-deep-teal" : "border-switch-stone-border bg-white text-ink hover:bg-switch-stone-over"}`}>
                               <input
                                 type="file"
