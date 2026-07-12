@@ -107,8 +107,6 @@ const T = {
     nextDest: "行先地",
     nextDestPh: "例: 京都、帰国",
     sec3: "確認・送信",
-    note: "備考（任意）",
-    notePh: "運営への連絡事項があればご記入ください",
     consent: "入力した情報が旅館業法・住宅宿泊事業法に基づく宿泊者名簿として3年間保管され、法令に基づき行政機関等へ提示・報告される場合があることに同意します。",
     privacy: "プライバシーポリシー",
     submit: "登録する",
@@ -193,8 +191,6 @@ const T = {
     nextDest: "Next destination",
     nextDestPh: "e.g. Kyoto, returning home",
     sec3: "Review & Submit",
-    note: "Notes (optional)",
-    notePh: "Anything you would like us to know",
     consent: "I agree that this information will be kept for 3 years as the official guest register required by Japanese law, and may be disclosed to government authorities as required by law.",
     privacy: "Privacy Policy",
     submit: "Register",
@@ -279,7 +275,6 @@ export default function GuestRegisterForm() {
   const [checkinTime, setCheckinTime] = useState("");
   const [checkoutTime, setCheckoutTime] = useState("");
   const [guests, setGuests] = useState<GuestForm[]>([emptyGuest()]);
-  const [note, setNote] = useState("");
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -386,7 +381,7 @@ export default function GuestRegisterForm() {
         checkout,
         checkinTime,
         checkoutTime,
-        note,
+        note: "", // 備考欄はUI廃止（API/名簿の列互換のため空文字を送る）
         guests: guests.map((g, i) => ({
           name: g.name,
           jaResident: g.jaResident === true,
@@ -424,7 +419,6 @@ export default function GuestRegisterForm() {
 
   function resetForNext() {
     setGuests([emptyGuest()]);
-    setNote("");
     setConsent(false);
     setReceiptId("");
     setError("");
@@ -749,11 +743,6 @@ export default function GuestRegisterForm() {
             <section className="bg-paper border border-rule rounded-switch-lg shadow-switch-card p-6 sm:p-8">
               {sectionHead("03", t.sec3)}
               <div className="space-y-5">
-                <div>
-                  <label htmlFor="gr-note" className={labelCls}>{t.note}</label>
-                  <textarea id="gr-note" value={note} maxLength={500} rows={3} placeholder={t.notePh}
-                    onChange={(e) => setNote(e.target.value)} className={inputCls} />
-                </div>
                 <label className="flex items-start gap-3 rounded-switch-md border border-rule bg-mist/60 p-4 cursor-pointer">
                   <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)}
                     className="mt-0.5 accent-[#167B81] shrink-0" />
