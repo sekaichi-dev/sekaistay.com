@@ -296,7 +296,8 @@ export default function GuestRegisterForm() {
     const co = params.get("co") || "";
     if (DATE_RE.test(ci)) setCheckin(ci);
     if (DATE_RE.test(co) && (!DATE_RE.test(ci) || co > ci)) setCheckout(co);
-    const n = Number.parseInt(params.get("n") || "", 10);
+    const nRaw = params.get("n") || "";
+    const n = /^\d{1,2}$/.test(nRaw) ? Number.parseInt(nRaw, 10) : NaN;
     const gn = (params.get("gn") || "").trim().slice(0, 100);
     if ((Number.isFinite(n) && n >= 1) || gn) {
       const count = Number.isFinite(n) ? Math.min(Math.max(n, 1), MAX_GUESTS) : 1;
