@@ -289,6 +289,23 @@ export default function GuestRegisterForm() {
     if (q === "en" || (q !== "ja" && !navigator.language.startsWith("ja"))) setLang("en");
     const p = params.get("p");
     if (p) setPropertyId(p);
+    // 予約情報からのプリフィル（案内メッセージのリンクに付与: ci/co=宿泊日・n=人数・gn=代表者名）。
+    // あくまで初期値＝ゲストは自由に編集できる。不正値は無視。
+    const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+    const ci = params.get("ci") || "";
+    const co = params.get("co") || "";
+    if (DATE_RE.test(ci)) setCheckin(ci);
+    if (DATE_RE.test(co) && (!DATE_RE.test(ci) || co > ci)) setCheckout(co);
+    const n = Number.parseInt(params.get("n") || "", 10);
+    const gn = (params.get("gn") || "").trim().slice(0, 100);
+    if ((Number.isFinite(n) && n >= 1) || gn) {
+      const count = Number.isFinite(n) ? Math.min(Math.max(n, 1), MAX_GUESTS) : 1;
+      setGuests(() => {
+        const arr = Array.from({ length: count }, () => emptyGuest());
+        if (gn) arr[0].name = gn;
+        return arr;
+      });
+    }
   }, []);
 
   useEffect(() => {
