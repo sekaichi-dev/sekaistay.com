@@ -2,9 +2,11 @@
 // 認証は lib/sheets-backup.ts と同じ env (GOOGLE_CLIENT_ID/SECRET/REFRESH_TOKEN_SEKAICHI) を使用。
 // 書き込み先スプシ: 宿泊者名簿_旅館業_民泊（旅館業用/民泊用タブ・1名1行・A〜S列）
 // 集計式は 民泊用!A6:A505 参照のため、追記行が505行を超えたら式レンジの拡張が必要。
+// スプシ・旅券写しフォルダとも共有ドライブ「SEKAI STAY」内（2026-07-14 移行）。
+// Drive API は supportsAllDrives 必須（外すと共有ドライブ内の親が 404 になる）。
 
-const SHEET_ID = (process.env.GUEST_REGISTER_SHEET_ID || "1K-Lg7OVO_J4l1IKolJhGx1SsICIhBjK0XIPlQ0unU1Y").trim();
-const DRIVE_FOLDER_ID = (process.env.GUEST_REGISTER_DRIVE_FOLDER_ID || "143iVqGvfRWIBjwfuqLsjV0_6G3h2ZnMG").trim();
+const SHEET_ID = (process.env.GUEST_REGISTER_SHEET_ID || "1Kki7oukd5yM73FH8kJvhzTxJyw4MCmlm8x1r09OhhQw").trim();
+const DRIVE_FOLDER_ID = (process.env.GUEST_REGISTER_DRIVE_FOLDER_ID || "1jQeGxUv1wPf8hfMgC2HvhZ7SdvPrKvQ6").trim();
 const API_TIMEOUT_MS = 15_000;
 
 import { ALL_NATIONALITY_JA } from "./nationalities.ts";
@@ -312,7 +314,7 @@ async function searchFolder(name: string, parentId: string, token: string): Prom
     `name = '${name.replaceAll("'", "\\'")}' and '${parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
   );
   const res = await fetchWithTimeout(
-    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&orderBy=createdTime&pageSize=1`,
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&orderBy=createdTime&pageSize=1&supportsAllDrives=true&includeItemsFromAllDrives=true`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   if (!res.ok) {
@@ -327,7 +329,7 @@ async function findOrCreateFolder(name: string, parentId: string): Promise<strin
   const token = await getAccessToken();
   const existing = await searchFolder(name, parentId, token);
   if (existing) return existing;
-  const created = await fetchWithTimeout("https://www.googleapis.com/drive/v3/files?fields=id", {
+  const created = await fetchWithTimeout("https://www.googleapis.com/drive/v3/files?fields=id&supportsAllDrives=true", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ name, parents: [parentId], mimeType: "application/vnd.google-apps.folder" }),
@@ -368,7 +370,7 @@ export async function uploadPassportPhoto(buffer: Buffer, mimeType: string, file
   const tail = Buffer.from(`\r\n--${boundary}--`, "utf8");
   const body = Buffer.concat([head, buffer, tail]);
   const resp = await fetchWithTimeout(
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink",
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink&supportsAllDrives=true",
     {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": `multipart/related; boundary=${boundary}` },
