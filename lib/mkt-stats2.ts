@@ -44,7 +44,8 @@ async function fetchAllRows(
   const MAX_PAGES = 200; // 20万行までの安全弁
   const all: any[] = [];
   for (let page = 0; page < MAX_PAGES; page++) {
-    let q = supabase.from(table).select(columns).range(page * PAGE, page * PAGE + PAGE - 1);
+    // ORDER BY 必須: order 無しの range はページ間で行が重複/欠落し、1000行超で件数がサイレントにズレる。
+    let q = supabase.from(table).select(columns).order("created_at", { ascending: true }).range(page * PAGE, page * PAGE + PAGE - 1);
     if (fromISO) q = q.gte("created_at", fromISO);
     if (toISO) q = q.lt("created_at", toISO);
     if (extraFilter) q = extraFilter(q);
@@ -80,7 +81,9 @@ export async function fetchMktStats2(from: string | null, to: string | null): Pr
     fetchAllRows("lead_submissions", "utm_campaign, utm_source, utm_content, lp_variant, kind", fromISO, toISO),
   ]);
 
-  const key = (c: string, s: string, ct: string, lp: string) => `${c}${s}${ct}${lp}`;
+  // 区切り文字(U+001F)でグループキーの境界を明示。素朴連結は "a"+"bc" と "ab"+"c" が衝突しうる。
+  const SEP = "\x1f";
+  const key = (c: string, s: string, ct: string, lp: string) => `${c}${SEP}${s}${SEP}${ct}${SEP}${lp}`;
   type Agg = { campaign: string; source: string; content: string; lpVariant: string; visitors: Set<string>; noHash: number; cv: number; cvTest: number; cvReal: number };
   const map = new Map<string, Agg>();
   const get = (c: string, s: string, ct: string, lp: string): Agg => {
