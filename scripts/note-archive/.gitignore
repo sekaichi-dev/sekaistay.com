@@ -1,0 +1,7 @@
+.env
+.env.local
+auth.json
+node_modules/
+screenshots/
+archive.log
+*.log

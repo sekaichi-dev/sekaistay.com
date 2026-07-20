@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /result
+Disallow: /api/
+
+# Sitemap (Next.js dynamic generation)
+Sitemap: https://sekaistay.com/sitemap.xml
