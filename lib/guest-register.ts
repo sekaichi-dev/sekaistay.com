@@ -1,6 +1,6 @@
 // 宿泊者名簿 (/guest-register) — Google Sheets/Drive 連携とレコード組み立て。
 // 認証は lib/sheets-backup.ts と同じ env (GOOGLE_CLIENT_ID/SECRET/REFRESH_TOKEN_SEKAICHI) を使用。
-// 書き込み先スプシ: 宿泊者名簿_旅館業_民泊（旅館業用/民泊用タブ・1名1行・A〜S列）
+// 書き込み先スプシ: 宿泊者名簿_旅館業_民泊（旅館業用/民泊用タブ・1名1行・A〜T列。T=顔写真リンク 2026-07-24追加）
 // 集計式は 民泊用!A6:A505 参照のため、追記行が505行を超えたら式レンジの拡張が必要。
 // スプシ・旅券写しフォルダとも共有ドライブ「SEKAI STAY」内（2026-07-14 移行）。
 // Drive API は supportsAllDrives 必須（外すと共有ドライブ内の親が 404 になる）。
@@ -172,10 +172,10 @@ export function makeGroupId(): string {
   return `G-${now.slice(2, 4)}${now.slice(5, 7)}${now.slice(8, 10)}-${rand}`;
 }
 
-// 民泊用タブ A〜S列（1名1行）。定期報告の式が参照するのは A(届出番号) H(国籍) J(開始日) L(終了日)。
+// 民泊用タブ A〜T列（1名1行）。定期報告の式が参照するのは A(届出番号) H(国籍) J(開始日) L(終了日)。
 export function buildMinpakuRows(
   input: RegisterInput, property: Property, groupId: string,
-  photoLinks: (string | null)[], receivedAt: string,
+  photoLinks: (string | null)[], facePhotoLinks: (string | null)[], receivedAt: string,
 ): unknown[][] {
   const nights = calcNights(input.checkin, input.checkout);
   return input.guests.map((g, i) => [
@@ -198,13 +198,14 @@ export function buildMinpakuRows(
     property.name,
     photoLinks[i] || "",
     receivedAt,
+    facePhotoLinks[i] || "",
   ]);
 }
 
-// 旅館業用タブ A〜S列（1名1行）。No.列は =ROW()-5 で自動採番（行削除にも追従）。
+// 旅館業用タブ A〜T列（1名1行）。No.列は =ROW()-5 で自動採番（行削除にも追従）。
 export function buildRyokanRows(
   input: RegisterInput, property: Property, groupId: string,
-  photoLinks: (string | null)[], receivedAt: string,
+  photoLinks: (string | null)[], facePhotoLinks: (string | null)[], receivedAt: string,
 ): unknown[][] {
   return input.guests.map((g, i) => [
     "=ROW()-5",
@@ -226,6 +227,7 @@ export function buildRyokanRows(
     property.name,
     photoLinks[i] || "",
     receivedAt,
+    facePhotoLinks[i] || "",
   ]);
 }
 
@@ -272,7 +274,7 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
 
 export async function appendRows(tab: "旅館業用" | "民泊用", rows: unknown[][]): Promise<void> {
   const token = await getAccessToken();
-  const range = encodeURIComponent(`${tab}!A6:S`);
+  const range = encodeURIComponent(`${tab}!A6:T`);
   const resp = await fetchWithTimeout(
     `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
     {

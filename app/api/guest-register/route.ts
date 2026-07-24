@@ -133,28 +133,63 @@ export async function POST(req: NextRequest) {
     photos.push({ buffer: Buffer.from(await file.arrayBuffer()), mime: file.type });
   }
 
+  // 顔写真の検証（居住地・国籍を問わず全ゲスト必須・2026-07-24 テンイチ指示）
+  const facePhotos: { buffer: Buffer; mime: string }[] = [];
+  for (let i = 0; i < input.guests.length; i++) {
+    const file = form.get(`face_photo_${i}`);
+    const who = `宿泊者${i + 1} / Guest ${i + 1}`;
+    if (!(file instanceof File) || file.size === 0) {
+      return NextResponse.json(
+        { error: `${who}: 顔写真を添付してください / Face photo is required` },
+        { status: 400 },
+      );
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      return NextResponse.json(
+        { error: `${who}: 顔写真のサイズが大きすぎます（4MBまで）/ Face photo too large (max 4MB)` },
+        { status: 400 },
+      );
+    }
+    if (!ALLOWED_MIME.has(file.type)) {
+      return NextResponse.json(
+        { error: `${who}: 顔写真は JPEG / PNG 形式で添付してください / Face photo must be JPEG or PNG` },
+        { status: 400 },
+      );
+    }
+    facePhotos.push({ buffer: Buffer.from(await file.arrayBuffer()), mime: file.type });
+  }
+
   const groupId = makeGroupId();
   const receivedAt = nowJstString();
 
+  const ext = (mime: string) =>
+    ({ "image/png": "png", "image/webp": "webp", "image/heic": "heic", "image/heif": "heif" })[mime] || "jpg";
+
   let photoLinks: (string | null)[];
+  let facePhotoLinks: (string | null)[];
   try {
     // 保管先: 報告期間（2ヶ月区切り）/ 物件 / 予約（受付ID_代表者）。フォルダ作成に失敗しても登録は止めない。
     let folderId: string | undefined;
-    if (photos.some(Boolean)) {
-      try {
-        folderId = await ensurePassportFolder(input.checkin, property.name, `${groupId}_${sanitizeFilePart(input.guests[0].name)}`);
-      } catch (e) {
-        console.error("[guest-register] passport folder ensure failed (fallback to root):", e);
-      }
+    try {
+      folderId = await ensurePassportFolder(input.checkin, property.name, `${groupId}_${sanitizeFilePart(input.guests[0].name)}`);
+    } catch (e) {
+      console.error("[guest-register] passport folder ensure failed (fallback to root):", e);
     }
-    photoLinks = await Promise.all(
-      photos.map((photo, i) => {
-        if (!photo) return Promise.resolve(null);
-        const ext = { "image/png": "png", "image/webp": "webp", "image/heic": "heic", "image/heif": "heif" }[photo.mime] || "jpg";
-        const filename = `${property.id}_${input.checkin.replaceAll("-", "")}_${sanitizeFilePart(input.guests[i].name)}_${groupId}.${ext}`;
-        return uploadPassportPhoto(photo.buffer, photo.mime, filename, folderId);
-      }),
-    );
+    [photoLinks, facePhotoLinks] = await Promise.all([
+      Promise.all(
+        photos.map((photo, i) => {
+          if (!photo) return Promise.resolve(null);
+          const filename = `${property.id}_${input.checkin.replaceAll("-", "")}_${sanitizeFilePart(input.guests[i].name)}_${groupId}.${ext(photo.mime)}`;
+          return uploadPassportPhoto(photo.buffer, photo.mime, filename, folderId);
+        }),
+      ),
+      Promise.all(
+        facePhotos.map((photo, i) => {
+          const filename = `顔写真_${property.id}_${input.checkin.replaceAll("-", "")}_${sanitizeFilePart(input.guests[i].name)}_${groupId}.${ext(photo.mime)}`;
+          return uploadPassportPhoto(photo.buffer, photo.mime, filename, folderId);
+        }),
+      ),
+    ]);
   } catch (e) {
     console.error("[guest-register] drive upload failed:", e);
     return NextResponse.json(
@@ -165,8 +200,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const rows = property.type === "民泊"
-      ? buildMinpakuRows(input, property, groupId, photoLinks, receivedAt)
-      : buildRyokanRows(input, property, groupId, photoLinks, receivedAt);
+      ? buildMinpakuRows(input, property, groupId, photoLinks, facePhotoLinks, receivedAt)
+      : buildRyokanRows(input, property, groupId, photoLinks, facePhotoLinks, receivedAt);
     await appendRows(property.type === "民泊" ? "民泊用" : "旅館業用", rows);
   } catch (e) {
     console.error("[guest-register] sheets append failed:", e);

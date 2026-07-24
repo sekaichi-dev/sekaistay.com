@@ -36,11 +36,11 @@ test("parseRegisterInput: 予定時刻は HH:MM のみ受理・不正は空で�
 test("buildMinpakuRows: 予定時刻が K/M 列に入る（未入力は空欄）", () => {
   const withTime = buildMinpakuRows(
     input({ checkinTime: "15:30", checkoutTime: "10:00" }) as never,
-    property() as never, "G-1", [null], "2026/07/03 14:00",
+    property() as never, "G-1", [null], [null], "2026/07/03 14:00",
   );
   assert.equal(withTime[0][10], "15:30"); // K 開始時刻
   assert.equal(withTime[0][12], "10:00"); // M 終了時刻
-  const noTime = buildMinpakuRows(input() as never, property() as never, "G-1", [null], "2026/07/03 14:00");
+  const noTime = buildMinpakuRows(input() as never, property() as never, "G-1", [null], [null], "2026/07/03 14:00");
   assert.equal(noTime[0][10], "");
   assert.equal(noTime[0][12], "");
 });
@@ -48,7 +48,7 @@ test("buildMinpakuRows: 予定時刻が K/M 列に入る（未入力は空欄）
 test("buildRyokanRows: 予定時刻が 到着日時/出発日時 列に日付付きで入る", () => {
   const rows = buildRyokanRows(
     input({ checkinTime: "15:30", checkoutTime: "10:00" }) as never,
-    property({ type: "旅館業", licenseNo: "" }) as never, "G-1", [null], "2026/07/03 14:00",
+    property({ type: "旅館業", licenseNo: "" }) as never, "G-1", [null], [null], "2026/07/03 14:00",
   );
   assert.equal(rows[0][12], "2026/07/15 15:30"); // M 到着日時
   assert.equal(rows[0][13], "2026/07/17 10:00"); // N 出発日時
@@ -156,12 +156,13 @@ test("validateGuests: リスト外の国籍を拒否", () => {
   assert.match(validateGuests(bad, "民泊")!, /国籍/);
 });
 
-test("buildMinpakuRows: 列マッピング A届出番号〜S受付日時", () => {
+test("buildMinpakuRows: 列マッピング A届出番号〜T顔写真", () => {
   const rows = buildMinpakuRows(
     input({ guests: [guest(), guest({ name: "Jane Smith" })] }) as never,
     property() as never,
     "G-260715-TEST",
     ["https://drive.google.com/x", null],
+    ["https://drive.google.com/face1", "https://drive.google.com/face2"],
     "2026/07/03 14:00",
   );
   assert.equal(rows.length, 2);
@@ -178,6 +179,8 @@ test("buildMinpakuRows: 列マッピング A届出番号〜S受付日時", () =>
   assert.equal(comp[14], "－");
   assert.equal(rep[17], "https://drive.google.com/x"); // R Driveリンク
   assert.equal(rep[18], "2026/07/03 14:00"); // S 受付日時
+  assert.equal(rep[19], "https://drive.google.com/face1"); // T 顔写真リンク
+  assert.equal(comp[19], "https://drive.google.com/face2");
 });
 
 test("buildRyokanRows: No.は自動採番式・日本人は旅券－", () => {
@@ -186,6 +189,7 @@ test("buildRyokanRows: No.は自動採番式・日本人は旅券－", () => {
     property({ type: "旅館業", licenseNo: "" }) as never,
     "G-260715-TEST",
     [null],
+    ["https://drive.google.com/face1"],
     "2026/07/03 14:00",
   );
   const [row] = rows;
@@ -194,6 +198,7 @@ test("buildRyokanRows: No.は自動採番式・日本人は旅券－", () => {
   assert.equal(row[5], "（日本）"); // F 国籍
   assert.equal(row[6], "－"); // G 旅券番号
   assert.match(String(row[15]), /受付ID: G-260715-TEST/); // P 備考
+  assert.equal(row[19], "https://drive.google.com/face1"); // T 顔写真リンク
 });
 
 test("makeGroupId: フォーマット", () => {
@@ -209,7 +214,7 @@ test("escapeCell: +始まりの国際電話番号を数式解釈させない", (
 
 test("buildMinpakuRows: 連絡先の + がエスケープされる", () => {
   const rows = buildMinpakuRows(
-    input() as never, property() as never, "G-1", [null], "2026/07/03 14:00",
+    input() as never, property() as never, "G-1", [null], [null], "2026/07/03 14:00",
   );
   assert.equal(rows[0][6], "'+44-20-1234-5678");
 });
@@ -220,6 +225,7 @@ test("buildMinpakuRows: 任意提供の旅券番号・写しも記録される�
     property() as never,
     "G-1",
     ["https://drive.google.com/opt"],
+    [null],
     "2026/07/03 14:00",
   );
   assert.equal(rows[0][8], "P7654321B"); // I 旅券番号（needsPassport でなくても提供があれば記録）
@@ -233,6 +239,7 @@ test("buildRyokanRows: 任意提供の旅券番号・写しも記録される（
     property({ type: "旅館業", licenseNo: "" }) as never,
     "G-1",
     ["https://drive.google.com/opt"],
+    [null],
     "2026/07/03 14:00",
   );
   assert.equal(rows[0][6], "TK1234567"); // G 旅券番号
