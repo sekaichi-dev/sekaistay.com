@@ -276,7 +276,8 @@ async function compressImage(file: File, maxDim = 1600, targetBytes = 450_000, o
 
 const inputCls = "w-full rounded-switch-md border border-switch-stone-border bg-white px-3.5 py-2.5 text-[15px] text-ink placeholder:text-switch-stone-text-disabled focus:outline-none focus:border-sekai-teal focus:ring-2 focus:ring-sekai-teal/20 transition-colors";
 const labelCls = "block text-[13px] font-semibold text-ink mb-1.5";
-const requiredMark = <span className="ml-1 text-[10px] font-bold text-switch-accent align-middle">*</span>;
+// クリエイティブガイド準拠: アクセントはティール（オレンジ不使用・2026-07-24）
+const requiredMark = <span className="ml-1 text-[10px] font-bold text-sekai-teal align-middle">*</span>;
 
 export default function GuestRegisterForm() {
   const [lang, setLang] = useState<Lang>("ja");
@@ -846,7 +847,7 @@ export default function GuestRegisterForm() {
                 <button
                   type="submit"
                   disabled={submitting || photoBusy !== null}
-                  className="w-full rounded-switch-md bg-switch-accent hover:bg-switch-accent-hover disabled:bg-switch-stone-03 disabled:cursor-not-allowed py-4 text-[16px] font-bold text-white tracking-wide transition-colors active:scale-[0.99]"
+                  className="w-full rounded-switch-md bg-sekai-teal hover:bg-deep-teal disabled:bg-switch-stone-03 disabled:cursor-not-allowed py-4 text-[16px] font-bold text-white tracking-wide transition-colors active:scale-[0.99]"
                 >
                   {submitting ? t.submitting : t.submit}
                 </button>
