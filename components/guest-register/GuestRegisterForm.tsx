@@ -4,8 +4,10 @@
  * 物件マスタの形態（民泊/旅館業）で必須項目を自動分岐:
  *  - 民泊: 氏名・住所・職業・連絡先・宿泊日・国籍（+国内住所なし外国籍は旅券番号/写し）
  *  - 旅館業: 氏名・住所・連絡先・宿泊日（+同上。性別/年齢/前泊地/行先地は条例上乗せ・任意）
- * パスポート欄は全ゲストに常時表示（国内住所なし外国籍は必須・それ以外は任意添付）。
- * パスポート写真はクライアントで最大1600px/450KB程度に圧縮してから送信（Vercelの4.5MB制限対策）。
+ * パスポート欄は「日本国外に居住」を選んだ時のみ表示（表示時は国籍を問わず必須）。
+ * 顔写真は居住地・国籍を問わず全ゲスト必須（2026-07-24 テンイチ指示・本人確認用）。
+ * 写真はクライアントで圧縮してから送信（旅券 1600px/450KB・顔 1200px/300KB 目安。
+ * 合計が Vercel の 4.5MB 制限に近づく場合は送信前にもう一段縮小する）。
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -35,6 +37,8 @@ interface GuestForm {
   passportNo: string;
   photo: File | null;
   photoName: string;
+  facePhoto: File | null;
+  facePhotoName: string;
   gender: string;
   age: string;
   prevStay: string;
@@ -44,7 +48,8 @@ interface GuestForm {
 const emptyGuest = (): GuestForm => ({
   name: "", jaResident: null, address: "", sameAddress: false, nationality: "",
   occupation: "", contact: "", sameContact: false, passportNo: "",
-  photo: null, photoName: "", gender: "", age: "", prevStay: "", nextDest: "",
+  photo: null, photoName: "", facePhoto: null, facePhotoName: "",
+  gender: "", age: "", prevStay: "", nextDest: "",
 });
 
 const T = {
@@ -97,6 +102,9 @@ const T = {
     photoHint: "顔写真のあるページを撮影してください。画像は自動で圧縮されます。",
     photoTooLarge: "画像が大きすぎます。設定を下げて撮影するか、スクリーンショットをお試しください。",
     photosTotalTooLarge: "写真の合計サイズが大きすぎます。JPEG形式の小さめの画像に変更してお試しください。",
+    facePhotoLabel: "顔写真",
+    facePhotoWhy: "ご本人確認のため、ご宿泊者全員にお顔がはっきり写った写真のご提出をお願いしています（自撮り写真で構いません）。",
+    facePhotoHint: "正面からお顔がはっきり写った画像を添付してください。画像は自動で圧縮されます。",
     optionalTitle: "追加情報（任意・自治体条例対応）",
     gender: "性別",
     genderOptions: ["", "男", "女", "その他"],
@@ -127,6 +135,7 @@ const T = {
     errContact: (w: string) => `${w}: 連絡先を入力してください`,
     errPassportNo: (w: string) => `${w}: パスポート番号を入力してください`,
     errPhoto: (w: string) => `${w}: パスポート写真を添付してください`,
+    errFacePhoto: (w: string) => `${w}: 顔写真を添付してください`,
     errConsent: "保管への同意にチェックしてください",
     errSubmit: "送信に失敗しました。通信環境をご確認のうえ再度お試しください。",
     who: (i: number) => (i === 0 ? "代表者" : `同行者${i}`),
@@ -181,6 +190,9 @@ const T = {
     photoHint: "Take a photo of the page with your portrait. The image is compressed automatically.",
     photoTooLarge: "The image is too large. Please try a smaller photo or a screenshot.",
     photosTotalTooLarge: "The combined size of the photos is too large. Please use smaller JPEG images.",
+    facePhotoLabel: "Face photo",
+    facePhotoWhy: "For identity verification, every guest is asked to provide a clear photo of their face (a selfie is fine).",
+    facePhotoHint: "Attach a clear, front-facing photo of your face. The image is compressed automatically.",
     optionalTitle: "Additional details (optional)",
     gender: "Gender",
     genderOptions: ["", "男", "女", "その他"],
@@ -211,6 +223,7 @@ const T = {
     errContact: (w: string) => `${w}: please enter a contact`,
     errPassportNo: (w: string) => `${w}: please enter the passport number`,
     errPhoto: (w: string) => `${w}: please attach a passport photo`,
+    errFacePhoto: (w: string) => `${w}: please attach a face photo`,
     errConsent: "Please agree to the data retention terms",
     errSubmit: "Submission failed. Please check your connection and try again.",
     who: (i: number) => (i === 0 ? "Lead guest" : `Guest ${i + 1}`),
@@ -232,15 +245,15 @@ async function loadBitmap(file: File): Promise<ImageBitmap | HTMLImageElement> {
   }
 }
 
-// 最大1600px・450KB目安にJPEG圧縮。デコード不可(HEIC等)は3.5MB以下ならそのまま送る。
-async function compressImage(file: File): Promise<File> {
-  if (file.size <= 450_000) return file;
+// maxDim px・targetBytes 目安にJPEG圧縮。デコード不可(HEIC等)は3.5MB以下ならそのまま送る。
+async function compressImage(file: File, maxDim = 1600, targetBytes = 450_000, outName = "photo.jpg"): Promise<File> {
+  if (file.size <= targetBytes) return file;
   try {
     const bitmap = await loadBitmap(file);
     const w = "width" in bitmap ? bitmap.width : 0;
     const h = "height" in bitmap ? bitmap.height : 0;
     if (!w || !h) throw new Error("empty image");
-    const scale = Math.min(1, 1600 / Math.max(w, h));
+    const scale = Math.min(1, maxDim / Math.max(w, h));
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(w * scale);
     canvas.height = Math.round(h * scale);
@@ -250,11 +263,11 @@ async function compressImage(file: File): Promise<File> {
     let result: Blob | null = null;
     for (const quality of [0.8, 0.65, 0.5]) {
       result = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-      if (result && result.size <= 450_000) break;
+      if (result && result.size <= targetBytes) break;
     }
     if (!result) throw new Error("toBlob failed");
     if (result.size > 3_500_000) throw new Error("TOO_LARGE");
-    return new File([result], "passport.jpg", { type: "image/jpeg" });
+    return new File([result], outName, { type: "image/jpeg" });
   } catch (e) {
     if (file.size <= 3_500_000) return file;
     throw new Error("TOO_LARGE");
@@ -279,7 +292,8 @@ export default function GuestRegisterForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [receiptId, setReceiptId] = useState("");
-  const [photoBusy, setPhotoBusy] = useState<number | null>(null);
+  // 圧縮中の写真キー（旅券 = "p0"〜 / 顔写真 = "f0"〜）
+  const [photoBusy, setPhotoBusy] = useState<string | null>(null);
 
   const t = T[lang];
 
@@ -340,15 +354,20 @@ export default function GuestRegisterForm() {
     return [...OTHER_NATIONALITIES].sort((a, b) => a[idx].localeCompare(b[idx], lang === "en" ? "en" : "ja"));
   }, [lang]);
 
-  async function onPhotoChange(index: number, file: File | null) {
+  // 旅券写しは判読性重視の 1600px/450KB・顔写真は本人確認できれば足りるので 1200px/300KB
+  async function onPhotoChange(kind: "passport" | "face", index: number, file: File | null) {
     if (!file) return;
     setError("");
-    setPhotoBusy(index);
+    setPhotoBusy(`${kind === "passport" ? "p" : "f"}${index}`);
     try {
-      const compressed = await compressImage(file);
-      updateGuest(index, { photo: compressed, photoName: file.name });
+      const compressed = kind === "passport"
+        ? await compressImage(file, 1600, 450_000, "passport.jpg")
+        : await compressImage(file, 1200, 300_000, "face.jpg");
+      updateGuest(index, kind === "passport"
+        ? { photo: compressed, photoName: file.name }
+        : { facePhoto: compressed, facePhotoName: file.name });
     } catch {
-      updateGuest(index, { photo: null, photoName: "" });
+      updateGuest(index, kind === "passport" ? { photo: null, photoName: "" } : { facePhoto: null, facePhotoName: "" });
       setError(t.photoTooLarge);
     } finally {
       setPhotoBusy(null);
@@ -367,6 +386,7 @@ export default function GuestRegisterForm() {
       if (!(i > 0 && g.sameAddress) && !g.address.trim()) return t.errAddress(who);
       if (property.type === "民泊" && !g.occupation.trim()) return t.errOccupation(who);
       if (!(i > 0 && g.sameContact) && !g.contact.trim()) return t.errContact(who);
+      if (!g.facePhoto) return t.errFacePhoto(who);
       if (needsPassport(g)) {
         if (!g.passportNo.trim()) return t.errPassportNo(who);
         if (!g.photo) return t.errPhoto(who);
@@ -384,9 +404,25 @@ export default function GuestRegisterForm() {
       setError(validationError);
       return;
     }
-    // Vercel のリクエスト上限 ~4.5MB 対策: 圧縮できなかった写真の合計が超えそうなら送信前に弾く
-    const totalPhotoBytes = guests.reduce((sum, g) => sum + (g.jaResident === false && g.photo ? g.photo.size : 0), 0);
-    if (totalPhotoBytes > 3_800_000) {
+    // Vercel のリクエスト上限 ~4.5MB 対策。顔写真8名+旅券8名で超えうるので、
+    // 合計が閾値を超えたら送信前にもう一段小さく再圧縮してから最終ガード。
+    let sendGuests = guests;
+    const totalBytes = (arr: GuestForm[]) =>
+      arr.reduce((sum, g) => sum + (g.jaResident === false && g.photo ? g.photo.size : 0) + (g.facePhoto ? g.facePhoto.size : 0), 0);
+    if (totalBytes(sendGuests) > 3_600_000) {
+      try {
+        sendGuests = await Promise.all(guests.map(async (g) => ({
+          ...g,
+          photo: g.photo ? await compressImage(g.photo, 1100, 260_000, "passport.jpg") : g.photo,
+          facePhoto: g.facePhoto ? await compressImage(g.facePhoto, 900, 180_000, "face.jpg") : g.facePhoto,
+        })));
+        setGuests(sendGuests);
+      } catch {
+        setError(t.photosTotalTooLarge);
+        return;
+      }
+    }
+    if (totalBytes(sendGuests) > 3_800_000) {
       setError(t.photosTotalTooLarge);
       return;
     }
@@ -417,8 +453,9 @@ export default function GuestRegisterForm() {
       const form = new FormData();
       form.set("payload", JSON.stringify(payload));
       form.set("website", (document.getElementById("gr-website") as HTMLInputElement)?.value || "");
-      guests.forEach((g, i) => {
+      sendGuests.forEach((g, i) => {
         if (g.jaResident === false && g.photo) form.set(`photo_${i}`, g.photo);
+        if (g.facePhoto) form.set(`face_photo_${i}`, g.facePhoto);
       });
       const res = await fetch("/api/guest-register", { method: "POST", body: form });
       const data = await res.json().catch(() => ({}));
@@ -449,7 +486,7 @@ export default function GuestRegisterForm() {
           key={l}
           type="button"
           onClick={() => setLang(l)}
-          className={`px-3.5 py-1.5 transition-colors ${lang === l ? "bg-white text-switch-charcoal" : "text-white/70 hover:text-white"}`}
+          className={`w-16 py-1.5 text-center transition-colors ${lang === l ? "bg-white text-switch-charcoal" : "text-white/70 hover:text-white"}`}
         >
           {l === "ja" ? "日本語" : "EN"}
         </button>
@@ -469,8 +506,9 @@ export default function GuestRegisterForm() {
     <div className="min-h-screen bg-ivory">
       {/* ヘッダーバンド */}
       <header className="bg-switch-charcoal">
-        <div className="max-w-2xl mx-auto px-5 py-5 flex items-center justify-between">
-          <span className="text-white font-display font-bold tracking-[0.18em] text-[15px]">SEKAI STAY</span>
+        <div className="max-w-2xl mx-auto px-5 py-5 flex items-center justify-between gap-4">
+          {/* 公式ロゴ（黒PNGを invert で白表示・ダーク背景用） */}
+          <img src="/images/switch/logo-lockup.png" alt="SEKAI STAY" className="h-[22px] w-auto invert shrink-0" />
           {langToggle}
         </div>
         <div className="max-w-2xl mx-auto px-5 pb-10 pt-2">
@@ -670,6 +708,35 @@ export default function GuestRegisterForm() {
                         </div>
                       </div>
 
+                      {/* 顔写真は居住地・国籍を問わず全ゲスト必須（本人確認用・2026-07-24） */}
+                      <div>
+                        <label className={labelCls}>{t.facePhotoLabel}{requiredMark}</label>
+                        <p className="text-[11.5px] text-ink/60 leading-relaxed mb-2">{t.facePhotoWhy}</p>
+                        <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.facePhoto ? "border-sekai-teal bg-teal-tint text-deep-teal" : "border-switch-stone-border bg-white text-ink hover:bg-switch-stone-over"}`}>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
+                            onChange={(e) => onPhotoChange("face", i, e.target.files?.[0] || null)}
+                          />
+                          {photoBusy === `f${i}` ? "…" : g.facePhoto ? `✓ ${t.photoAttached}` : t.photoSelect}
+                        </label>
+                        {g.facePhoto && (
+                          <span className="ml-3 text-[12px] text-ink/55">
+                            <span className="break-all">{g.facePhotoName}</span>
+                            <button
+                              type="button"
+                              onClick={() => updateGuest(i, { facePhoto: null, facePhotoName: "" })}
+                              className="ml-2 underline underline-offset-2 hover:text-danger"
+                            >
+                              {t.photoRemove}
+                            </button>
+                          </span>
+                        )}
+                        <p className="mt-1.5 text-[11px] text-ink/45">{t.facePhotoHint}</p>
+                      </div>
+
                       {/* パスポート欄は国外居住を選んだ時だけ表示（国内住所ありは法定不要）。表示時は国籍を問わず必須 */}
                       {g.jaResident === false && (
                       <div className="rounded-switch-md border p-4 sm:p-5 border-brass/40 bg-brass/5">
@@ -689,9 +756,9 @@ export default function GuestRegisterForm() {
                                 accept="image/*"
                                 className="hidden"
                                 onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
-                                onChange={(e) => onPhotoChange(i, e.target.files?.[0] || null)}
+                                onChange={(e) => onPhotoChange("passport", i, e.target.files?.[0] || null)}
                               />
-                              {photoBusy === i ? "…" : g.photo ? `✓ ${t.photoAttached}` : t.photoSelect}
+                              {photoBusy === `p${i}` ? "…" : g.photo ? `✓ ${t.photoAttached}` : t.photoSelect}
                             </label>
                             {g.photo && (
                               <span className="ml-3 text-[12px] text-ink/55">
