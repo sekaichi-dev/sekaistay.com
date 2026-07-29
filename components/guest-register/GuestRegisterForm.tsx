@@ -27,6 +27,8 @@ interface PropertyOption {
 
 interface GuestForm {
   name: string;
+  /** お子様カード（削除可）。API へは送らない表示用の区分。 */
+  isChild: boolean;
   jaResident: boolean | null;
   address: string;
   sameAddress: boolean;
@@ -45,8 +47,8 @@ interface GuestForm {
   nextDest: string;
 }
 
-const emptyGuest = (): GuestForm => ({
-  name: "", jaResident: null, address: "", sameAddress: false, nationality: "",
+const emptyGuest = (isChild = false): GuestForm => ({
+  name: "", isChild, jaResident: null, address: "", sameAddress: false, nationality: "",
   occupation: "", contact: "", sameContact: false, passportNo: "",
   photo: null, photoName: "", facePhoto: null, facePhotoName: "",
   gender: "", age: "", prevStay: "", nextDest: "",
@@ -71,8 +73,12 @@ const T = {
     sec2: "宿泊者情報",
     repBadge: "代表者",
     compBadge: (i: number) => `同行者 ${i}`,
+    childBadge: (i: number) => `お子様 ${i}`,
+    typeAdult: "大人",
+    typeChild: "お子様",
     addGuest: "＋ 同行者を追加",
-    removeGuest: "削除",
+    addChild: "＋ お子様を追加",
+    removeGuest: "このカードを削除",
     guestNote: "ご宿泊者全員（お子様を含む）のご登録が必要です。",
     name: "氏名",
     namePh: "山田 太郎 / TARO YAMADA",
@@ -138,7 +144,6 @@ const T = {
     errFacePhoto: (w: string) => `${w}: 顔写真を添付してください`,
     errConsent: "保管への同意にチェックしてください",
     errSubmit: "送信に失敗しました。通信環境をご確認のうえ再度お試しください。",
-    who: (i: number) => (i === 0 ? "代表者" : `同行者${i}`),
     legalFoot: "この名簿は作成日から3年間保管され、旅館業法第6条・住宅宿泊事業法第8条に基づき、行政機関の求めに応じて提示されます。",
   },
   en: {
@@ -159,8 +164,12 @@ const T = {
     sec2: "Guest Details",
     repBadge: "Lead guest",
     compBadge: (i: number) => `Guest ${i + 1}`,
+    childBadge: (i: number) => `Child ${i}`,
+    typeAdult: "Adult",
+    typeChild: "Child",
     addGuest: "+ Add another guest",
-    removeGuest: "Remove",
+    addChild: "+ Add a child",
+    removeGuest: "Remove this card",
     guestNote: "Every guest, including children, must be registered.",
     name: "Full name",
     namePh: "TARO YAMADA",
@@ -226,7 +235,6 @@ const T = {
     errFacePhoto: (w: string) => `${w}: please attach a face photo`,
     errConsent: "Please agree to the data retention terms",
     errSubmit: "Submission failed. Please check your connection and try again.",
-    who: (i: number) => (i === 0 ? "Lead guest" : `Guest ${i + 1}`),
     legalFoot: "This register is kept for 3 years and presented to government authorities upon request, as required by the Hotel Business Act (Art. 6) and the Private Lodging Business Act (Art. 8).",
   },
 } as const;
@@ -346,6 +354,16 @@ export default function GuestRegisterForm() {
     setGuests((prev) => prev.map((g, i) => (i === index ? { ...g, ...patch } : g)));
   }, []);
 
+  // カード見出し・エラー文用のゲスト呼称（代表者 / 同行者 N / お子様 N・区分別連番）
+  const guestLabels = useMemo(() => {
+    let adults = 0;
+    let children = 0;
+    return guests.map((g, i) => {
+      if (i === 0) return t.repBadge;
+      return g.isChild ? t.childBadge(++children) : t.compBadge(++adults);
+    });
+  }, [guests, t]);
+
   // 国外居住なら国籍を問わずパスポート必須（2026-07-10 テンイチ指示）
   const needsPassport = (g: GuestForm) => g.jaResident === false;
 
@@ -380,7 +398,7 @@ export default function GuestRegisterForm() {
     if (nights < 1 || nights > 90) return t.errDates;
     for (let i = 0; i < guests.length; i++) {
       const g = guests[i];
-      const who = t.who(i);
+      const who = guestLabels[i];
       if (!g.name.trim()) return t.errName(who);
       if (g.jaResident === null) return t.errResidence(who);
       if (!g.nationality) return t.errNationality(who);
@@ -596,26 +614,49 @@ export default function GuestRegisterForm() {
               </div>
             </section>
 
-            {/* 02 宿泊者情報 */}
-            <section className="bg-paper border border-rule rounded-switch-lg shadow-switch-card p-6 sm:p-8 mb-6">
-              {sectionHead("02", t.sec2)}
-              <p className="text-[12px] text-ink/60 leading-relaxed -mt-2 mb-5">{t.guestNote}</p>
+            {/* 02 宿泊者情報（ゲスト毎に独立カード・お子様カードのみ削除可） */}
+            <section className="mb-6">
+              <div className="bg-paper border border-rule rounded-switch-lg shadow-switch-card p-6 sm:p-8 mb-4">
+                {sectionHead("02", t.sec2)}
+                <p className="text-[12px] text-ink/60 leading-relaxed -mt-2">{t.guestNote}</p>
+              </div>
 
-              <div className="space-y-8">
+              <div className="space-y-4">
                 {guests.map((g, i) => (
-                  <div key={i} className={i > 0 ? "border-t border-rule pt-7" : ""}>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className={`inline-block rounded-pill px-3 py-1 text-[11px] font-bold tracking-wide ${i === 0 ? "bg-deep-teal text-white" : "bg-teal-tint text-deep-teal"}`}>
-                        {i === 0 ? t.repBadge : t.compBadge(i)}
+                  <div key={i} className="bg-paper border border-rule rounded-switch-lg shadow-switch-card p-6 sm:p-8">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                      <span className={`inline-block rounded-pill px-3 py-1 text-[11px] font-bold tracking-wide ${i === 0 ? "bg-deep-teal text-white" : g.isChild ? "bg-mist text-ink/70 border border-rule" : "bg-teal-tint text-deep-teal"}`}>
+                        {guestLabels[i]}
                       </span>
                       {i > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setGuests((prev) => prev.filter((_, j) => j !== i))}
-                          className="text-[12px] text-ink/50 hover:text-danger underline underline-offset-2"
-                        >
-                          {t.removeGuest}
-                        </button>
+                        <div className="flex items-center gap-3">
+                          {/* 区分（大人/お子様）。プリフィル時は全員「大人」で入るためカード側で切替できるようにする */}
+                          <div className="inline-flex rounded-pill border border-switch-stone-border overflow-hidden text-[11px] font-semibold">
+                            <button
+                              type="button"
+                              onClick={() => updateGuest(i, { isChild: false })}
+                              className={`px-3 py-1.5 transition-colors ${!g.isChild ? "bg-deep-teal text-white" : "bg-white text-ink/55 hover:bg-mist"}`}
+                            >
+                              {t.typeAdult}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateGuest(i, { isChild: true })}
+                              className={`px-3 py-1.5 transition-colors ${g.isChild ? "bg-deep-teal text-white" : "bg-white text-ink/55 hover:bg-mist"}`}
+                            >
+                              {t.typeChild}
+                            </button>
+                          </div>
+                          {g.isChild && (
+                            <button
+                              type="button"
+                              onClick={() => setGuests((prev) => prev.filter((_, j) => j !== i))}
+                              className="text-[12px] text-ink/50 hover:text-danger underline underline-offset-2"
+                            >
+                              {t.removeGuest}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -815,13 +856,22 @@ export default function GuestRegisterForm() {
               </div>
 
               {guests.length < MAX_GUESTS && (
-                <button
-                  type="button"
-                  onClick={() => setGuests((prev) => [...prev, emptyGuest()])}
-                  className="mt-7 w-full rounded-switch-md border border-dashed border-switch-stone-03 bg-white py-3.5 text-[14px] font-semibold text-deep-teal hover:bg-teal-tint/40 hover:border-sekai-teal transition-colors"
-                >
-                  {t.addGuest}
-                </button>
+                <div className="mt-4 grid sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setGuests((prev) => [...prev, emptyGuest()])}
+                    className="w-full rounded-switch-md border border-dashed border-switch-stone-03 bg-white py-3.5 text-[14px] font-semibold text-deep-teal hover:bg-teal-tint/40 hover:border-sekai-teal transition-colors"
+                  >
+                    {t.addGuest}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGuests((prev) => [...prev, emptyGuest(true)])}
+                    className="w-full rounded-switch-md border border-dashed border-switch-stone-03 bg-white py-3.5 text-[14px] font-semibold text-deep-teal hover:bg-teal-tint/40 hover:border-sekai-teal transition-colors"
+                  >
+                    {t.addChild}
+                  </button>
+                </div>
               )}
             </section>
 
