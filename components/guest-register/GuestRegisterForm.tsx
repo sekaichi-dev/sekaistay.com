@@ -282,10 +282,10 @@ async function compressImage(file: File, maxDim = 1600, targetBytes = 450_000, o
   }
 }
 
-const inputCls = "w-full rounded-switch-md border border-switch-stone-border bg-white px-3.5 py-2.5 text-[15px] text-ink placeholder:text-switch-stone-text-disabled focus:outline-none focus:border-sekai-teal focus:ring-2 focus:ring-sekai-teal/20 transition-colors";
-const labelCls = "block text-[13px] font-semibold text-ink mb-1.5";
+const inputCls = "w-full rounded-switch-md border border-switch-stone-border bg-white px-3.5 py-2.5 text-[15px] text-switch-charcoal placeholder:text-switch-stone-text-disabled focus:outline-none focus:border-switch-teal focus:ring-2 focus:ring-switch-teal/20 transition-colors";
+const labelCls = "block text-[13px] font-semibold text-switch-charcoal mb-1.5";
 // クリエイティブガイド準拠: アクセントはティール（オレンジ不使用・2026-07-24）
-const requiredMark = <span className="ml-1 text-[10px] font-bold text-sekai-teal align-middle">*</span>;
+const requiredMark = <span className="ml-1 text-[10px] font-bold text-switch-teal align-middle">*</span>;
 
 export default function GuestRegisterForm() {
   const [lang, setLang] = useState<Lang>("ja");
@@ -321,11 +321,15 @@ export default function GuestRegisterForm() {
     if (DATE_RE.test(co) && (!DATE_RE.test(ci) || co > ci)) setCheckout(co);
     const nRaw = params.get("n") || "";
     const n = /^\d{1,2}$/.test(nRaw) ? Number.parseInt(nRaw, 10) : NaN;
+    // nc = お子様の人数（Beds24 の numChild 由来・任意）。大人カードの後ろにお子様カードを作る。
+    const ncRaw = params.get("nc") || "";
+    const ncParsed = /^\d{1,2}$/.test(ncRaw) ? Number.parseInt(ncRaw, 10) : 0;
     const gn = (params.get("gn") || "").trim().slice(0, 100);
     if ((Number.isFinite(n) && n >= 1) || gn) {
       const count = Number.isFinite(n) ? Math.min(Math.max(n, 1), MAX_GUESTS) : 1;
+      const children = Math.min(Math.max(ncParsed, 0), count - 1); // 代表者は常に大人
       setGuests(() => {
-        const arr = Array.from({ length: count }, () => emptyGuest());
+        const arr = Array.from({ length: count }, (_, idx) => emptyGuest(idx >= count - children));
         if (gn) arr[0].name = gn;
         return arr;
       });
@@ -515,14 +519,14 @@ export default function GuestRegisterForm() {
 
   const sectionHead = (num: string, title: string) => (
     <div className="flex items-baseline gap-3 mb-5">
-      <span className="font-mono-editorial text-[11px] tracking-ticker text-deep-teal/70">{num}</span>
-      <h2 className="text-[18px] sm:text-[20px] font-bold text-ink tracking-tight">{title}</h2>
-      <span className="flex-1 h-px bg-rule translate-y-[-4px]" />
+      <span className="font-mono-editorial text-[11px] tracking-ticker text-switch-teal-deep/70">{num}</span>
+      <h2 className="text-[20px] sm:text-[22px] font-bold text-switch-charcoal tracking-tight">{title}</h2>
+      <span className="flex-1 h-px bg-switch-stone-border translate-y-[-4px]" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-ivory">
+    <div className="min-h-screen bg-switch-cloud">
       {/* ヘッダーバンド */}
       <header className="bg-switch-charcoal">
         <div className="max-w-2xl mx-auto px-5 py-5 flex items-center justify-between gap-4">
@@ -531,31 +535,31 @@ export default function GuestRegisterForm() {
           {langToggle}
         </div>
         <div className="max-w-2xl mx-auto px-5 pb-10 pt-2">
-          <p className="font-mono-editorial text-[10px] tracking-ticker text-bright-teal mb-3">{t.eyebrow}</p>
+          <p className="font-mono-editorial text-[10px] tracking-ticker text-switch-teal-bright mb-3">{t.eyebrow}</p>
           <h1 className="text-[26px] sm:text-[32px] font-bold text-white tracking-tight leading-snug mb-3">{t.title}</h1>
-          <p className="text-[13px] sm:text-[14px] leading-[1.9] text-white/70 max-w-xl">{t.lede}</p>
+          <p className="text-[14px] sm:text-[15px] leading-[1.9] text-white/70 max-w-xl">{t.lede}</p>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-5 py-10 pb-20">
         {receiptId ? (
-          <div className="bg-paper border border-rule rounded-switch-lg shadow-switch-card p-8 sm:p-10 text-center">
-            <div className="mx-auto w-14 h-14 rounded-full bg-teal-tint flex items-center justify-center mb-5">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" className="text-sekai-teal">
+          <div className="bg-white border border-switch-gray-pale rounded-switch-lg shadow-switch-card p-8 sm:p-10 text-center">
+            <div className="mx-auto w-14 h-14 rounded-full bg-switch-teal-tint flex items-center justify-center mb-5">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" className="text-switch-teal">
                 <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <h2 className="text-[22px] font-bold text-ink mb-2">{t.successTitle}</h2>
-            <p className="text-[14px] text-ink/70 leading-[1.9] mb-6">{t.successBody}</p>
-            <div className="inline-block bg-mist border border-rule rounded-switch-md px-5 py-3 mb-6">
-              <span className="block font-mono-editorial text-[10px] tracking-ticker text-ink/50 mb-1">{t.receiptId}</span>
-              <span className="font-mono-editorial text-[16px] font-bold text-deep-teal">{receiptId}</span>
+            <h2 className="text-[22px] font-bold text-switch-charcoal mb-2">{t.successTitle}</h2>
+            <p className="text-[14px] text-switch-gray-dark leading-[1.9] mb-6">{t.successBody}</p>
+            <div className="inline-block bg-switch-stone-01 border border-switch-gray-pale rounded-switch-md px-5 py-3 mb-6">
+              <span className="block font-mono-editorial text-[10px] tracking-ticker text-switch-gray-mid mb-1">{t.receiptId}</span>
+              <span className="font-mono-editorial text-[16px] font-bold text-switch-teal-deep">{receiptId}</span>
             </div>
-            <p className="text-[12px] text-ink/55 leading-relaxed mb-6">{t.successMore}</p>
+            <p className="text-[13px] text-switch-gray-mid leading-[1.8] mb-6">{t.successMore}</p>
             <button
               type="button"
               onClick={resetForNext}
-              className="rounded-switch-md border border-switch-stone-border bg-white px-6 py-3 text-[14px] font-semibold text-ink hover:bg-switch-stone-over transition-colors"
+              className="rounded-switch-md border border-switch-stone-border bg-white px-6 py-3 text-[14px] font-semibold text-switch-charcoal hover:bg-switch-stone-over transition-colors"
             >
               {t.registerMore}
             </button>
@@ -566,7 +570,7 @@ export default function GuestRegisterForm() {
             <input id="gr-website" type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
             {/* 01 ご宿泊情報 */}
-            <section className="bg-paper border border-rule rounded-switch-lg shadow-switch-card p-6 sm:p-8 mb-6">
+            <section className="bg-white border border-switch-gray-pale rounded-switch-lg shadow-switch-card p-6 sm:p-8 mb-6">
               {sectionHead("01", t.sec1)}
               <div className="space-y-5">
                 <div>
@@ -598,7 +602,7 @@ export default function GuestRegisterForm() {
                   </div>
                 </div>
                 {nights > 0 && (
-                  <p className="text-[12px] text-deep-teal font-semibold">{t.nights(nights)}</p>
+                  <p className="text-[12px] text-switch-teal-deep font-semibold">{t.nights(nights)}</p>
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -610,22 +614,23 @@ export default function GuestRegisterForm() {
                     <input id="gr-checkout-time" type="time" value={checkoutTime} onChange={(e) => setCheckoutTime(e.target.value)} className={inputCls} />
                   </div>
                 </div>
-                <p className="-mt-3 text-[11px] text-ink/45">{t.timeHint}</p>
+                <p className="-mt-3 text-[12px] text-switch-gray-mid">{t.timeHint}</p>
               </div>
             </section>
 
-            {/* 02 宿泊者情報（ゲスト毎に独立カード・お子様カードのみ削除可） */}
+            {/* 02 宿泊者情報（ゲスト毎に独立カード・見出しは1人目のカード内・お子様カードのみ削除可） */}
             <section className="mb-6">
-              <div className="bg-paper border border-rule rounded-switch-lg shadow-switch-card p-6 sm:p-8 mb-4">
-                {sectionHead("02", t.sec2)}
-                <p className="text-[12px] text-ink/60 leading-relaxed -mt-2">{t.guestNote}</p>
-              </div>
-
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {guests.map((g, i) => (
-                  <div key={i} className="bg-paper border border-rule rounded-switch-lg shadow-switch-card p-6 sm:p-8">
+                  <div key={i} className="bg-white border border-switch-gray-pale rounded-switch-lg shadow-switch-card p-6 sm:p-8">
+                    {i === 0 && (
+                      <>
+                        {sectionHead("02", t.sec2)}
+                        <p className="text-[13px] text-switch-gray-mid leading-[1.8] -mt-2 mb-6">{t.guestNote}</p>
+                      </>
+                    )}
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                      <span className={`inline-block rounded-pill px-3 py-1 text-[11px] font-bold tracking-wide ${i === 0 ? "bg-deep-teal text-white" : g.isChild ? "bg-mist text-ink/70 border border-rule" : "bg-teal-tint text-deep-teal"}`}>
+                      <span className={`inline-block rounded-pill px-3 py-1 text-[11px] font-bold tracking-wide ${i === 0 ? "bg-switch-teal-deep text-white" : g.isChild ? "bg-switch-stone-01 text-switch-gray-dark border border-switch-gray-pale" : "bg-switch-teal-tint text-switch-teal-deep"}`}>
                         {guestLabels[i]}
                       </span>
                       {i > 0 && (
@@ -635,14 +640,14 @@ export default function GuestRegisterForm() {
                             <button
                               type="button"
                               onClick={() => updateGuest(i, { isChild: false })}
-                              className={`px-3 py-1.5 transition-colors ${!g.isChild ? "bg-deep-teal text-white" : "bg-white text-ink/55 hover:bg-mist"}`}
+                              className={`px-3 py-1.5 transition-colors ${!g.isChild ? "bg-switch-teal-deep text-white" : "bg-white text-switch-gray-mid hover:bg-switch-stone-01"}`}
                             >
                               {t.typeAdult}
                             </button>
                             <button
                               type="button"
                               onClick={() => updateGuest(i, { isChild: true })}
-                              className={`px-3 py-1.5 transition-colors ${g.isChild ? "bg-deep-teal text-white" : "bg-white text-ink/55 hover:bg-mist"}`}
+                              className={`px-3 py-1.5 transition-colors ${g.isChild ? "bg-switch-teal-deep text-white" : "bg-white text-switch-gray-mid hover:bg-switch-stone-01"}`}
                             >
                               {t.typeChild}
                             </button>
@@ -651,7 +656,7 @@ export default function GuestRegisterForm() {
                             <button
                               type="button"
                               onClick={() => setGuests((prev) => prev.filter((_, j) => j !== i))}
-                              className="text-[12px] text-ink/50 hover:text-danger underline underline-offset-2"
+                              className="text-[12px] text-switch-gray-mid hover:text-danger underline underline-offset-2"
                             >
                               {t.removeGuest}
                             </button>
@@ -665,7 +670,7 @@ export default function GuestRegisterForm() {
                         <label className={labelCls}>{t.name}{requiredMark}</label>
                         <input type="text" value={g.name} maxLength={100} placeholder={t.namePh}
                           onChange={(e) => updateGuest(i, { name: e.target.value })} className={inputCls} />
-                        <p className="mt-1 text-[11px] text-ink/45">{t.nameHint}</p>
+                        <p className="mt-1 text-[12px] text-switch-gray-mid">{t.nameHint}</p>
                       </div>
 
                       <div className="grid sm:grid-cols-2 gap-4">
@@ -673,7 +678,7 @@ export default function GuestRegisterForm() {
                           <label className={labelCls}>{t.residence}{requiredMark}</label>
                           <div className="space-y-1.5">
                             {([true, false] as const).map((v) => (
-                              <label key={String(v)} className="flex items-center gap-2.5 rounded-switch-md border border-switch-stone-border bg-white px-3.5 py-2.5 cursor-pointer has-[:checked]:border-sekai-teal has-[:checked]:bg-teal-tint/40 transition-colors">
+                              <label key={String(v)} className="flex items-center gap-2.5 rounded-switch-md border border-switch-stone-border bg-white px-3.5 py-2.5 cursor-pointer has-[:checked]:border-switch-teal has-[:checked]:bg-switch-teal-tint/40 transition-colors">
                                 <input
                                   type="radio"
                                   name={`residence-${i}`}
@@ -681,7 +686,7 @@ export default function GuestRegisterForm() {
                                   onChange={() => updateGuest(i, { jaResident: v })}
                                   className="accent-[#167B81]"
                                 />
-                                <span className="text-[13px] text-ink">{v ? t.residenceJa : t.residenceAbroad}</span>
+                                <span className="text-[13px] text-switch-charcoal">{v ? t.residenceJa : t.residenceAbroad}</span>
                               </label>
                             ))}
                           </div>
@@ -709,9 +714,9 @@ export default function GuestRegisterForm() {
 
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="text-[13px] font-semibold text-ink">{t.address}{requiredMark}</label>
+                          <label className="text-[13px] font-semibold text-switch-charcoal">{t.address}{requiredMark}</label>
                           {i > 0 && (
-                            <label className="flex items-center gap-1.5 text-[12px] text-ink/60 cursor-pointer">
+                            <label className="flex items-center gap-1.5 text-[12px] text-switch-gray-mid cursor-pointer">
                               <input type="checkbox" checked={g.sameAddress} className="accent-[#167B81]"
                                 onChange={(e) => updateGuest(i, { sameAddress: e.target.checked })} />
                               {t.sameAsRep}
@@ -734,9 +739,9 @@ export default function GuestRegisterForm() {
                         )}
                         <div className={property?.type === "民泊" ? "" : "sm:col-span-2"}>
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-[13px] font-semibold text-ink">{t.contact}{requiredMark}</label>
+                            <label className="text-[13px] font-semibold text-switch-charcoal">{t.contact}{requiredMark}</label>
                             {i > 0 && (
-                              <label className="flex items-center gap-1.5 text-[12px] text-ink/60 cursor-pointer">
+                              <label className="flex items-center gap-1.5 text-[12px] text-switch-gray-mid cursor-pointer">
                                 <input type="checkbox" checked={g.sameContact} className="accent-[#167B81]"
                                   onChange={(e) => updateGuest(i, { sameContact: e.target.checked })} />
                                 {t.sameAsRep}
@@ -753,8 +758,8 @@ export default function GuestRegisterForm() {
                       {/* 顔写真は居住地・国籍を問わず全ゲスト必須（本人確認用・2026-07-24） */}
                       <div>
                         <label className={labelCls}>{t.facePhotoLabel}{requiredMark}</label>
-                        <p className="text-[11.5px] text-ink/60 leading-relaxed mb-2">{t.facePhotoWhy}</p>
-                        <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.facePhoto ? "border-sekai-teal bg-teal-tint text-deep-teal" : "border-switch-stone-border bg-white text-ink hover:bg-switch-stone-over"}`}>
+                        <p className="text-[11.5px] text-switch-gray-mid leading-relaxed mb-2">{t.facePhotoWhy}</p>
+                        <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.facePhoto ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}`}>
                           <input
                             type="file"
                             accept="image/*"
@@ -765,7 +770,7 @@ export default function GuestRegisterForm() {
                           {photoBusy === `f${i}` ? "…" : g.facePhoto ? `✓ ${t.photoAttached}` : t.photoSelect}
                         </label>
                         {g.facePhoto && (
-                          <span className="ml-3 text-[12px] text-ink/55">
+                          <span className="ml-3 text-[12px] text-switch-gray-mid">
                             <span className="break-all">{g.facePhotoName}</span>
                             <button
                               type="button"
@@ -776,14 +781,14 @@ export default function GuestRegisterForm() {
                             </button>
                           </span>
                         )}
-                        <p className="mt-1.5 text-[11px] text-ink/45">{t.facePhotoHint}</p>
+                        <p className="mt-1.5 text-[12px] text-switch-gray-mid">{t.facePhotoHint}</p>
                       </div>
 
                       {/* パスポート欄は国外居住を選んだ時だけ表示（国内住所ありは法定不要）。表示時は国籍を問わず必須 */}
                       {g.jaResident === false && (
-                      <div className="rounded-switch-md border p-4 sm:p-5 border-brass/40 bg-brass/5">
-                        <p className="text-[13px] font-bold text-ink mb-1">{t.passportTitle}</p>
-                        <p className="text-[11.5px] text-ink/60 leading-relaxed mb-4">{t.passportWhy}</p>
+                      <div className="rounded-switch-md border p-4 sm:p-5 border-switch-teal/35 bg-switch-teal-tint/40">
+                        <p className="text-[13px] font-bold text-switch-charcoal mb-1">{t.passportTitle}</p>
+                        <p className="text-[11.5px] text-switch-gray-mid leading-relaxed mb-4">{t.passportWhy}</p>
                         <div className="space-y-4">
                           <div>
                             <label className={labelCls}>{t.passportNo}{requiredMark}</label>
@@ -792,7 +797,7 @@ export default function GuestRegisterForm() {
                           </div>
                           <div>
                             <label className={labelCls}>{t.passportPhoto}{requiredMark}</label>
-                            <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.photo ? "border-sekai-teal bg-teal-tint text-deep-teal" : "border-switch-stone-border bg-white text-ink hover:bg-switch-stone-over"}`}>
+                            <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.photo ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}`}>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -803,7 +808,7 @@ export default function GuestRegisterForm() {
                               {photoBusy === `p${i}` ? "…" : g.photo ? `✓ ${t.photoAttached}` : t.photoSelect}
                             </label>
                             {g.photo && (
-                              <span className="ml-3 text-[12px] text-ink/55">
+                              <span className="ml-3 text-[12px] text-switch-gray-mid">
                                 <span className="break-all">{g.photoName}</span>
                                 <button
                                   type="button"
@@ -814,15 +819,15 @@ export default function GuestRegisterForm() {
                                 </button>
                               </span>
                             )}
-                            <p className="mt-1.5 text-[11px] text-ink/45">{t.photoHint}</p>
+                            <p className="mt-1.5 text-[12px] text-switch-gray-mid">{t.photoHint}</p>
                           </div>
                         </div>
                       </div>
                       )}
 
                       {property?.type === "旅館業" && (
-                        <details className="rounded-switch-md border border-rule bg-mist/60 px-4 py-3">
-                          <summary className="text-[12.5px] font-semibold text-ink/70 cursor-pointer select-none">{t.optionalTitle}</summary>
+                        <details className="rounded-switch-md border border-switch-gray-pale bg-switch-stone-01 px-4 py-3">
+                          <summary className="text-[13px] font-semibold text-switch-gray-dark cursor-pointer select-none">{t.optionalTitle}</summary>
                           <div className="grid sm:grid-cols-2 gap-4 pt-4">
                             <div>
                               <label className={labelCls}>{t.gender}</label>
@@ -860,14 +865,14 @@ export default function GuestRegisterForm() {
                   <button
                     type="button"
                     onClick={() => setGuests((prev) => [...prev, emptyGuest()])}
-                    className="w-full rounded-switch-md border border-dashed border-switch-stone-03 bg-white py-3.5 text-[14px] font-semibold text-deep-teal hover:bg-teal-tint/40 hover:border-sekai-teal transition-colors"
+                    className="w-full rounded-switch-md border border-dashed border-switch-stone-03 bg-white py-3.5 text-[14px] font-semibold text-switch-teal-deep hover:bg-switch-teal-tint/40 hover:border-switch-teal transition-colors"
                   >
                     {t.addGuest}
                   </button>
                   <button
                     type="button"
                     onClick={() => setGuests((prev) => [...prev, emptyGuest(true)])}
-                    className="w-full rounded-switch-md border border-dashed border-switch-stone-03 bg-white py-3.5 text-[14px] font-semibold text-deep-teal hover:bg-teal-tint/40 hover:border-sekai-teal transition-colors"
+                    className="w-full rounded-switch-md border border-dashed border-switch-stone-03 bg-white py-3.5 text-[14px] font-semibold text-switch-teal-deep hover:bg-switch-teal-tint/40 hover:border-switch-teal transition-colors"
                   >
                     {t.addChild}
                   </button>
@@ -876,15 +881,15 @@ export default function GuestRegisterForm() {
             </section>
 
             {/* 03 確認・送信 */}
-            <section className="bg-paper border border-rule rounded-switch-lg shadow-switch-card p-6 sm:p-8">
+            <section className="bg-white border border-switch-gray-pale rounded-switch-lg shadow-switch-card p-6 sm:p-8">
               {sectionHead("03", t.sec3)}
               <div className="space-y-5">
-                <label className="flex items-start gap-3 rounded-switch-md border border-rule bg-mist/60 p-4 cursor-pointer">
+                <label className="flex items-start gap-3 rounded-switch-md border border-switch-gray-pale bg-switch-stone-01 p-4 cursor-pointer">
                   <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)}
                     className="mt-0.5 accent-[#167B81] shrink-0" />
-                  <span className="text-[12.5px] text-ink/75 leading-relaxed">
+                  <span className="text-[13px] text-switch-charcoal/85 leading-relaxed">
                     {t.consent}{" "}
-                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-deep-teal underline underline-offset-2">{t.privacy}</a>
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-switch-teal-deep underline underline-offset-2">{t.privacy}</a>
                   </span>
                 </label>
 
@@ -897,19 +902,19 @@ export default function GuestRegisterForm() {
                 <button
                   type="submit"
                   disabled={submitting || photoBusy !== null}
-                  className="w-full rounded-switch-md bg-sekai-teal hover:bg-deep-teal disabled:bg-switch-stone-03 disabled:cursor-not-allowed py-4 text-[16px] font-bold text-white tracking-wide transition-colors active:scale-[0.99]"
+                  className="w-full rounded-switch-md bg-switch-teal hover:bg-switch-teal-deep disabled:bg-switch-stone-03 disabled:cursor-not-allowed py-4 text-[16px] font-bold text-white tracking-wide transition-colors active:scale-[0.99]"
                 >
                   {submitting ? t.submitting : t.submit}
                 </button>
-                <p className="text-[11px] text-ink/45 leading-relaxed">{t.legalFoot}</p>
+                <p className="text-[13px] text-switch-gray-mid leading-[1.8]">{t.legalFoot}</p>
               </div>
             </section>
           </form>
         )}
       </main>
 
-      <footer className="border-t border-rule py-8">
-        <p className="text-center text-[11px] tracking-[0.14em] text-ink/40">
+      <footer className="border-t border-switch-gray-pale py-8">
+        <p className="text-center text-[11px] tracking-[0.14em] text-switch-gray-mid/70">
           © SEKAI STAY — Guest Register
         </p>
       </footer>
