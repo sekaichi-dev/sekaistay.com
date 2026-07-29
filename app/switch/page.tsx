@@ -23,7 +23,7 @@ import SwitchFlow from "@/components/switch/SwitchFlow";
 import SwitchFAQ from "@/components/switch/SwitchFAQ";
 import LpVariantForm from "@/components/switch/LpVariantForm";
 import SwitchPrimaryCTA from "@/components/switch/SwitchPrimaryCTA";
-import SwitchStickyCTA from "@/components/switch/SwitchStickyCTA";
+import FloatingCTA from "@/components/FloatingCTA";
 import WaveDivider from "@/components/switch/deco/WaveDivider";
 import PageViewTracker from "@/components/switch/PageViewTracker";
 import EngagementTracker from "@/components/EngagementTracker";
@@ -144,7 +144,7 @@ export default function SwitchPage() {
         <LpCompanyInfo />
       </main>
       <LpFooter />
-      <SwitchStickyCTA />
+      <FloatingCTA />
     </>
   );
 }
