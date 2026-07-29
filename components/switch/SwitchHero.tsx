@@ -81,7 +81,7 @@ export default function SwitchHero({
             </svg>
             限定
           </span>
-          <span className="text-white whitespace-nowrap">先着10オーナー</span>
+          <span className="text-white whitespace-nowrap">8/31までのお問い合わせ</span>
           <span className="hidden sm:inline text-white/40">／</span>
           <span className="inline-flex items-center gap-1 text-white/90 whitespace-nowrap">
             初期費用
