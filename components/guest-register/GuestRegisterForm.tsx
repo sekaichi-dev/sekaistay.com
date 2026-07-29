@@ -74,10 +74,6 @@ const T = {
     repBadge: "代表者",
     compBadge: (i: number) => `同行者 ${i}`,
     childBadge: (i: number) => `お子様 ${i}`,
-    typeAdult: "大人",
-    typeChild: "お子様",
-    addGuest: "＋ 同行者を追加",
-    addChild: "＋ お子様を追加",
     removeGuest: "このカードを削除",
     guestNote: "ご宿泊者全員（お子様を含む）のご登録が必要です。",
     name: "氏名",
@@ -165,10 +161,6 @@ const T = {
     repBadge: "Lead guest",
     compBadge: (i: number) => `Guest ${i + 1}`,
     childBadge: (i: number) => `Child ${i}`,
-    typeAdult: "Adult",
-    typeChild: "Child",
-    addGuest: "+ Add another guest",
-    addChild: "+ Add a child",
     removeGuest: "Remove this card",
     guestNote: "Every guest, including children, must be registered.",
     name: "Full name",
@@ -633,35 +625,15 @@ export default function GuestRegisterForm() {
                       <span className={`inline-block rounded-pill px-3 py-1 text-[11px] font-bold tracking-wide ${i === 0 ? "bg-switch-teal-deep text-white" : g.isChild ? "bg-switch-stone-01 text-switch-gray-dark border border-switch-gray-pale" : "bg-switch-teal-tint text-switch-teal-deep"}`}>
                         {guestLabels[i]}
                       </span>
-                      {i > 0 && (
-                        <div className="flex items-center gap-3">
-                          {/* 区分（大人/お子様）。プリフィル時は全員「大人」で入るためカード側で切替できるようにする */}
-                          <div className="inline-flex rounded-pill border border-switch-stone-border overflow-hidden text-[11px] font-semibold">
-                            <button
-                              type="button"
-                              onClick={() => updateGuest(i, { isChild: false })}
-                              className={`px-3 py-1.5 transition-colors ${!g.isChild ? "bg-switch-teal-deep text-white" : "bg-white text-switch-gray-mid hover:bg-switch-stone-01"}`}
-                            >
-                              {t.typeAdult}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => updateGuest(i, { isChild: true })}
-                              className={`px-3 py-1.5 transition-colors ${g.isChild ? "bg-switch-teal-deep text-white" : "bg-white text-switch-gray-mid hover:bg-switch-stone-01"}`}
-                            >
-                              {t.typeChild}
-                            </button>
-                          </div>
-                          {g.isChild && (
-                            <button
-                              type="button"
-                              onClick={() => setGuests((prev) => prev.filter((_, j) => j !== i))}
-                              className="text-[12px] text-switch-gray-mid hover:text-danger underline underline-offset-2"
-                            >
-                              {t.removeGuest}
-                            </button>
-                          )}
-                        </div>
+                      {/* 区分は予約情報(nc)からの決めつけ（代表者は常に大人）。お子様カードのみ削除できる */}
+                      {i > 0 && g.isChild && (
+                        <button
+                          type="button"
+                          onClick={() => setGuests((prev) => prev.filter((_, j) => j !== i))}
+                          className="text-[12px] text-switch-gray-mid hover:text-danger underline underline-offset-2"
+                        >
+                          {t.removeGuest}
+                        </button>
                       )}
                     </div>
 
@@ -860,24 +832,6 @@ export default function GuestRegisterForm() {
                 ))}
               </div>
 
-              {guests.length < MAX_GUESTS && (
-                <div className="mt-4 grid sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setGuests((prev) => [...prev, emptyGuest()])}
-                    className="w-full rounded-switch-md border border-dashed border-switch-stone-03 bg-white py-3.5 text-[14px] font-semibold text-switch-teal-deep hover:bg-switch-teal-tint/40 hover:border-switch-teal transition-colors"
-                  >
-                    {t.addGuest}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setGuests((prev) => [...prev, emptyGuest(true)])}
-                    className="w-full rounded-switch-md border border-dashed border-switch-stone-03 bg-white py-3.5 text-[14px] font-semibold text-switch-teal-deep hover:bg-switch-teal-tint/40 hover:border-switch-teal transition-colors"
-                  >
-                    {t.addChild}
-                  </button>
-                </div>
-              )}
             </section>
 
             {/* 03 確認・送信 */}
