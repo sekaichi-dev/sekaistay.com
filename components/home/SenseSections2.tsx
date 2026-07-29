@@ -152,6 +152,7 @@ export function OpeningFlowSense() {
 
 /* NEWS — 先頭記事に大サムネ＋残りはリスト（sense-trust 準拠） */
 const NEWS = [
+  { date: "2026.07.29", cat: "キャンペーン", title: "新規立ち上げ・他社からの乗り換えを対象とした「初期費用10万円割引キャンペーン」を開始しました", img: "/images/switch/property-cabin.jpg" },
   { date: "2026.06.10", cat: "お知らせ", title: "対応エリアに沖縄を追加しました", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=70&auto=format&fit=crop" },
   { date: "2026.05.22", cat: "プロダクト", title: "SEKAI STAYとして新しい料金体系でのサービスをリリースしました" },
   { date: "2026.03.28", cat: "受賞", title: "管理物件が「BEST OF SAUNA STAY 2026」サウナ付き部門で第一位に輝きました" },

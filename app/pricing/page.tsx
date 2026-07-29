@@ -17,7 +17,7 @@ import { ContactSense } from '@/components/home/SenseSections'
 export const metadata: Metadata = {
   title: '料金',
   description:
-    'SEKAI STAYの料金体系。毎月の基本料金は売上の8%＋月額10,000円/物件。初期費用は乗り換え¥100,000/物件・新規立ち上げ¥200,000〜。かかりうる費用をすべて開示します。',
+    'SEKAI STAYの料金体系。毎月の基本料金は売上の8%＋月額10,000円/物件。初期費用は乗り換え¥100,000/物件・新規立ち上げプラン¥300,000（プロ撮影込み）。かかりうる費用をすべて開示します。',
   openGraph: {
     title: '料金 | SEKAI STAY',
     description:
@@ -50,9 +50,20 @@ const INCLUDES = [
 ]
 
 const EXTRAS = [
-  { no: '01', title: '初期費用', body: '乗り換えは一律10万円、新規立ち上げは20万円から対応。移行作業・リスティング最適化（多言語）・運用セットアップを含みます。' },
+  { no: '01', title: '初期費用', body: '乗り換えは一律10万円、新規立ち上げは立ち上げプラン30万円（プロ撮影込み・全8工程）。2026年8月31日までのお問い合わせで、どちらも初期費用から10万円割引になります。' },
   { no: '02', title: '有料オプション（希望制）', body: '①物件撮影 ②インテリアコーディネート ③許認可申請代行 ④スマートロック導入 ⑤一休.com・じゃらん追加掲載 は、事前見積もりのうえ、物件のサイズなどに応じて承ります。' },
   { no: '03', title: '民泊保険・火災保険の加入', body: '我々は火災保険・民泊保険への加入をオーナー様にお願いしております。きちんと訴求しない民泊運用代行業者も一部ありますが、なにかあったときに大切な物件を守るためにも、弊社としては推奨いたします。（保険の紹介手数料などをいただくことは一切ございません。）' },
+]
+
+const SETUP_STEPS = [
+  { no: '01', title: 'プロ写真撮影', body: 'プロカメラマンによる物件撮影を標準で内包。撮影が不要な場合は、初期費用から¥80,000を割引します。' },
+  { no: '02', title: 'OTAリスティング初期設定', body: 'Airbnb・Booking.comなど主要予約サイトへの掲載と、カレンダー連携をセットアップします。' },
+  { no: '03', title: 'Airbnb登録用 電話番号の代行取得・登録', body: '登録に必要な電話番号の取得・登録を代行。メールアドレスの発行にも対応します。' },
+  { no: '04', title: '料金初期設定（ダイナミックプライシング）', body: '需要・競合・季節をふまえた価格設計で、開業初日から適正価格でスタートします。' },
+  { no: '05', title: 'キーボックス・鍵設定／設備確認', body: 'ゲストが迷わず入室できる鍵まわりの設定と、開業前の設備チェックを行います。' },
+  { no: '06', title: '消耗品・アメニティ初期管理', body: 'タオル・アメニティなど開業に必要な備品を初期セットアップ。※内容により一部実費が発生します。' },
+  { no: '07', title: 'ハウスマニュアル作成', body: 'チェックイン手順・設備の使い方・ゴミ出し・ハウスルール・緊急連絡先・周辺情報を、多言語テンプレで整備します。' },
+  { no: '08', title: '清掃会社の手配・初回設定／公開', body: '清掃パートナーの手配と初回設定まで整え、リスティングを公開。そのまま運用開始につなげます。' },
 ]
 
 const TERMS_PANELS = [
@@ -63,11 +74,15 @@ const TERMS_PANELS = [
 const PRICING_FAQ = [
   {
     q: 'SEKAI STAYの民泊運営代行の料金は？',
-    a: '毎月の基本料金は、変動運営委託費（売上の8%）＋固定管理費10,000円/物件/月です。初期費用は乗り換えが100,000円/物件、新規立ち上げが200,000円〜。このほかは消耗品などの実費（実費＋20%）と、ご希望のときだけの有料オプションのみで、かかりうる費用は契約前にすべて金額つきで提示します。',
+    a: '毎月の基本料金は、変動運営委託費（売上の8%）＋固定管理費10,000円/物件/月です。初期費用は乗り換えが100,000円/物件、新規立ち上げが立ち上げプラン300,000円/物件（プロ撮影込み・全8工程）。このほかは消耗品などの実費（実費＋20%）と、ご希望のときだけの有料オプションのみで、かかりうる費用は契約前にすべて金額つきで提示します。※2026年8月31日までのお問い合わせは、初期費用10万円割引キャンペーンの対象です。',
   },
   {
     q: '他社からの乗り換えに費用はかかりますか？',
-    a: '初期費用として100,000円/物件をいただきます。移行作業に加えて、リスティング最適化（多言語）まで含む金額です。OTAの引き継ぎは並走で進めるため収益の空白期間はなく、移行は最短2週間で完了します。',
+    a: '初期費用として100,000円/物件をいただきます。移行作業に加えて、リスティング最適化（多言語）まで含む金額です。OTAの引き継ぎは並走で進めるため収益の空白期間はなく、移行は最短2週間で完了します。※2026年8月31日までのお問い合わせは、キャンペーンにより乗り換え初期費用が¥0になります。',
+  },
+  {
+    q: '新規立ち上げの初期費用には何が含まれますか？',
+    a: '立ち上げプラン300,000円/物件（一括）に、プロ写真撮影・OTAリスティング初期設定（Airbnb・Booking）・Airbnb登録用電話番号の代行取得・料金初期設定（ダイナミックプライシング）・キーボックス設定と設備確認・消耗品/アメニティ初期管理・ハウスマニュアル作成（多言語）・清掃会社の手配と公開の全8工程を含みます。撮影が不要な場合は80,000円割引。2026年8月31日までのお問い合わせは、立ち上げ割引により200,000円になります。',
   },
   {
     q: '解約金はかかりますか？',
@@ -187,15 +202,20 @@ export default function PricingPage() {
                           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75 motion-reduce:hidden" />
                           <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
                         </span>
-                        8月中のお問い合わせ限定キャンペーン
+                        8/31までのお問い合わせ限定キャンペーン
                       </span>
                       <p className="mt-2 flex items-baseline gap-2 font-bold text-white">
                         乗り換え初期費用
                         <span className="text-[14px] text-white/60 line-through">¥100,000</span>
                         <span className="font-grotesk text-[2rem] leading-none text-white">¥0</span>
                       </p>
+                      <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-[13px] font-bold text-white/90">
+                        新規立ち上げ
+                        <span className="text-white/60 line-through">¥300,000</span>
+                        <span className="font-grotesk text-[1.25rem] leading-none text-white">¥200,000</span>
+                      </p>
                       <p className="mt-1.5 text-[12px] leading-[1.7] text-white/85">
-                        通常一律10万円の初期費用を、今月中にお問い合わせいただいたオーナー様は無料に。
+                        2026年8月31日までのお問い合わせで、初期費用をどちらも10万円割引。
                       </p>
                       <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-bold text-white">
                         このまま無料で収益診断を受ける
@@ -211,6 +231,40 @@ export default function PricingPage() {
             <p className="mt-8 max-w-2xl text-[14px] leading-[1.95] text-ink/60">
               見積もりにない名目の請求はしません。かかりうる費用は、すべて契約前に金額つきでお渡しします。
             </p>
+          </div>
+        </section>
+
+        {/* 3.5 新規立ち上げプラン（navy）— SETUP：ゼロから始める方の初期構築 全8工程 */}
+        <section className="w-full bg-navy section-2xl text-white">
+          <div className="container-edit">
+            <SectionHead
+              light
+              en="SETUP"
+              sub="新規で始める方の立ち上げプラン"
+              lead="これから民泊を始める方向けに、ゼロからの立ち上げ全8工程を一括で代行します。既存物件からの乗り換えの場合、この費用は不要です。"
+            />
+
+            {/* 価格ロックアップ：キャンペーン価格を主役に、通常価格は打ち消し */}
+            <Reveal as="div" className="mt-12 sm:mt-16">
+              <span className="inline-flex items-center rounded-md border border-bright-teal px-3 py-1 text-[12px] font-bold tracking-[0.08em] text-bright-teal">
+                8/31までのお問い合わせ限定・立ち上げ割引
+              </span>
+              <div className="mt-6 flex flex-wrap items-end gap-x-6 gap-y-3">
+                <span className="font-grotesk text-[clamp(3.25rem,11vw,7.5rem)] font-bold leading-[0.8] tracking-[-0.04em] text-white">
+                  ¥200,000
+                </span>
+                <div className="mb-1 sm:mb-2">
+                  <p className="text-[15px] font-bold text-white/60">
+                    通常 <span className="line-through">¥300,000</span>（一括）
+                  </p>
+                  <p className="mt-1 text-[14px] font-bold text-white">プロ写真撮影込み・初期費用から10万円割引</p>
+                </div>
+              </div>
+            </Reveal>
+
+            <div className="mt-12 sm:mt-14">
+              <EditorialList light columns={2} items={SETUP_STEPS} />
+            </div>
           </div>
         </section>
 
@@ -293,11 +347,11 @@ export default function PricingPage() {
                 '@type': 'AggregateOffer',
                 priceCurrency: 'JPY',
                 lowPrice: '10000',
-                highPrice: '200000',
+                highPrice: '300000',
                 offerCount: '3',
                 offers: [
                   { '@type': 'Offer', name: '初期費用（乗り換え）', price: '100000', priceCurrency: 'JPY', description: '1物件あたり。移行作業・リスティング最適化（多言語）を含む。', availability: 'https://schema.org/InStock' },
-                  { '@type': 'Offer', name: '初期費用（新規立ち上げ）', price: '200000', priceCurrency: 'JPY', description: '1物件あたり200,000円〜。リスティング作成・ハウスマニュアル・運用セットアップ等を含む。', availability: 'https://schema.org/InStock' },
+                  { '@type': 'Offer', name: '初期費用（新規立ち上げ・立ち上げプラン）', price: '300000', priceCurrency: 'JPY', description: '1物件あたり300,000円（プロ撮影込み）。OTA初期設定・ハウスマニュアル作成・清掃手配など立ち上げ全8工程を含む。', availability: 'https://schema.org/InStock' },
                   { '@type': 'Offer', name: '月額固定管理費', price: '10000', priceCurrency: 'JPY', description: '1物件あたり月額10,000円。変動運営委託費は売上の8%。', availability: 'https://schema.org/InStock' },
                 ],
               },
