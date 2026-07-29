@@ -45,7 +45,7 @@ export default function FloatingCTA() {
           </button>
 
           <span className="inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.1em] text-white">
-            <Ping />8月までのお問い合わせ限定
+            <Ping />8/31までのお問い合わせ限定
           </span>
           <p className="mt-3 text-[15px] font-bold leading-snug text-white">
             乗り換え初期費用
@@ -53,7 +53,7 @@ export default function FloatingCTA() {
             <span className="ml-2 font-grotesk text-[1.875rem] leading-none text-white">¥0</span>
           </p>
           <p className="mt-1.5 text-[12px] leading-[1.7] text-white/80">
-            今お問い合わせのオーナー様は、乗り換え初期費用が無料に。
+            新規立ち上げも ¥300,000 → ¥200,000。どちらも初期費用10万円割引です。
           </p>
 
           <AuditLink
@@ -75,10 +75,10 @@ export default function FloatingCTA() {
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-white">
-              <Ping />8月まで限定
+              <Ping />8/31まで限定
             </span>
             <p className="mt-0.5 truncate text-[13px] font-bold">
-              乗り換え初期費用 <span className="font-grotesk">¥0</span>
+              乗り換え<span className="font-grotesk">¥0</span>・新規も10万円割引
             </p>
           </div>
           <AuditLink
