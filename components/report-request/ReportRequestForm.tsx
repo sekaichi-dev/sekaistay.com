@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { fireYahooConversion } from "@/lib/yahoo-ads";
 import { resolveAttribution } from "@/lib/attribution";
 
 type PropertySearchResult = {
@@ -399,6 +400,8 @@ export function ReportRequestForm({ lpVariant, embed = false }: ReportRequestFor
             contents: [{ content_name: "report_request", content_type: "lead" }],
           });
         }
+        // Yahoo!広告 コンバージョン（送信完了時点＝完了ページ相当）
+        fireYahooConversion();
       } catch {}
       // iframe parent notify
       try {

@@ -151,6 +151,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja" className={`${notoSansJP.variable} ${grotesk.variable} ${spaceMono.variable} ${yujiBoku.variable}`}>
       <head>
+        {/* Yahoo!広告 サイトジェネラルタグ — 全ページ共通・<head> 最上部に配置（Yahoo指定） */}
+        <script async src="https://s.yimg.jp/images/listing/tool/cv/ytag.js" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.yjDataLayer = window.yjDataLayer || [];
+function ytag() { yjDataLayer.push(arguments); }
+ytag({"type":"ycl_cookie", "config":{"ycl_use_non_cookie_storage":true}});`,
+          }}
+        />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://connect.facebook.net" />
