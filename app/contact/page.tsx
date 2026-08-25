@@ -7,6 +7,7 @@ import FloatingCTA from '@/components/FloatingCTA'
 import AuditLink from '@/components/audit/AuditLink'
 import { resolveAttribution } from '@/lib/attribution'
 import { isValidReferralCodeFormat, normalizeReferralCode } from '@/lib/referral-code'
+import { fireYahooConversion } from '@/lib/yahoo-ads'
 
 const inputCls =
   'w-full rounded-md border border-rule bg-paper px-4 py-3 text-[15px] text-ink outline-none transition placeholder:text-ink/40 focus:border-sekai-teal'
@@ -78,6 +79,8 @@ export default function ContactPage() {
           const body = await res.json().catch(() => ({}))
           ;(window as any).fbq('track', 'Lead', { content_name: 'contact_form', lp_variant: 'contact' }, { eventID: body?.eventId })
         }
+        // Yahoo!広告 コンバージョン（送信完了時点＝完了ページ相当）
+        fireYahooConversion()
         await new Promise((r) => setTimeout(r, 150))
         try {
           window.location.href = MEETING_URL

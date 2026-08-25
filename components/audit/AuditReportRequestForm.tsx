@@ -24,6 +24,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { resolveAttribution } from "@/lib/attribution";
+import { fireYahooConversion } from "@/lib/yahoo-ads";
 
 // ─────── Constants ───────
 
@@ -292,6 +293,8 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
             value: 0,
           });
         }
+        // Yahoo!広告 コンバージョン（送信完了時点＝完了ページ相当）
+        fireYahooConversion();
       } catch {}
       await new Promise((r) => setTimeout(r, 150));
       try {
