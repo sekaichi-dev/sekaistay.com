@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <!-- Background shape -->
+  <rect width="400" height="300" rx="24" fill="#E5F4F5"/>
+
+  <!-- Sparkle / diamond shape behind -->
+  <path d="M200 40 L230 130 L320 145 L230 160 L200 260 L170 160 L80 145 L170 130 Z" fill="white" stroke="#259DA3" stroke-width="1" opacity="0.5"/>
+
+  <!-- Central star badge -->
+  <circle cx="200" cy="145" r="55" fill="white" stroke="#167B81" stroke-width="3"/>
+  <circle cx="200" cy="145" r="45" fill="#167B81" opacity="0.05"/>
+
+  <!-- Five stars inside -->
+  <g transform="translate(163, 125)">
+    <polygon points="8,0 10,5.5 16,5.5 11,9 13,15 8,11.5 3,15 5,9 0,5.5 6,5.5" fill="#F59E0B"/>
+  </g>
+  <g transform="translate(181, 125)">
+    <polygon points="8,0 10,5.5 16,5.5 11,9 13,15 8,11.5 3,15 5,9 0,5.5 6,5.5" fill="#F59E0B"/>
+  </g>
+  <g transform="translate(199, 125)">
+    <polygon points="8,0 10,5.5 16,5.5 11,9 13,15 8,11.5 3,15 5,9 0,5.5 6,5.5" fill="#F59E0B"/>
+  </g>
+  <g transform="translate(217, 125)">
+    <polygon points="8,0 10,5.5 16,5.5 11,9 13,15 8,11.5 3,15 5,9 0,5.5 6,5.5" fill="#F59E0B"/>
+  </g>
+  <g transform="translate(235, 125)">
+    <polygon points="8,0 10,5.5 16,5.5 11,9 13,15 8,11.5 3,15 5,9 0,5.5 6,5.5" fill="#F59E0B" opacity="0.7"/>
+  </g>
+
+  <!-- 4.7 text -->
+  <text x="200" y="170" text-anchor="middle" fill="#167B81" font-size="22" font-weight="bold" font-family="sans-serif">4.7</text>
+
+  <!-- Checklist items around -->
+  <!-- Top left: clean bed -->
+  <g transform="translate(65, 60)">
+    <rect x="0" y="0" width="90" height="40" rx="10" fill="white" stroke="#259DA3" stroke-width="1.5"/>
+    <circle cx="20" cy="20" r="10" fill="#167B81" opacity="0.1"/>
+    <path d="M15 20 L18 23 L25 16" stroke="#167B81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="55" y="24" text-anchor="middle" fill="#2D2D2D" font-size="10" font-weight="600" font-family="sans-serif">清掃</text>
+  </g>
+
+  <!-- Top right: maintenance -->
+  <g transform="translate(250, 50)">
+    <rect x="0" y="0" width="100" height="40" rx="10" fill="white" stroke="#259DA3" stroke-width="1.5"/>
+    <circle cx="20" cy="20" r="10" fill="#167B81" opacity="0.1"/>
+    <path d="M15 20 L18 23 L25 16" stroke="#167B81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="62" y="24" text-anchor="middle" fill="#2D2D2D" font-size="10" font-weight="600" font-family="sans-serif">メンテナンス</text>
+  </g>
+
+  <!-- Bottom left: review -->
+  <g transform="translate(55, 220)">
+    <rect x="0" y="0" width="105" height="40" rx="10" fill="white" stroke="#259DA3" stroke-width="1.5"/>
+    <circle cx="20" cy="20" r="10" fill="#167B81" opacity="0.1"/>
+    <path d="M15 20 L18 23 L25 16" stroke="#167B81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="66" y="24" text-anchor="middle" fill="#2D2D2D" font-size="10" font-weight="600" font-family="sans-serif">レビュー管理</text>
+  </g>
+
+  <!-- Bottom right: report -->
+  <g transform="translate(255, 230)">
+    <rect x="0" y="0" width="100" height="40" rx="10" fill="white" stroke="#259DA3" stroke-width="1.5"/>
+    <circle cx="20" cy="20" r="10" fill="#167B81" opacity="0.1"/>
+    <path d="M15 20 L18 23 L25 16" stroke="#167B81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="62" y="24" text-anchor="middle" fill="#2D2D2D" font-size="10" font-weight="600" font-family="sans-serif">月次レポート</text>
+  </g>
+
+  <!-- Connecting dashed lines to center -->
+  <line x1="130" y1="85" x2="165" y2="120" stroke="#54BEC3" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+  <line x1="280" y1="85" x2="240" y2="120" stroke="#54BEC3" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+  <line x1="130" y1="235" x2="165" y2="185" stroke="#54BEC3" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+  <line x1="280" y1="245" x2="240" y2="185" stroke="#54BEC3" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+
+  <!-- Sparkle decorations -->
+  <g transform="translate(320, 130)" opacity="0.4">
+    <line x1="8" y1="0" x2="8" y2="16" stroke="#259DA3" stroke-width="2" stroke-linecap="round"/>
+    <line x1="0" y1="8" x2="16" y2="8" stroke="#259DA3" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(60, 145)" opacity="0.3">
+    <line x1="6" y1="0" x2="6" y2="12" stroke="#259DA3" stroke-width="2" stroke-linecap="round"/>
+    <line x1="0" y1="6" x2="12" y2="6" stroke="#259DA3" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

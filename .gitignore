@@ -1,0 +1,18 @@
+.vercel
+node_modules/
+.next/
+.env
+.env.local
+.env.vercel.prod
+.env.vercel.preview
+node_modules/
+awesome-design-md-jp-main/
+
+# bindfs artifacts
+.fuse_hidden*
+
+# TypeScript build cache
+tsconfig.tsbuildinfo
+
+# Claude Code local tooling
+.claude/

@@ -1,0 +1,15 @@
+{
+  "name": "note-archive",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "login": "node archive.js --login-only",
+    "dry": "DRY_RUN=true node archive.js",
+    "archive": "node archive.js"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0",
+    "dotenv": "^16.4.5"
+  }
+}

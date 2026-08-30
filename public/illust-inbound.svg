@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <!-- Background shape -->
+  <rect width="400" height="300" rx="24" fill="#E5F4F5"/>
+
+  <!-- Globe -->
+  <circle cx="200" cy="145" r="80" stroke="#167B81" stroke-width="3" fill="white"/>
+  <ellipse cx="200" cy="145" rx="40" ry="80" stroke="#259DA3" stroke-width="1.5" fill="none"/>
+  <line x1="120" y1="145" x2="280" y2="145" stroke="#259DA3" stroke-width="1.5"/>
+  <ellipse cx="200" cy="110" rx="68" ry="20" stroke="#259DA3" stroke-width="1" fill="none" opacity="0.5"/>
+  <ellipse cx="200" cy="180" rx="68" ry="20" stroke="#259DA3" stroke-width="1" fill="none" opacity="0.5"/>
+
+  <!-- Flight path arcs -->
+  <path d="M100 100 Q200 50 300 110" stroke="#54BEC3" stroke-width="2" stroke-dasharray="6 4" fill="none"/>
+  <path d="M80 180 Q180 240 320 170" stroke="#54BEC3" stroke-width="2" stroke-dasharray="6 4" fill="none"/>
+
+  <!-- Airplane 1 -->
+  <g transform="translate(280, 105) rotate(-15)">
+    <path d="M0 0 L-15 -5 L-12 0 L-15 5 Z" fill="#167B81"/>
+    <rect x="-22" y="-1.5" width="10" height="3" rx="1" fill="#167B81"/>
+  </g>
+
+  <!-- Airplane 2 -->
+  <g transform="translate(310, 173) rotate(15)">
+    <path d="M0 0 L-15 -5 L-12 0 L-15 5 Z" fill="#259DA3"/>
+    <rect x="-22" y="-1.5" width="10" height="3" rx="1" fill="#259DA3"/>
+  </g>
+
+  <!-- Location pins -->
+  <g transform="translate(170, 120)">
+    <path d="M8 0 C3.6 0 0 3.6 0 8 C0 14 8 20 8 20 C8 20 16 14 16 8 C16 3.6 12.4 0 8 0Z" fill="#167B81"/>
+    <circle cx="8" cy="8" r="3" fill="white"/>
+  </g>
+  <g transform="translate(215, 155)">
+    <path d="M6 0 C2.7 0 0 2.7 0 6 C0 10.5 6 15 6 15 C6 15 12 10.5 12 6 C12 2.7 9.3 0 6 0Z" fill="#54BEC3"/>
+    <circle cx="6" cy="6" r="2.5" fill="white"/>
+  </g>
+
+  <!-- Stars / ratings -->
+  <g transform="translate(75, 60)">
+    <polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" fill="#F59E0B" opacity="0.8"/>
+  </g>
+  <g transform="translate(300, 55)" opacity="0.6">
+    <polygon points="8,1 10,6 15,6 11,9 12,14 8,11 4,14 5,9 1,6 6,6" fill="#F59E0B"/>
+  </g>
+
+  <!-- Language bubbles -->
+  <g transform="translate(55, 140)">
+    <rect x="0" y="0" width="42" height="24" rx="12" fill="#167B81"/>
+    <text x="21" y="16" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="sans-serif">EN</text>
+  </g>
+  <g transform="translate(305, 200)">
+    <rect x="0" y="0" width="42" height="24" rx="12" fill="#259DA3"/>
+    <text x="21" y="16" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="sans-serif">JP</text>
+  </g>
+
+  <!-- Decorative dots -->
+  <circle cx="55" cy="230" r="5" fill="#54BEC3" opacity="0.25"/>
+  <circle cx="350" cy="250" r="4" fill="#259DA3" opacity="0.2"/>
+  <circle cx="340" cy="90" r="6" fill="#54BEC3" opacity="0.15"/>
+</svg>
