@@ -10,40 +10,14 @@ import DotPattern from "./deco/DotPattern";
 
 export default function SwitchHeroPortal({
   hideCta = false,
-  hideUrgencyStrip = false,
 }: {
   hideCta?: boolean;
-  hideUrgencyStrip?: boolean;
 } = {}) {
   const [visible, setVisible] = useState(false);
   useEffect(() => setVisible(true), []);
 
   return (
     <section className="relative">
-      {/* Top strip — control 同様の限定バー（ポータル系でも緊急性は維持） */}
-      {!hideUrgencyStrip && (
-      <div className="bg-gradient-to-r from-black via-[#1a1a1a] to-black text-white py-2.5 sm:py-3 px-3 sm:px-4 relative overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,191,36,0.08),transparent_60%)] pointer-events-none" aria-hidden />
-        <p className="relative flex items-center justify-center flex-wrap gap-x-2 gap-y-1 sm:gap-x-3 text-[11px] sm:text-base font-bold tracking-wide">
-          <span className="inline-flex items-center gap-1 bg-gradient-to-br from-yellow-300 to-yellow-500 text-black text-[10px] sm:text-xs font-bold px-1.5 sm:px-2.5 py-0.5 rounded-sm shrink-0 shadow-[0_0_12px_rgba(251,191,36,0.4)] whitespace-nowrap">
-            <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            限定
-          </span>
-          <span className="text-white whitespace-nowrap">先着10オーナー</span>
-          <span className="hidden sm:inline text-white/40">／</span>
-          <span className="inline-flex items-center gap-1 text-white/90 whitespace-nowrap">
-            初期費用
-            <span className="text-white/40 line-through decoration-[1.5px]">¥10万円</span>
-            <span aria-hidden className="text-white/50">→</span>
-            <span className="text-yellow-400 font-bold text-[15px] sm:text-lg tracking-wider">¥0</span>
-            <span className="text-[9px] sm:text-[10px] text-white/45 font-normal tracking-normal ml-0.5">※運用中の物件</span>
-          </span>
-        </p>
-      </div>
-      )}
-
       <div className="bg-switch-charcoal text-white relative overflow-hidden">
         <div className="absolute top-[-10%] right-[-15%] w-[70%] h-[75%] bg-switch-teal-bright/22 blur-[140px] rounded-full pointer-events-none" />
         <div className="absolute bottom-[-15%] left-[-15%] w-[55%] h-[60%] bg-switch-teal/14 blur-[140px] rounded-full pointer-events-none" />

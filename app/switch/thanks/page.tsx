@@ -105,10 +105,6 @@ function ThanksContent() {
             <span className="text-switch-teal font-bold">✓</span>
             OTA掲載の改善ポイント
           </li>
-          <li className="flex gap-2">
-            <span className="text-switch-teal font-bold">✓</span>
-            72時間限定の特典（初期費用¥0）
-          </li>
         </ul>
       </div>
 

@@ -40,7 +40,7 @@ export default function SwitchFounderStory() {
               切り替えは、心理的にもオペレーション的にも重い決断です。だからこそ、入り口は軽くしました。
             </p>
             <p>
-              <mark className="bg-deep-teal/10 text-deep-teal font-bold px-1 rounded-sm">初期費用 ¥0<sup className="text-[10px] font-normal ml-0.5">※1</sup></mark>、<mark className="bg-deep-teal/10 text-deep-teal font-bold px-1 rounded-sm">解約金 ¥0<sup className="text-[10px] font-normal ml-0.5">※2</sup></mark>。
+              <mark className="bg-deep-teal/10 text-deep-teal font-bold px-1 rounded-sm">契約手数料 ¥0</mark>、<mark className="bg-deep-teal/10 text-deep-teal font-bold px-1 rounded-sm">解約金 ¥0<sup className="text-[10px] font-normal ml-0.5">※1</sup></mark>。
             </p>
             <p>
               運用が変わって、結果としてお付き合いが続いたら嬉しいです。
@@ -53,8 +53,8 @@ export default function SwitchFounderStory() {
           {/* セクション末の CTA — ボタン化 */}
           <div className="mt-12 sm:mt-14 pt-8 border-t border-rule text-center">
             <p className="text-[12px] sm:text-[13px] leading-[1.8] text-ink/55 tracking-normal text-left mb-8">
-              ※1 運用中物件のみ期間限定無料（新規立ち上げ物件は別途お見積もり）<br />
-              ※2 最低契約期間（6ヶ月）以降は解約金 ¥0
+              ※1 最低契約期間（6ヶ月）以降は解約金 ¥0<br />
+              ※ 初期費用は乗り換え ¥100,000/物件（新規立ち上げ物件は別途お見積もり）
             </p>
             <a
               href="https://timerex.net/s/sekai-stay/d61b424d"

@@ -6,9 +6,8 @@ import { useSwitchCtaLabels } from "@/hooks/useSwitchCtaLabels";
 import SectionHead from "./deco/SectionHead";
 
 const zeroItems = [
-  "初期費用 ※1",
   "契約手数料",
-  "解約金 ※2",
+  "解約金 ※1",
   "清掃費の別請求",
   "広告費の別請求",
   "レポート作成費",
@@ -137,15 +136,15 @@ export default function SwitchPricing() {
             <ul className="space-y-1.5">
               <li className="flex items-start gap-2">
                 <span className="text-switch-teal-bright font-bold shrink-0">※1</span>
+                <span>最低契約期間（6ヶ月）以降は解約金 ¥0</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-white/40 font-bold shrink-0">※</span>
                 <span>
-                  初期費用は運用中の物件のみ期間限定無料
+                  初期費用は乗り換え ¥100,000/物件（移行作業・リスティング最適化含む）
                   <br />
                   <span className="text-white/45">（新規立ち上げ物件は別途お見積もり）</span>
                 </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-switch-teal-bright font-bold shrink-0">※2</span>
-                <span>最低契約期間（6ヶ月）以降は解約金 ¥0</span>
               </li>
             </ul>
             <ul className="space-y-1.5">

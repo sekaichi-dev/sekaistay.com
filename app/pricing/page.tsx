@@ -187,44 +187,10 @@ export default function PricingPage() {
             <p className="text-[clamp(1.125rem,1.8vw,1.375rem)] font-bold text-ink">基本料金の外でかかりうる費用</p>
             <div className="mt-8 grid gap-5 sm:mt-10 sm:gap-6 md:grid-cols-3">
               {EXTRAS.map((x) => (
-                <div key={x.no} className={`flex flex-col rounded-[12px] bg-white p-7 ${x.no === '01' ? 'ring-2 ring-[#F2691B]' : 'ring-1 ring-rule'}`}>
-                  <span className={`font-grotesk text-[1.75rem] font-bold leading-none ${x.no === '01' ? 'text-[#F2691B]' : 'text-sekai-teal'}`}>{x.no}</span>
+                <div key={x.no} className="flex flex-col rounded-[12px] bg-white p-7 ring-1 ring-rule">
+                  <span className="font-grotesk text-[1.75rem] font-bold leading-none text-sekai-teal">{x.no}</span>
                   <h3 className="mt-4 text-[1.0625rem] font-bold leading-snug text-ink">{x.title}</h3>
                   <p className="mt-3 flex-1 text-[13.5px] leading-[1.9] text-ink/70">{x.body}</p>
-                  {x.no === '01' && (
-                    <AuditLink
-                      data-cta="audit"
-                      data-cta-label="pricing-campaign"
-                      className="group mt-5 block overflow-hidden rounded-[12px] bg-[#F2691B] px-5 py-4 text-white animate-[cta-pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] transition-transform hover:-translate-y-0.5 motion-reduce:animate-none"
-                    >
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[0.08em] text-white">
-                        <span className="relative flex h-2 w-2">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75 motion-reduce:hidden" />
-                          <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-                        </span>
-                        8/31までのお問い合わせ限定キャンペーン
-                      </span>
-                      <p className="mt-2 flex items-baseline gap-2 font-bold text-white">
-                        乗り換え初期費用
-                        <span className="text-[14px] text-white/60 line-through">¥100,000</span>
-                        <span className="font-grotesk text-[2rem] leading-none text-white">¥0</span>
-                      </p>
-                      <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-[13px] font-bold text-white/90">
-                        新規立ち上げ
-                        <span className="text-white/60 line-through">¥300,000</span>
-                        <span className="font-grotesk text-[1.25rem] leading-none text-white">¥200,000</span>
-                      </p>
-                      <p className="mt-1.5 text-[12px] leading-[1.7] text-white/85">
-                        2026年8月31日までのお問い合わせで、初期費用をどちらも10万円割引。
-                      </p>
-                      <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-bold text-white">
-                        このまま無料で収益診断を受ける
-                        <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M13 6l6 6-6 6" />
-                        </svg>
-                      </span>
-                    </AuditLink>
-                  )}
                 </div>
               ))}
             </div>
