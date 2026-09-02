@@ -266,7 +266,9 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), API_TIMEOUT_MS);
   try {
-    return await fetch(url, { ...init, signal: ac.signal });
+    // Next.js の Data Cache を無効化（Vercel はデプロイをまたいで fetch 結果を保持するため、
+    // これが無いと物件マスタの読み取りが古いスナップショットに固着する。2026-09-02 実障害）
+    return await fetch(url, { cache: "no-store", ...init, signal: ac.signal });
   } finally {
     clearTimeout(timer);
   }
