@@ -66,9 +66,9 @@ const T = {
     propertyError: "施設一覧を取得できませんでした。再読み込みしてください。",
     checkin: "チェックイン日",
     checkout: "チェックアウト日",
-    checkinTime: "チェックイン予定時刻（任意）",
-    checkoutTime: "チェックアウト予定時刻（任意）",
-    timeHint: "わかる場合のみご記入ください。",
+    checkinTime: "チェックイン予定時刻",
+    checkoutTime: "チェックアウト予定時刻",
+    timeOptional: "（任意）",
     nights: (n: number) => `${n}泊`,
     sec2: "宿泊者情報",
     repBadge: "代表者",
@@ -153,9 +153,9 @@ const T = {
     propertyError: "Could not load the property list. Please reload the page.",
     checkin: "Check-in date",
     checkout: "Check-out date",
-    checkinTime: "Planned check-in time (optional)",
-    checkoutTime: "Planned check-out time (optional)",
-    timeHint: "Only if already known.",
+    checkinTime: "Planned check-in time",
+    checkoutTime: "Planned check-out time",
+    timeOptional: " (optional)",
     nights: (n: number) => `${n} night${n > 1 ? "s" : ""}`,
     sec2: "Guest Details",
     repBadge: "Lead guest",
@@ -596,17 +596,16 @@ export default function GuestRegisterForm() {
                 {nights > 0 && (
                   <p className="text-[12px] text-switch-teal-deep font-semibold">{t.nights(nights)}</p>
                 )}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 items-end">
                   <div>
-                    <label htmlFor="gr-checkin-time" className={labelCls}>{t.checkinTime}</label>
+                    <label htmlFor="gr-checkin-time" className={labelCls}>{t.checkinTime}<span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span></label>
                     <input id="gr-checkin-time" type="time" value={checkinTime} onChange={(e) => setCheckinTime(e.target.value)} className={inputCls} />
                   </div>
                   <div>
-                    <label htmlFor="gr-checkout-time" className={labelCls}>{t.checkoutTime}</label>
+                    <label htmlFor="gr-checkout-time" className={labelCls}>{t.checkoutTime}<span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span></label>
                     <input id="gr-checkout-time" type="time" value={checkoutTime} onChange={(e) => setCheckoutTime(e.target.value)} className={inputCls} />
                   </div>
                 </div>
-                <p className="-mt-3 text-[12px] text-switch-gray-mid">{t.timeHint}</p>
               </div>
             </section>
 
