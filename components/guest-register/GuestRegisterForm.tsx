@@ -4,6 +4,8 @@
  * 物件マスタの形態（民泊/旅館業）で必須項目を自動分岐:
  *  - 民泊: 氏名・住所・職業・連絡先・宿泊日・国籍（+国内住所なし外国籍は旅券番号/写し）
  *  - 旅館業: 氏名・住所・連絡先・宿泊日（+同上。性別/年齢/前泊地/行先地は条例上乗せ・任意）
+ * 人数は URL の n/nc が初期値で、ゲスト自身が同行者カードを追加・削除して調整できる
+ * （予約後の人数変更に対応。2026-09-07 テンイチ指示。代表者カードは削除不可・上限 MAX_GUESTS）。
  * パスポート欄は「日本国外に居住」を選んだ時のみ表示（表示時は国籍を問わず必須）。
  * 顔写真は居住地・国籍を問わず全ゲスト必須（2026-07-24 テンイチ指示・本人確認用）。
  * 写真はクライアントで圧縮してから送信（旅券 1600px/450KB・顔 1200px/300KB 目安。
@@ -75,7 +77,8 @@ const T = {
     compBadge: (i: number) => `同行者 ${i}`,
     childBadge: (i: number) => `お子様 ${i}`,
     removeGuest: "このカードを削除",
-    guestNote: "ご宿泊者全員（お子様を含む）のご登録が必要です。",
+    addGuest: "宿泊者を追加",
+    guestNote: "ご宿泊者全員（お子様を含む）のご登録が必要です。ご予約時から人数が変わった場合は、カードの追加・削除で調整してください。",
     name: "氏名",
     namePh: "山田 太郎 / TARO YAMADA",
     nameHint: "外国籍の方はパスポート表記と同じローマ字でご記入ください。",
@@ -162,7 +165,8 @@ const T = {
     compBadge: (i: number) => `Guest ${i + 1}`,
     childBadge: (i: number) => `Child ${i}`,
     removeGuest: "Remove this card",
-    guestNote: "Every guest, including children, must be registered.",
+    addGuest: "Add a guest",
+    guestNote: "Every guest, including children, must be registered. If your party size has changed since booking, add or remove cards below.",
     name: "Full name",
     namePh: "TARO YAMADA",
     nameHint: "Please write your name exactly as it appears in your passport.",
@@ -609,7 +613,7 @@ export default function GuestRegisterForm() {
               </div>
             </section>
 
-            {/* 02 宿泊者情報（ゲスト毎に独立カード・見出しは1人目のカード内・お子様カードのみ削除可） */}
+            {/* 02 宿泊者情報（ゲスト毎に独立カード・見出しは1人目のカード内・代表者以外は削除可／末尾に追加可） */}
             <section className="mb-6">
               <div className="space-y-5">
                 {guests.map((g, i) => (
@@ -624,8 +628,8 @@ export default function GuestRegisterForm() {
                       <span className={`inline-block rounded-pill px-3 py-1 text-[11px] font-bold tracking-wide ${i === 0 ? "bg-switch-teal-deep text-white" : g.isChild ? "bg-switch-stone-01 text-switch-gray-dark border border-switch-gray-pale" : "bg-switch-teal-tint text-switch-teal-deep"}`}>
                         {guestLabels[i]}
                       </span>
-                      {/* 区分は予約情報(nc)からの決めつけ（代表者は常に大人）。お子様カードのみ削除できる */}
-                      {i > 0 && g.isChild && (
+                      {/* 区分は予約情報(nc)からの決めつけ（代表者は常に大人）。代表者以外はカードを削除できる */}
+                      {i > 0 && (
                         <button
                           type="button"
                           onClick={() => setGuests((prev) => prev.filter((_, j) => j !== i))}
@@ -829,6 +833,15 @@ export default function GuestRegisterForm() {
                     </div>
                   </div>
                 ))}
+                {guests.length < MAX_GUESTS && (
+                  <button
+                    type="button"
+                    onClick={() => setGuests((prev) => [...prev, emptyGuest()])}
+                    className="w-full rounded-switch-lg border border-dashed border-switch-stone-border bg-white/60 py-4 text-[14px] font-semibold text-switch-teal-deep hover:bg-switch-teal-tint/40 hover:border-switch-teal transition-colors"
+                  >
+                    ＋ {t.addGuest}
+                  </button>
+                )}
               </div>
 
             </section>
