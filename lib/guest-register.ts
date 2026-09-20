@@ -45,6 +45,8 @@ export interface RegisterInput {
   checkinTime: string; // HH:MM or ""（条例上乗せ・わかる場合のみ）
   checkoutTime: string; // HH:MM or ""
   note: string;
+  /** 案内リンクの b=（ops が付ける Beds24 予約番号）。名簿と予約の突き合わせ用。手入力の直アクセスでは "" */
+  bookingRef: string;
   guests: GuestInput[];
 }
 
@@ -96,6 +98,9 @@ export function parseRegisterInput(raw: unknown): { input?: RegisterInput; error
   const checkinTime = TIME_RE.test(trimTo(r.checkinTime, 5)) ? trimTo(r.checkinTime, 5) : "";
   const checkoutTime = TIME_RE.test(trimTo(r.checkoutTime, 5)) ? trimTo(r.checkoutTime, 5) : "";
   const note = trimTo(r.note, FIELD_MAX.note);
+  // 数字だけを受ける（ゲストが編集できる URL 由来の値をそのままシートに書かない）
+  const bookingRefRaw = trimTo(r.bookingRef, 12);
+  const bookingRef = /^\d{5,12}$/.test(bookingRefRaw) ? bookingRefRaw : "";
   if (!propertyId) return { error: "宿泊施設を選択してください / Please select the property" };
   if (!DATE_RE.test(checkin) || !DATE_RE.test(checkout)) {
     return { error: "宿泊日を入力してください / Please enter your stay dates" };
@@ -124,7 +129,7 @@ export function parseRegisterInput(raw: unknown): { input?: RegisterInput; error
       nextDest: trimTo(g.nextDest, FIELD_MAX.nextDest),
     });
   }
-  return { input: { propertyId, checkin, checkout, checkinTime, checkoutTime, note, guests } };
+  return { input: { propertyId, checkin, checkout, checkinTime, checkoutTime, note, bookingRef, guests } };
 }
 
 // 法定必須項目の充足チェック（民泊=職業必須 / 旅館業=連絡先必須・両方とも氏名住所連絡先は取る）
@@ -172,7 +177,7 @@ export function makeGroupId(): string {
   return `G-${now.slice(2, 4)}${now.slice(5, 7)}${now.slice(8, 10)}-${rand}`;
 }
 
-// 民泊用タブ A〜T列（1名1行）。定期報告の式が参照するのは A(届出番号) H(国籍) J(開始日) L(終了日)。
+// 民泊用タブ A〜U列（1名1行・U=予約番号）。定期報告の式が参照するのは A(届出番号) H(国籍) J(開始日) L(終了日)。
 export function buildMinpakuRows(
   input: RegisterInput, property: Property, groupId: string,
   photoLinks: (string | null)[], facePhotoLinks: (string | null)[], receivedAt: string,
@@ -199,10 +204,11 @@ export function buildMinpakuRows(
     photoLinks[i] || "",
     receivedAt,
     facePhotoLinks[i] || "",
+    input.bookingRef,
   ]);
 }
 
-// 旅館業用タブ A〜T列（1名1行）。No.列は =ROW()-5 で自動採番（行削除にも追従）。
+// 旅館業用タブ A〜U列（1名1行・U=予約番号）。No.列は =ROW()-5 で自動採番（行削除にも追従）。
 export function buildRyokanRows(
   input: RegisterInput, property: Property, groupId: string,
   photoLinks: (string | null)[], facePhotoLinks: (string | null)[], receivedAt: string,
@@ -228,6 +234,7 @@ export function buildRyokanRows(
     photoLinks[i] || "",
     receivedAt,
     facePhotoLinks[i] || "",
+    input.bookingRef,
   ]);
 }
 
@@ -276,7 +283,7 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
 
 export async function appendRows(tab: "旅館業用" | "民泊用", rows: unknown[][]): Promise<void> {
   const token = await getAccessToken();
-  const range = encodeURIComponent(`${tab}!A6:T`);
+  const range = encodeURIComponent(`${tab}!A6:U`);
   const resp = await fetchWithTimeout(
     `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
     {
