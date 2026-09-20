@@ -293,6 +293,7 @@ export default function GuestRegisterForm() {
   const [checkinTime, setCheckinTime] = useState("");
   const [checkoutTime, setCheckoutTime] = useState("");
   const [guests, setGuests] = useState<GuestForm[]>([emptyGuest()]);
+  const [bookingRef, setBookingRef] = useState("");
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -308,6 +309,9 @@ export default function GuestRegisterForm() {
     if (q === "en" || (q !== "ja" && !navigator.language.startsWith("ja"))) setLang("en");
     const p = params.get("p");
     if (p) setPropertyId(p);
+    // b = 予約番号（案内リンクに付与）。名簿と予約を 1 対 1 で突き合わせるため、そのまま送り返す。
+    const b = params.get("b") || "";
+    if (/^\d{5,12}$/.test(b)) setBookingRef(b);
     // 予約情報からのプリフィル（案内メッセージのリンクに付与: ci/co=宿泊日・n=人数・gn=代表者名）。
     // あくまで初期値＝ゲストは自由に編集できる。不正値は無視。
     const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -455,6 +459,7 @@ export default function GuestRegisterForm() {
         checkinTime,
         checkoutTime,
         note: "", // 備考欄はUI廃止（API/名簿の列互換のため空文字を送る）
+        bookingRef,
         guests: guests.map((g, i) => ({
           name: g.name,
           jaResident: g.jaResident === true,

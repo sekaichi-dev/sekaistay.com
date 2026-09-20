@@ -251,3 +251,20 @@ test("sanitizeFilePart: 記号・空白を除去", () => {
   assert.equal(sanitizeFilePart("John / Smith:*?"), "John_Smith_");
   assert.equal(sanitizeFilePart(""), "guest");
 });
+
+// 2026-09-20: 名簿を「物件×到着日」で突き合わせていたため、同じ日に到着する別の予約の名簿で
+// 鍵案内が出ていた（Lake Side INN）。案内リンクの b=予約番号 を U 列に残し、予約単位で突き合わせる。
+test("bookingRef: 数字の予約番号だけ受け取り、両タブの U 列に入る", () => {
+  const ok = parseRegisterInput({ ...input(), bookingRef: "93363867" });
+  assert.equal(ok.input!.bookingRef, "93363867");
+  for (const bad of ["=HYPERLINK(1)", "12ab", "123", "", undefined]) {
+    assert.equal(parseRegisterInput({ ...input(), bookingRef: bad }).input!.bookingRef, "", String(bad));
+  }
+  const m = buildMinpakuRows(ok.input! as never, property() as never, "G-1", [null], [null], "2026/09/20 10:00");
+  assert.equal(m[0].length, 21);
+  assert.equal(m[0][20], "93363867");
+  const r = buildRyokanRows(ok.input! as never, property({ type: "旅館業" }) as never, "G-1", [null], [null], "2026/09/20 10:00");
+  assert.equal(r[0].length, 21);
+  assert.equal(r[0][20], "93363867");
+  assert.equal(r[0][18], "2026/09/20 10:00"); // S=受付日時 は動かさない（ops が列固定で読む）
+});
