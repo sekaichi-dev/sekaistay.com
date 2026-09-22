@@ -63,17 +63,17 @@ export default function RecruitForm({ defaultPosition }: { defaultPosition?: str
         <div className="mb-6 border border-rule bg-paper px-4 py-3 font-sans text-[14px] text-ink">{error}</div>
       )}
       <form onSubmit={handleSubmit} className="space-y-6 border border-rule bg-paper p-6 sm:p-10">
-        <Field label="お名前" required>
-          <input type="text" name="name" required maxLength={100} className={inputCls} placeholder="山田 太郎" />
+        <Field label="お名前" required htmlFor="recruit-name">
+          <input id="recruit-name" type="text" name="name" required maxLength={100} className={inputCls} placeholder="山田 太郎" />
         </Field>
-        <Field label="メールアドレス" required>
-          <input type="email" name="email" required maxLength={254} className={inputCls} placeholder="example@email.com" />
+        <Field label="メールアドレス" required htmlFor="recruit-email">
+          <input id="recruit-email" type="email" name="email" required maxLength={254} className={inputCls} placeholder="example@email.com" />
         </Field>
-        <Field label="電話番号（任意）">
-          <input type="tel" name="phone" maxLength={40} className={inputCls} placeholder="090-1234-5678" />
+        <Field label="電話番号（任意）" htmlFor="recruit-phone">
+          <input id="recruit-phone" type="tel" name="phone" maxLength={40} className={inputCls} placeholder="090-1234-5678" />
         </Field>
-        <Field label="ご希望の職種" required>
-          <select name="position" required defaultValue={defaultPosition || ''} className={inputCls}>
+        <Field label="ご希望の職種" required htmlFor="recruit-position">
+          <select id="recruit-position" name="position" required defaultValue={defaultPosition || ''} className={inputCls}>
             <option value="" disabled>
               選択してください
             </option>
@@ -85,8 +85,9 @@ export default function RecruitForm({ defaultPosition }: { defaultPosition?: str
             <option value={RECRUIT_OTHER_POSITION_ID}>その他 / まずは話を聞きたい</option>
           </select>
         </Field>
-        <Field label="職務経歴・志望動機" required>
+        <Field label="職務経歴・志望動機" required htmlFor="recruit-message">
           <textarea
+            id="recruit-message"
             name="message"
             required
             rows={8}
@@ -96,8 +97,8 @@ export default function RecruitForm({ defaultPosition }: { defaultPosition?: str
             placeholder="これまでのご経験と、SEKAI STAY で取り組みたいことをご記入ください。履歴書のご用意は不要です。"
           />
         </Field>
-        <Field label="ポートフォリオ・SNS・職務経歴書の URL（任意）">
-          <input type="url" name="portfolioUrl" maxLength={500} className={inputCls} placeholder="https://" />
+        <Field label="ポートフォリオ・SNS・職務経歴書の URL（任意）" htmlFor="recruit-url">
+          <input id="recruit-url" type="url" name="portfolioUrl" maxLength={500} className={inputCls} placeholder="https://" />
         </Field>
 
         {/* honeypot: bot 対策。人間には見えない。 */}
@@ -129,10 +130,20 @@ export default function RecruitForm({ defaultPosition }: { defaultPosition?: str
   )
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  htmlFor,
+  children,
+}: {
+  label: string
+  required?: boolean
+  htmlFor?: string
+  children: React.ReactNode
+}) {
   return (
     <div>
-      <label className="mb-2 block font-sans text-[14px] font-bold text-ink">
+      <label htmlFor={htmlFor} className="mb-2 block font-sans text-[14px] font-bold text-ink">
         {label}
         {required && <span className="ml-1 text-sekai-teal">*</span>}
       </label>

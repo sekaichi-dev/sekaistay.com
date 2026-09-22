@@ -49,6 +49,19 @@ function sanitizeHeaderValue(value: string): string {
   return value.replace(/[\r\n]+/g, ' ').trim()
 }
 
+/**
+ * From / Reply-To の表示名を安全な形にする。
+ * ASCII の表示名を素のまま入れると `山田, foo@example.com` のようなカンマが
+ * アドレスの区切りとして解釈され、意図しない宛先が増える（返信の誤送信）。
+ * ASCII は quoted-string、非 ASCII は RFC2047 の encoded-word にして封じる。
+ */
+export function formatDisplayName(name: string): string {
+  const clean = sanitizeHeaderValue(name)
+  // eslint-disable-next-line no-control-regex
+  if (!/^[\x00-\x7F]*$/.test(clean)) return encodeHeader(clean)
+  return `"${clean.replace(/[\\"]/g, (c) => `\\${c}`)}"`
+}
+
 export type MailMessage = {
   to: string
   from: string
@@ -62,7 +75,7 @@ export type MailMessage = {
 /** RFC822 メッセージを組み立てて base64url にする（Gmail API の raw 形式）。 */
 export function buildRawMessage(msg: MailMessage): string {
   const from = msg.fromName
-    ? `${encodeHeader(sanitizeHeaderValue(msg.fromName))} <${sanitizeHeaderValue(msg.from)}>`
+    ? `${formatDisplayName(msg.fromName)} <${sanitizeHeaderValue(msg.from)}>`
     : sanitizeHeaderValue(msg.from)
   const headers = [
     `From: ${from}`,
@@ -74,7 +87,7 @@ export function buildRawMessage(msg: MailMessage): string {
   ]
   if (msg.replyTo) {
     const replyTo = msg.replyToName
-      ? `${encodeHeader(sanitizeHeaderValue(msg.replyToName))} <${sanitizeHeaderValue(msg.replyTo)}>`
+      ? `${formatDisplayName(msg.replyToName)} <${sanitizeHeaderValue(msg.replyTo)}>`
       : sanitizeHeaderValue(msg.replyTo)
     headers.splice(3, 0, `Reply-To: ${replyTo}`)
   }

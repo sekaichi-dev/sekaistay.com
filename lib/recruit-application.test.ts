@@ -6,7 +6,7 @@ import {
   buildRecruitBody,
   formatJst,
 } from './recruit-application.ts'
-import { buildRawMessage, encodeHeader } from './gmail-send.ts'
+import { buildRawMessage, encodeHeader, formatDisplayName } from './gmail-send.ts'
 
 const valid = {
   name: '山田 太郎',
@@ -132,4 +132,23 @@ test('header injection via newline is neutralised', () => {
   // 改行は空白に潰されるので、Bcc: で始まるヘッダ行は生まれない
   assert.ok(!headerLines.some((l) => /^Bcc:/i.test(l)))
   assert.equal(headerLines.filter((l) => /^Reply-To:/i.test(l)).length, 1)
+})
+
+test('display name with comma cannot add a second recipient', () => {
+  const raw = buildRawMessage({
+    to: 'hikaru@sekaichi.org',
+    from: 'tenichi@sekaichi.org',
+    replyTo: 'applicant@example.com',
+    replyToName: 'other@example.net, Applicant',
+    subject: 'Test',
+    text: 'body',
+  })
+  const decoded = Buffer.from(raw, 'base64url').toString('utf8')
+  const line = decoded.split('\r\n').find((l) => l.startsWith('Reply-To:')) || ''
+  assert.equal(line, 'Reply-To: "other@example.net, Applicant" <applicant@example.com>')
+})
+
+test('display name quotes are escaped', () => {
+  assert.equal(formatDisplayName('He said "hi"'), '"He said \\"hi\\""')
+  assert.ok(formatDisplayName('山田 太郎').startsWith('=?UTF-8?B?'))
 })
