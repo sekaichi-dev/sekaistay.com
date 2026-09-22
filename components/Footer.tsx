@@ -10,6 +10,7 @@ const FOOTER_NAV = [
   { href: '/faq', label: 'FAQ' },
   { href: '/about', label: '会社情報' },
   { href: '/audit', label: '無料収益診断' },
+  { href: '/recruit', label: '採用情報' },
   { href: '/contact', label: 'お問い合わせ' },
 ]
 
