@@ -34,7 +34,12 @@ function rateLimited(ip: string): boolean {
 export async function POST(req: Request) {
   let body: Record<string, unknown>
   try {
-    body = (await req.json()) as Record<string, unknown>
+    const parsedBody: unknown = await req.json()
+    // JSON の null / 配列 / スカラーは req.json() が成功してしまうので実体を確かめる
+    if (!parsedBody || typeof parsedBody !== 'object' || Array.isArray(parsedBody)) {
+      return NextResponse.json({ error: '送信内容を読み取れませんでした。' }, { status: 400 })
+    }
+    body = parsedBody as Record<string, unknown>
   } catch {
     return NextResponse.json({ error: '送信内容を読み取れませんでした。' }, { status: 400 })
   }

@@ -45,7 +45,7 @@ export default function RecruitForm({ defaultPosition }: { defaultPosition?: str
 
   if (done) {
     return (
-      <div className="border border-rule bg-paper p-8 text-center sm:p-12">
+      <div className="rounded-lg border border-rule bg-paper p-8 text-center sm:p-12">
         <p className="eyebrow text-sekai-teal">Thank you</p>
         <h3 className="heading-sub text-ink mt-3">ご応募ありがとうございます</h3>
         <p className="font-sans text-body-sm text-dark-gray mt-5 leading-[1.95]">
@@ -60,9 +60,9 @@ export default function RecruitForm({ defaultPosition }: { defaultPosition?: str
   return (
     <>
       {error && (
-        <div className="mb-6 border border-rule bg-paper px-4 py-3 font-sans text-[14px] text-ink">{error}</div>
+        <div className="mb-6 rounded-md border border-rule bg-paper px-4 py-3 font-sans text-[14px] text-ink">{error}</div>
       )}
-      <form onSubmit={handleSubmit} className="space-y-6 border border-rule bg-paper p-6 sm:p-10">
+      <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border border-rule bg-paper p-6 sm:p-10">
         <Field label="お名前" required htmlFor="recruit-name">
           <input id="recruit-name" type="text" name="name" required maxLength={100} className={inputCls} placeholder="山田 太郎" />
         </Field>
@@ -113,7 +113,7 @@ export default function RecruitForm({ defaultPosition }: { defaultPosition?: str
           <button
             type="submit"
             disabled={submitting}
-            className="group inline-flex min-h-[54px] w-full items-center justify-center gap-2 bg-navy px-8 text-[15px] font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-navy-hover disabled:opacity-50 disabled:hover:translate-y-0"
+            className="group inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-md bg-navy px-8 text-[15px] font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-navy-hover disabled:opacity-50 disabled:hover:translate-y-0"
           >
             {submitting ? '送信中...' : '応募する'}
           </button>
