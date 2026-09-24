@@ -55,7 +55,7 @@ test('non-http portfolio url is rejected', () => {
 
 test('optional fields may be omitted', () => {
   const r = validateRecruitApplication({
-    name: '花子', email: 'h@example.com', position: 'engineer',
+    name: '花子', email: 'h@example.com', position: 'business',
     message: 'フロントエンドを5年やっています。',
   })
   assert.equal(r.ok, true)
