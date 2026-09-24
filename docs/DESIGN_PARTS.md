@@ -130,6 +130,7 @@ import OtaMarquee from '@/components/ds/OtaMarquee'
 ## 3. ページ固有の合成パーツ（現状の所在・将来 ds 化候補）
 
 これらは「ベースパーツの合成」。流用時は所在を参照し、必要なら ds へ昇格してから使う。
+- **PositionList（募集要項リスト）**: `components/recruit/PositionList.tsx`（/recruit POSITIONS）。**EditorialList の派生** — 番号＋ヘアライン罫線・ピクトグラム不使用という原則はそのままに、本文部を「仕事内容 / 求める人物像」の2カラムへ展開した版。募集要項のように1項目が2ブロックの箇条書きを抱える構成で使う。
 - **Stepper（番号ノード＋接続線の横フロー）**: 現状 `/services` FLOW にインライン。→ 流用時 `components/ds/Stepper.tsx` に昇格。
 - **StatGrid（実績数字 4枚）**: `components/home/SenseSections2` の `ResultsSense`。
 - **Accordion（FAQ）**: `components/services/ServicesFaq.tsx`（paper/light版）。`components/pricing/PricingFaq.tsx`（deep版）。→ 共通化候補。
