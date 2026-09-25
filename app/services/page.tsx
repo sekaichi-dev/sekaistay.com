@@ -16,6 +16,7 @@ import ImageMarquee from '@/components/ds/ImageMarquee'
 import GhostWordmark from '@/components/ds/GhostWordmark'
 import OtaMarquee from '@/components/ds/OtaMarquee'
 import { getAllAreas } from '@/lib/areas'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 export const metadata: Metadata = {
   title: '民泊運営サービス',
@@ -27,11 +28,13 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     url: 'https://sekaistay.com/services',
     siteName: 'SEKAI STAY',
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: '民泊運営サービス | SEKAI STAY',
     description: '手数料8%で開業準備から運用管理・集客まで一括対応。9つのサービスをワンストップで提供。',
+    images: [OG_IMAGE_URL],
   },
   alternates: { canonical: 'https://sekaistay.com/services' },
 }

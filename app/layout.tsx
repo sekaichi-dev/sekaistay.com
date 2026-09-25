@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 import AnalyticsRouteTracker from '@/components/AnalyticsRouteTracker'
 import AuditModalProvider from '@/components/audit/AuditModalProvider'
 import './globals.css'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -112,21 +113,17 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     siteName: 'SEKAI STAY',
     url: SITE_URL,
-    images: [
-      {
-        url: `${SITE_URL}/og-image-v2.png`,
-        width: 2400,
-        height: 840,
-        alt: 'SEKAI STAY — 民泊運用のぜんぶを、手数料8%で、まるっとお任せ。',
-      },
-    ],
+    // og:image は app/opengraph-image.jpg（ファイル規約）が全ルートに効くのでここでは指定しない。
+    // 重複した og:image を出すと SNS 側がどちらを拾うか不定になる。
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'SEKAI STAY | 成果で選ばれる民泊運用代行',
     description:
       '管理物件レビュー平均4.8・Airbnbスーパーホスト認定。稼働率と収益を上げる民泊運用代行。全国7拠点。',
-    images: [`${SITE_URL}/og-image-v2.png`],
+    // twitter:image は app/twitter-image.jpg（ファイル規約）に任せる。
+    images: [OG_IMAGE_URL],
   },
   robots: {
     index: true,

@@ -7,6 +7,7 @@ import GhostWordmark from '@/components/ds/GhostWordmark'
 import { ContactSense } from '@/components/home/SenseSections'
 import BlogGrid from '@/components/blog/BlogGrid'
 import { getAllPostSummaries, getCategories } from '@/lib/blog'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 const SITE_URL = 'https://sekaistay.com'
 
@@ -21,11 +22,13 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     url: `${SITE_URL}/blog`,
     siteName: 'SEKAI STAY',
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'コラム | SEKAI STAY',
     description: '民泊運営のノウハウ・費用・法令・運用事例まで、現場で使える情報をお届けする民泊マガジン。',
+    images: [OG_IMAGE_URL],
   },
 }
 

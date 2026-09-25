@@ -10,6 +10,7 @@ import GhostWordmark from '@/components/ds/GhostWordmark'
 import InterviewChat from '@/components/case-studies/InterviewChat'
 import { ContactSense } from '@/components/home/SenseSections'
 import { getCaseStudies } from '@/lib/case-studies'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 export const metadata: Metadata = {
   title: '実績・オーナーの声 | SEKAI STAY',
@@ -21,11 +22,13 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     url: 'https://sekaistay.com/case-studies',
     siteName: 'SEKAI STAY',
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: '実績・オーナーの声 | SEKAI STAY',
     description: '数字で見るオーナーの成果と、運営代行で実現した収益の動き。',
+    images: [OG_IMAGE_URL],
   },
   alternates: { canonical: 'https://sekaistay.com/case-studies' },
 }

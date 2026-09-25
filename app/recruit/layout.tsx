@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 export const metadata: Metadata = {
   title: '採用情報',
@@ -12,11 +13,13 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     url: 'https://sekaistay.com/recruit',
     siteName: 'SEKAI STAY',
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: '採用情報 | SEKAI STAY',
     description: '民泊運用を仕組みで変えるチームで、一緒に働く仲間を募集しています。',
+    images: [OG_IMAGE_URL],
   },
   alternates: { canonical: 'https://sekaistay.com/recruit' },
 }

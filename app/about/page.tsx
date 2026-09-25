@@ -7,6 +7,7 @@ import GhostWordmark from '@/components/ds/GhostWordmark'
 import RelatedLinks from '@/components/ds/RelatedLinks'
 import Reveal from '@/components/motion/Reveal'
 import { ContactSense } from '@/components/home/SenseSections'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 const SITE_URL = 'https://sekaistay.com'
 
@@ -23,11 +24,13 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     url: `${SITE_URL}/about`,
     siteName: 'SEKAI STAY',
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: '私たちについて | SEKAI STAY',
     description: '宿を預かる会社ではなく、宿の価値を伸ばす会社。',
+    images: [OG_IMAGE_URL],
   },
 }
 
