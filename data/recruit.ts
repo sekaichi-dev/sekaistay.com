@@ -6,6 +6,8 @@ export type RecruitPosition = {
   id: string
   title: string
   en: string
+  image: string
+  alt: string
   employment: string
   location: string
   summary: string
@@ -18,6 +20,8 @@ export const RECRUIT_POSITIONS: RecruitPosition[] = [
     id: 'operations',
     title: '運営オペレーション',
     en: 'Guest Operations',
+    image: '/images/included/INCLUDED3.png',
+    alt: 'ヘッドセットでゲストからの問い合わせに対応するスタッフ',
     employment: '正社員 / 業務委託（応相談）',
     location: '東京（中目黒）・リモート可',
     summary:
@@ -38,6 +42,8 @@ export const RECRUIT_POSITIONS: RecruitPosition[] = [
     id: 'business',
     title: '事業開発 / オーナーサクセス',
     en: 'Business Development',
+    image: '/images/included/INCLUDED9.png',
+    alt: 'オンラインでオーナーと打ち合わせをするスタッフ',
     employment: '正社員 / 業務委託（応相談）',
     location: '東京（中目黒）・リモート可',
     summary:
