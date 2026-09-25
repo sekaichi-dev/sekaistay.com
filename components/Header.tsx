@@ -50,14 +50,14 @@ export default function Header() {
           </Link>
 
           {/* Nav */}
-          <nav className="hidden md:flex items-center gap-5 lg:gap-8">
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-7">
             {NAV.map(n => (
               <Link
                 key={n.href}
                 href={n.href}
                 className="group flex items-center leading-none"
               >
-                <span className={`text-[13px] font-medium tracking-[0.08em] transition ${solid ? 'text-ink' : 'text-white'} group-hover:opacity-70`}>
+                <span className={`whitespace-nowrap text-[12.5px] xl:text-[13px] font-medium tracking-[0.06em] xl:tracking-[0.08em] transition ${solid ? 'text-ink' : 'text-white'} group-hover:opacity-70`}>
                   {n.ja}
                 </span>
               </Link>
@@ -65,16 +65,16 @@ export default function Header() {
           </nav>
 
           {/* CTAs */}
-          <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-2 xl:gap-3 flex-shrink-0">
             <Link
               href="/audit"
-              className="btn-cta inline-flex items-center rounded-md px-5 py-2.5 text-[12px] font-bold"
+              className="btn-cta inline-flex items-center whitespace-nowrap rounded-md px-4 xl:px-5 py-2.5 text-[12px] font-bold"
             >
               無料収益診断
             </Link>
             <Link
               href="/contact"
-              className="inline-flex items-center rounded-md bg-navy px-5 py-2.5 text-[12px] font-bold text-white transition hover:bg-navy-hover"
+              className="inline-flex items-center whitespace-nowrap rounded-md bg-navy px-4 xl:px-5 py-2.5 text-[12px] font-bold text-white transition hover:bg-navy-hover"
             >
               お問い合わせ
             </Link>
@@ -83,7 +83,7 @@ export default function Header() {
           {/* Hamburger */}
           <button
             onClick={() => setOpen(!open)}
-            className="md:hidden w-11 h-11 flex flex-col items-center justify-center gap-1.5 -mr-2"
+            className="lg:hidden w-11 h-11 flex flex-col items-center justify-center gap-1.5 -mr-2"
             aria-label="メニュー"
           >
             <span className={`block w-6 h-px transition-all duration-300 ${solid ? 'bg-ink' : 'bg-white'} ${open ? 'rotate-45 translate-y-[3px]' : ''}`} />
