@@ -62,6 +62,15 @@ export function formatDisplayName(name: string): string {
   return `"${clean.replace(/[\\"]/g, (c) => `\\${c}`)}"`
 }
 
+export type MailAttachment = {
+  /** 添付ファイル名（改行・パス区切りは落とす） */
+  filename: string
+  /** MIME タイプ。未知のものは application/octet-stream に倒す */
+  contentType: string
+  /** 中身（base64） */
+  base64: string
+}
+
 export type MailMessage = {
   to: string
   from: string
@@ -70,6 +79,19 @@ export type MailMessage = {
   replyToName?: string
   subject: string
   text: string
+  attachments?: MailAttachment[]
+}
+
+/** 添付ファイル名の無害化（ヘッダ分割・パス指定を防ぐ）。 */
+export function sanitizeFilename(name: string): string {
+  const base = name.replace(/[\r\n]+/g, ' ').split(/[\\/]/).pop() || 'attachment'
+  return base.replace(/["]/g, '').trim().slice(0, 120) || 'attachment'
+}
+
+const SAFE_CONTENT_TYPE = /^[a-z0-9][a-z0-9!#$&^_.+-]*\/[a-z0-9][a-z0-9!#$&^_.+-]*$/i
+
+function wrapBase64(b64: string): string {
+  return b64.replace(/\s+/g, '').replace(/(.{76})/g, '$1\r\n')
 }
 
 /** RFC822 メッセージを組み立てて base64url にする（Gmail API の raw 形式）。 */
@@ -77,13 +99,14 @@ export function buildRawMessage(msg: MailMessage): string {
   const from = msg.fromName
     ? `${formatDisplayName(msg.fromName)} <${sanitizeHeaderValue(msg.from)}>`
     : sanitizeHeaderValue(msg.from)
+  const attachments = (msg.attachments || []).filter((a) => a.base64)
+  const boundary = `sekaistay_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
+
   const headers = [
     `From: ${from}`,
     `To: ${sanitizeHeaderValue(msg.to)}`,
     `Subject: ${encodeHeader(sanitizeHeaderValue(msg.subject))}`,
     'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset="UTF-8"',
-    'Content-Transfer-Encoding: base64',
   ]
   if (msg.replyTo) {
     const replyTo = msg.replyToName
@@ -91,8 +114,30 @@ export function buildRawMessage(msg: MailMessage): string {
       : sanitizeHeaderValue(msg.replyTo)
     headers.splice(3, 0, `Reply-To: ${replyTo}`)
   }
-  const body = Buffer.from(msg.text, 'utf8').toString('base64').replace(/(.{76})/g, '$1\r\n')
-  const raw = `${headers.join('\r\n')}\r\n\r\n${body}`
+
+  const body = wrapBase64(Buffer.from(msg.text, 'utf8').toString('base64'))
+
+  if (attachments.length === 0) {
+    headers.push('Content-Type: text/plain; charset="UTF-8"', 'Content-Transfer-Encoding: base64')
+    return Buffer.from(`${headers.join('\r\n')}\r\n\r\n${body}`, 'utf8').toString('base64url')
+  }
+
+  headers.push(`Content-Type: multipart/mixed; boundary="${boundary}"`)
+  const parts = [
+    ['Content-Type: text/plain; charset="UTF-8"', 'Content-Transfer-Encoding: base64', '', body].join('\r\n'),
+    ...attachments.map((a) => {
+      const filename = sanitizeFilename(a.filename)
+      const contentType = SAFE_CONTENT_TYPE.test(a.contentType) ? a.contentType : 'application/octet-stream'
+      return [
+        `Content-Type: ${contentType}; name="${filename}"`,
+        `Content-Disposition: attachment; filename="${encodeHeader(filename)}"`,
+        'Content-Transfer-Encoding: base64',
+        '',
+        wrapBase64(a.base64),
+      ].join('\r\n')
+    }),
+  ]
+  const raw = `${headers.join('\r\n')}\r\n\r\n--${boundary}\r\n${parts.join(`\r\n--${boundary}\r\n`)}\r\n--${boundary}--`
   return Buffer.from(raw, 'utf8').toString('base64url')
 }
 
