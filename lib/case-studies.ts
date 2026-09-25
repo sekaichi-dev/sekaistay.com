@@ -104,94 +104,38 @@ const caseStudies: CaseStudy[] = [
     tags: ["一棟貸し", "スキーリゾート", "山岳ロッジ", "インバウンド対応"],
   },
   {
-    id: "atami-white-house",
-    name: "White House Atami",
-    location: "熱海市",
-    type: "一棟貸しオーシャンビューヴィラ",
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=500&fit=crop&q=80&auto=format",
+    id: "ogura-yotsuya-203",
+    name: "オグラビル四谷 203",
+    location: "東京都新宿区",
+    type: "都心・駅近の1室貸し",
+    image: "/images/cases/ogura-yotsuya-203.jpg",
     description:
-      "熱海の海を望むオーシャンビュー一棟貸し。2LDKの広々とした間取りに、プライベートサウナ、カラオケ、BBQスペースを完備。enabler DAOが所有していた物件で、SEKAI STAYが全面的な運営を統括。",
+      "JR・東京メトロの四ツ谷駅から徒歩約5分、新宿駅まで電車で約10分の立地にある住宅宿泊事業（民泊新法）の1室貸し。ホスト非常駐のセルフチェックイン運用で、観光・出張の両方の需要を受けています。2026年7月から運用をお預かりしています。",
     highlights: [
-      "複数OTAの在庫管理と予約同期を自動化し、ダブルブッキングゼロを達成",
-      "サウナ・カラオケといった施設の特性を活かした的確なマーケティング",
-      "清掃・チェックインの標準化で平均評価を4.5から4.9に向上",
-      "月額売上を45万円から76万円に増加させ、運営収益性を大幅改善",
+      "四ツ谷駅 徒歩約5分・新宿駅まで約10分の立地を軸にOTA掲載を整備",
+      "ホスト非常駐のセルフチェックインを標準化し、到着時のつまずきを削減",
+      "多言語の自動応答でインバウンドの問い合わせに24時間対応",
+      "同じ建物の2室を一体で運用し、清掃と備品補充をまとめて効率化",
     ],
-    results: {
-      occupancyBefore: "48%",
-      occupancyAfter: "71%",
-      revenueBefore: "450,000円/月",
-      revenueAfter: "760,000円/月",
-      reviewScore: "4.9",
-      superhost: false,
-    },
-    tags: [
-      "一棟貸し",
-      "オーシャンビュー",
-      "サウナ",
-      "カラオケ",
-      "BBQ施設",
-    ],
+    results: {},
+    tags: ["1室貸し", "駅徒歩5分", "セルフチェックイン", "インバウンド対応"],
   },
   {
-    id: "teshikaga-lodge",
-    name: "弟子屈ロッジ",
-    location: "北海道弟子屈町",
-    type: "一棟貸しロッジ",
-    image: "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=800&h=500&fit=crop&q=80&auto=format",
+    id: "ogura-yotsuya-205",
+    name: "オグラビル四谷 205",
+    location: "東京都新宿区",
+    type: "都心・駅近の1室貸し",
+    image: "/images/cases/ogura-yotsuya-205.jpg",
     description:
-      "北海道の自然に恵まれた弟子屈の一棟貸しロッジ。摩周湖や屈斜路湖などの観光地に近く、春から秋の観光シーズンに高い需要を見込める物件。地方特有の季節変動への対応が課題だった。",
+      "203号室と同じ建物の1室貸し。ソファ・ダイニングを備えたゆとりのある間取りで、グループやご家族の滞在にも対応します。2026年7月から運用をお預かりしています。",
     highlights: [
-      "季節変動を見越した事前予約キャンペーン戦略で、閑散期の稼働率を40%から62%に改善",
-      "地域の観光情報と連携したコンテンツ戦略でブランド認知を強化",
-      "複数OTAでの同時管理により、限られた物件を最大限活用",
-      "月売上を38万円から54万円に増加し、年間収益性を向上",
+      "203号室と客層を分け、人数・滞在目的に合わせて掲載内容を出し分け",
+      "曜日・イベントに合わせた価格調整で平日の空室を圧縮",
+      "写真と説明文を撮り直し、検索結果での見え方を改善",
+      "清掃チェックリストを標準化し、リネン・備品の品質を安定化",
     ],
-    results: {
-      occupancyBefore: "54%",
-      occupancyAfter: "68%",
-      revenueBefore: "380,000円/月",
-      revenueAfter: "540,000円/月",
-      reviewScore: "4.6",
-      superhost: false,
-    },
-    tags: [
-      "一棟貸し",
-      "ロッジ",
-      "北海道",
-      "自然体験",
-      "季節変動対応",
-    ],
-  },
-  {
-    id: "teshikaga-tower-sauna",
-    name: "弟子屈タワーサウナ",
-    location: "北海道弟子屈町",
-    type: "一棟貸しサウナ施設",
-    image: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800&h=500&fit=crop&q=80&auto=format",
-    description:
-      "弟子屈に立つユニークなタワーサウナ付き一棟貸し物件。天然温泉とサウナの組み合わせが強みで、ウェルネス観光客を中心とした高付加価値層を獲得。デジタルマーケティングの強化で差別化を図る。",
-    highlights: [
-      "サウナ・温泉体験に特化したSNSマーケティングでフォロワーを3,200人に成長",
-      "ウェルネス層向けのキーワード最適化で検索流入を5倍化",
-      "複数サウナ関連メディアでの掲載実現により、ブランドネットワークを拡大",
-      "月売上を42万円から69万円に増加、ウェルネスニーズの高まりを活かした成功事例",
-    ],
-    results: {
-      occupancyBefore: "49%",
-      occupancyAfter: "72%",
-      revenueBefore: "420,000円/月",
-      revenueAfter: "690,000円/月",
-      reviewScore: "4.8",
-      superhost: true,
-    },
-    tags: [
-      "一棟貸し",
-      "サウナ",
-      "温泉",
-      "ウェルネス",
-      "北海道",
-    ],
+    results: {},
+    tags: ["1室貸し", "駅徒歩5分", "セルフチェックイン", "ファミリー対応"],
   },
 ];
 
@@ -215,11 +159,8 @@ export function getCaseStudyById(id: string): CaseStudy | undefined {
  */
 export function getFeaturedCaseStudies(): CaseStudy[] {
   // Select top 3 by revenue improvement
-  return [
-    caseStudies[0], // Lake House Nojiriko (best overall)
-    caseStudies[6], // Hawaii Private Beach (highest revenue)
-    caseStudies[1], // Lakeside Inn Nojiriko (high occupancy improvement)
-  ];
+  // 件数が変わっても undefined を返さないよう先頭3件を返す
+  return caseStudies.slice(0, 3);
 }
 
 /**

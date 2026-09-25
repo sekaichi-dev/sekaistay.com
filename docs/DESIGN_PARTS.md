@@ -76,7 +76,8 @@ Splide（`@splidejs/react-splide`）の `type:'loop'`・固定幅カード（fix
 import SlideCarousel from '@/components/ds/SlideCarousel'
 <SlideCarousel ariaLabel="…" items={[{ image:'…', alt:'…', title:'…', tag:'標準で含まれる' }]} />
 ```
-使用例: /pricing INCLUDED（基本料金に含まれる運用業務10件を横スライド）。
+使用例: /pricing INCLUDED（基本料金に含まれる運用業務10件を横スライド）、/case-studies WORKS（事例カード）。
+成果タグは `result`（ティール・主指標）と任意の `result2`（グレー・副指標）の2行まで。/case-studies では稼働率と評価を並べている。
 
 ### NumberCards — 巨大番号のカードグリッド（番号主体・ピクトグラム不使用）
 濃色背景（navy）上で使う。背面の巨大ゴースト番号＋前面の可視番号 → タイトル → 本文 → 下罫線＋効果値タグ。hover で浮上＋上辺アクセント線が伸びる。`columns`(3|4)。`Reveal stagger` 出現。**機能/サービスを一覧で“魅せる”ときの主役パーツ**（番号付き項目を画像なしで密度高く並べる用途。EditorialList の単調さを割る選択肢）。
