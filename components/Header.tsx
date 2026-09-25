@@ -11,6 +11,7 @@ const NAV = [
   { href: '/blog', label: 'MAGAZINE', ja: '民泊マガジン' },
   { href: '/faq', label: 'FAQ', ja: 'FAQ' },
   { href: '/about', label: 'ABOUT', ja: '会社情報' },
+  { href: '/recruit', label: 'RECRUIT', ja: '採用情報' },
 ]
 
 export default function Header() {
