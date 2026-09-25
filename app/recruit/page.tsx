@@ -13,20 +13,20 @@ import { RECRUIT_POSITIONS, RECRUIT_STEPS } from '@/data/recruit'
 const FACTS = [
   {
     no: '01',
-    title: '手数料8%で成り立つ運用',
-    body: '業界平均15〜25%という相場は、すべてを人の手で回す前提で組み上がった金額です。業務を分解してツールに落とし込み、8%でも運用品質を落とさない体制をつくっています。',
+    title: 'AIによるDXで、業界平均の半額以下へ',
+    body: '業界平均15〜25%という相場は、すべてを人の手で回す前提で組み上がった金額です。予約管理・ゲスト対応・レポート作成をAIと自社ツールで自動化し、手数料8%でも運用品質を落とさない体制をつくっています。',
     meta: '手数料 8%',
   },
   {
     no: '02',
-    title: '全国7拠点のネットワーク',
-    body: '東京・大阪・京都・福岡・沖縄・北海道・長野。清掃からゲスト対応、駆け付けまでを各地域のチームでカバーしています。',
-    meta: '7拠点',
+    title: '全国展開で、どこの物件でも運用できる',
+    body: '北海道から沖縄まで、各地域のチームで清掃・ゲスト対応・駆け付けまでカバーしています。エリアが増えても同じ品質で運用できることを前提に、仕組みをつくっています。',
+    meta: '全国展開',
   },
   {
     no: '03',
-    title: '数字とプロセスを開示する',
-    body: '売上・稼働率・経費はオーナー様専用のダッシュボードでリアルタイムに開示。住宅宿泊管理業の登録事業者として、運営の中身を見える状態に保ちます。',
+    title: '日本一透明性の高い民泊運用を目指す',
+    body: '売上・稼働率・経費は、オーナー様専用のダッシュボードでリアルタイムに開示しています。何にいくらかかり、なぜその判断をしたのか。運営の中身を隠さないことを、サービスの前提に置いています。',
     meta: '国土交通大臣 (01)第F05780号',
   },
 ]
@@ -53,7 +53,7 @@ const CULTURE = [
   {
     no: '04',
     title: '働く場所は問わない',
-    body: '現場業務を除きリモート勤務が可能です。オフィスは中目黒。全国7拠点の仲間とはオンラインでつながっています。',
+    body: '現場業務を除きリモート勤務が可能です。オフィスは中目黒。全国の仲間とはオンラインでつながっています。',
     effect: 'リモート可',
   },
 ]
@@ -83,8 +83,22 @@ export default function RecruitPage() {
           </div>
         </section>
 
-        {/* 2. 事業の現在地（paper） */}
+        {/* 2. 募集職種（paper）*/}
         <section className="w-full bg-paper section-2xl">
+          <div className="container-edit">
+            <SectionHead
+              en="POSITIONS"
+              sub="募集職種"
+              lead="給与・待遇は経験と担当範囲に応じて個別にご提示します。下記以外の職種にご興味がある方も、フォームの「その他 / まずは話を聞きたい」からご連絡ください。"
+            />
+            <div className="mt-14">
+              <PositionList positions={RECRUIT_POSITIONS} />
+            </div>
+          </div>
+        </section>
+
+        {/* 3. 事業の現在地（ivory）*/}
+        <section className="w-full bg-ivory section-2xl">
           <div className="container-edit">
             <SectionHead
               en="OUR WORK"
@@ -97,26 +111,12 @@ export default function RecruitPage() {
           </div>
         </section>
 
-        {/* 3. 働き方（navy） */}
+        {/* 4. 働き方（navy）*/}
         <section className="w-full bg-navy section-2xl">
           <div className="container-edit">
             <SectionHead light en="HOW WE WORK" sub="SEKAI STAY の働き方" />
             <div className="mt-14">
               <NumberCards columns={4} items={CULTURE} />
-            </div>
-          </div>
-        </section>
-
-        {/* 4. 募集職種（ivory） */}
-        <section className="w-full bg-ivory section-2xl">
-          <div className="container-edit">
-            <SectionHead
-              en="POSITIONS"
-              sub="募集職種"
-              lead="給与・待遇は経験と担当範囲に応じて個別にご提示します。下記以外の職種にご興味がある方も、フォームの「その他 / まずは話を聞きたい」からご連絡ください。"
-            />
-            <div className="mt-14">
-              <PositionList positions={RECRUIT_POSITIONS} />
             </div>
           </div>
         </section>
