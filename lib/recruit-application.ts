@@ -12,6 +12,16 @@ export type RecruitApplicationInput = {
   position?: unknown
   message?: unknown
   portfolioUrl?: unknown
+  resume?: unknown
+}
+
+/** 職務経歴書の添付（PDF / 画像 / テキスト）。base64 はデータ本体のみ。 */
+export type RecruitResume = {
+  filename: string
+  contentType: string
+  base64: string
+  /** 元ファイルのバイト数 */
+  size: number
 }
 
 export type RecruitApplication = {
@@ -21,6 +31,7 @@ export type RecruitApplication = {
   position: string
   message: string
   portfolioUrl: string
+  resume: RecruitResume | null
 }
 
 export const RECRUIT_LIMITS = {
@@ -29,7 +40,36 @@ export const RECRUIT_LIMITS = {
   phone: 40,
   message: 5000,
   portfolioUrl: 500,
+  /** 添付の上限（3MB）。base64 化で約1.33倍に膨らむため、Vercel の 4.5MB 制限に収まる値 */
+  resumeBytes: 3 * 1024 * 1024,
+  resumeFilename: 120,
 } as const
+
+/** 職務経歴書として受け取る形式（PDF / 画像 / テキスト / Word）。 */
+const RESUME_TYPE_RE = /^(application\/pdf|image\/(png|jpeg|jpg|webp|heic|heif)|text\/plain|application\/msword|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$/i
+
+export function validateResume(
+  input: unknown
+): { ok: true; value: RecruitResume | null } | { ok: false; error: string } {
+  if (input == null) return { ok: true, value: null }
+  if (typeof input !== 'object' || Array.isArray(input)) return { ok: false, error: '職務経歴書のデータを読み取れませんでした。' }
+  const r = input as Record<string, unknown>
+  const filename = typeof r.filename === 'string' ? r.filename.trim() : ''
+  const contentType = typeof r.contentType === 'string' ? r.contentType.trim() : ''
+  const base64 = typeof r.base64 === 'string' ? r.base64.replace(/\s+/g, '') : ''
+  if (!filename || !base64) return { ok: false, error: '職務経歴書のデータを読み取れませんでした。' }
+  if (!RESUME_TYPE_RE.test(contentType)) {
+    return { ok: false, error: '職務経歴書は PDF・画像・テキスト・Word のいずれかでご提出ください。' }
+  }
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) return { ok: false, error: '職務経歴書のデータを読み取れませんでした。' }
+  // base64 の実バイト数（末尾の = は元データを持たないので差し引く）
+  const padding = (base64.match(/=+$/)?.[0] || '').length
+  const size = Math.floor((base64.length * 3) / 4) - padding
+  if (size > RECRUIT_LIMITS.resumeBytes) {
+    return { ok: false, error: '職務経歴書のファイルサイズは3MBまでです。' }
+  }
+  return { ok: true, value: { filename: filename.slice(0, RECRUIT_LIMITS.resumeFilename), contentType, base64, size } }
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -60,7 +100,10 @@ export function validateRecruitApplication(
     return { ok: false, error: 'URL は http:// または https:// で始めてください。' }
   }
 
-  return { ok: true, value: { name, email, phone, position, message, portfolioUrl } }
+  const resume = validateResume(input.resume ?? null)
+  if (!resume.ok) return { ok: false, error: resume.error }
+
+  return { ok: true, value: { name, email, phone, position, message, portfolioUrl, resume: resume.value } }
 }
 
 export function buildRecruitSubject(app: RecruitApplication): string {
@@ -81,6 +124,7 @@ export function buildRecruitBody(
     `電話番号　　: ${app.phone || '（未入力）'}`,
     `希望職種　　: ${recruitPositionLabel(app.position)}`,
     `URL　　　　 : ${app.portfolioUrl || '（未入力）'}`,
+    `職務経歴書　: ${app.resume ? `${app.resume.filename}（添付・${Math.max(1, Math.round(app.resume.size / 1024))}KB）` : '（添付なし・本文に記載）'}`,
     `応募日時　　: ${meta.submittedAt}`,
     '────────────────────',
     '',

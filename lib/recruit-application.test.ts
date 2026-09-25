@@ -2,11 +2,13 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   validateRecruitApplication,
+  validateResume,
+  RECRUIT_LIMITS,
   buildRecruitSubject,
   buildRecruitBody,
   formatJst,
 } from './recruit-application.ts'
-import { buildRawMessage, encodeHeader, formatDisplayName } from './gmail-send.ts'
+import { buildRawMessage, encodeHeader, formatDisplayName, sanitizeFilename } from './gmail-send.ts'
 
 const valid = {
   name: '山田 太郎',
@@ -151,4 +153,88 @@ test('display name with comma cannot add a second recipient', () => {
 test('display name quotes are escaped', () => {
   assert.equal(formatDisplayName('He said "hi"'), '"He said \\"hi\\""')
   assert.ok(formatDisplayName('山田 太郎').startsWith('=?UTF-8?B?'))
+})
+
+
+const pdf = { filename: '職務経歴書.pdf', contentType: 'application/pdf', base64: Buffer.from('%PDF-1.4 dummy').toString('base64') }
+
+test('resume: 添付なしは許容される', () => {
+  const r = validateResume(null)
+  assert.equal(r.ok, true)
+  if (r.ok) assert.equal(r.value, null)
+})
+
+test('resume: PDF は受け付けてサイズを算出する', () => {
+  const r = validateResume(pdf)
+  assert.equal(r.ok, true)
+  if (r.ok && r.value) {
+    assert.equal(r.value.filename, '職務経歴書.pdf')
+    assert.equal(r.value.size, 14)
+  }
+})
+
+test('resume: 画像・テキスト・Word も受け付ける', () => {
+  for (const t of ['image/jpeg', 'image/png', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']) {
+    assert.equal(validateResume({ ...pdf, contentType: t }).ok, true, t)
+  }
+})
+
+test('resume: 実行ファイルなど想定外の形式は弾く', () => {
+  const r = validateResume({ ...pdf, contentType: 'application/x-msdownload' })
+  assert.equal(r.ok, false)
+})
+
+test('resume: 3MB を超える添付は弾く', () => {
+  const big = 'A'.repeat(Math.ceil((RECRUIT_LIMITS.resumeBytes + 1024) / 3) * 4)
+  const r = validateResume({ ...pdf, base64: big })
+  assert.equal(r.ok, false)
+})
+
+test('resume: base64 でない中身は弾く', () => {
+  const r = validateResume({ ...pdf, base64: '<<not base64>>' })
+  assert.equal(r.ok, false)
+})
+
+test('応募本文に添付ファイル名が残る', () => {
+  const r = validateRecruitApplication({ ...valid, resume: pdf })
+  assert.equal(r.ok, true)
+  if (!r.ok) return
+  const body = buildRecruitBody(r.value, { submittedAt: 'x' })
+  assert.ok(body.includes('職務経歴書.pdf'))
+})
+
+test('添付なしの応募は「添付なし」と本文に出る', () => {
+  const r = validateRecruitApplication(valid)
+  assert.equal(r.ok, true)
+  if (!r.ok) return
+  assert.ok(buildRecruitBody(r.value, { submittedAt: 'x' }).includes('添付なし'))
+})
+
+test('添付つきメールは multipart になり本文と添付が両方入る', () => {
+  const raw = buildRawMessage({
+    to: 'hikaru@sekaichi.org',
+    from: 'tenichi@sekaichi.org',
+    subject: '添付テスト',
+    text: '本文',
+    attachments: [{ filename: '職務経歴書.pdf', contentType: 'application/pdf', base64: pdf.base64 }],
+  })
+  const decoded = Buffer.from(raw, 'base64url').toString('utf8')
+  assert.ok(/Content-Type: multipart\/mixed; boundary="/.test(decoded))
+  assert.ok(decoded.includes('Content-Type: application/pdf; name="職務経歴書.pdf"'))
+  assert.ok(decoded.includes('Content-Disposition: attachment; filename="=?UTF-8?B?'))
+  assert.ok(decoded.includes(pdf.base64))
+})
+
+test('添付ファイル名のパス・改行は落とす', () => {
+  assert.equal(sanitizeFilename('../../etc/passwd'), 'passwd')
+  assert.equal(sanitizeFilename('resume\r\nBcc: x@example.com.pdf'), 'resume Bcc: x@example.com.pdf')
+})
+
+test('未知の content-type は octet-stream に倒す', () => {
+  const raw = buildRawMessage({
+    to: 'a@example.com', from: 'b@example.com', subject: 's', text: 't',
+    attachments: [{ filename: 'f.bin', contentType: 'not a mime type', base64: 'QUJD' }],
+  })
+  const decoded = Buffer.from(raw, 'base64url').toString('utf8')
+  assert.ok(decoded.includes('Content-Type: application/octet-stream; name="f.bin"'))
 })

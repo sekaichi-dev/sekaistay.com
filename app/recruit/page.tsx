@@ -137,7 +137,7 @@ export default function RecruitPage() {
             <SectionHead
               en="APPLICATION"
               sub="応募フォーム"
-              lead="履歴書・職務経歴書のご用意は不要です。内容を確認のうえ、採用担当より3営業日以内にご連絡いたします。"
+              lead="職務経歴書（PDF・画像・テキストのいずれか）を添えてご応募ください。まずは書類審査のうえ、ご面談をお願いする方に3営業日以内にご連絡いたします。"
             />
             <div className="mx-auto mt-14 max-w-2xl">
               <RecruitForm />

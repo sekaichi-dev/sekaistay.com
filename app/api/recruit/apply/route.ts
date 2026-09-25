@@ -72,6 +72,9 @@ export async function POST(req: Request) {
       replyTo: app.email,
       replyToName: app.name,
       subject: buildRecruitSubject(app),
+      attachments: app.resume
+        ? [{ filename: app.resume.filename, contentType: app.resume.contentType, base64: app.resume.base64 }]
+        : undefined,
       text: buildRecruitBody(app, {
         submittedAt: formatJst(new Date()),
         landingUrl: typeof body.landingUrl === 'string' ? body.landingUrl : undefined,
