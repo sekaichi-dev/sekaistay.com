@@ -13,6 +13,7 @@ import ServicesFaq from '@/components/services/ServicesFaq'
 import RelatedLinks from '@/components/ds/RelatedLinks'
 import AuditLink from '@/components/audit/AuditLink'
 import { ContactSense } from '@/components/home/SenseSections'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 export const metadata: Metadata = {
   title: '料金',
@@ -26,12 +27,14 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     url: 'https://sekaistay.com/pricing',
     siteName: 'SEKAI STAY',
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: '料金 | SEKAI STAY',
     description:
       '毎月の基本料金は売上の8%＋月額10,000円/物件。初期費用・実費・有料オプションまで、かかりうる費用をすべて開示します。',
+    images: [OG_IMAGE_URL],
   },
   alternates: { canonical: 'https://sekaistay.com/pricing' },
 }

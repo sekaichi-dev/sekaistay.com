@@ -7,6 +7,7 @@ import SectionHead from '@/components/ds/SectionHead'
 import RelatedLinks from '@/components/ds/RelatedLinks'
 import { ContactSense } from '@/components/home/SenseSections'
 import FaqAccordion, { type FaqCategory } from '@/components/faq/FaqAccordion'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 export const metadata: Metadata = {
   title: 'よくあるご質問（FAQ）',
@@ -19,11 +20,13 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     url: 'https://sekaistay.com/faq',
     siteName: 'SEKAI STAY',
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'よくあるご質問 | SEKAI STAY',
     description: '民泊運用代行に関するよくあるご質問。料金・契約・対応範囲・始め方など。',
+    images: [OG_IMAGE_URL],
   },
   alternates: { canonical: 'https://sekaistay.com/faq' },
 }

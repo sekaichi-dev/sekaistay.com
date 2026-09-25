@@ -6,6 +6,7 @@ import { getAllPostSummaries } from '@/lib/blog'
 
 /* ── Above-fold: static imports (critical path) ── */
 import HomeHero from '@/components/home/HomeHero'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 /* ── Below-fold: dynamic imports (reduce initial JS bundle) ── */
 const FloatingCTA = dynamic(() => import('@/components/FloatingCTA'), { ssr: false })
@@ -34,6 +35,7 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     url: 'https://sekaistay.com',
     siteName: 'SEKAI STAY',
+    images: [OG_IMAGE],
   },
   alternates: { canonical: 'https://sekaistay.com' },
 }

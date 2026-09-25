@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 export const metadata: Metadata = {
   title: '無料物件診断｜SEKAI STAY',
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
     title: '無料物件診断｜SEKAI STAY',
     description: '3分で完了する民泊物件の無料診断レポート。個別の改善提案をお届けします。',
     url: 'https://sekaistay.com/audit',
+    images: [OG_IMAGE],
   },
 }
 

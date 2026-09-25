@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
 
 export const metadata: Metadata = {
   title: 'お問い合わせ',
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     url: 'https://sekaistay.com/contact',
     siteName: 'SEKAI STAY',
+    images: [OG_IMAGE],
   },
   alternates: { canonical: 'https://sekaistay.com/contact' },
 }
