@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 const NAV = [
   { href: '/services', label: 'BUSINESS', ja: '事業内容' },
   { href: '/pricing', label: 'PRICING', ja: '料金' },
-  { href: '/case-studies', label: 'WORKS', ja: '実績・オーナーの声' },
+  { href: '/case-studies', label: 'WORKS', ja: '実績' },
   { href: '/blog', label: 'MAGAZINE', ja: '民泊マガジン' },
   { href: '/faq', label: 'FAQ', ja: 'FAQ' },
   { href: '/about', label: 'ABOUT', ja: '会社情報' },

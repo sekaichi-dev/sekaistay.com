@@ -9,7 +9,7 @@ import RelatedLinks from '@/components/ds/RelatedLinks'
 import GhostWordmark from '@/components/ds/GhostWordmark'
 import InterviewChat from '@/components/case-studies/InterviewChat'
 import { ContactSense } from '@/components/home/SenseSections'
-import { getCaseStudies, getAverageMetrics } from '@/lib/case-studies'
+import { getCaseStudies } from '@/lib/case-studies'
 
 export const metadata: Metadata = {
   title: '実績・オーナーの声 | SEKAI STAY',
@@ -39,13 +39,33 @@ const RESULT_STATS = [
 ]
 
 /* WORKS 各事例の表示用メタ（現実的な改善指標・カードに収まる短い説明） */
-const WORKS_META: Record<string, { body: string; result: string }> = {
-  'lake-house-nojiriko': { body: '野尻湖畔の1日1組限定ヴィラ。サウナ・桟橋を備えた高級一棟貸し。', result: '稼働率 43% → 66%' },
-  'lakeside-inn-nojiriko': { body: '野尻湖畔のトレーラーハウス4棟。グループ旅行・研修に強い複合施設。', result: '稼働率 40% → 63%' },
-  'mountain-villa-niseko': { body: 'ゲレンデ近くの一棟貸し山岳ロッジ。冬のインバウンド需要を取り込む。', result: '稼働率 38% → 60%' },
-  'atami-white-house': { body: '熱海の海を望むオーシャンビュー一棟貸し。サウナ・BBQ付きの人気物件。', result: '稼働率 45% → 64%' },
-  'teshikaga-lodge': { body: '摩周湖・屈斜路湖に近い自然立地の一棟貸しロッジ。観光期の需要が高い。', result: '稼働率 41% → 62%' },
-  'teshikaga-tower-sauna': { body: '温泉×タワーサウナのウェルネス一棟貸し。高付加価値層を獲得。', result: '稼働率 44% → 67%' },
+/* WORKS 各事例の表示用メタ（カードに収まる短い説明＋成果の2行） */
+const WORKS_META: Record<string, { body: string; result: string; review?: string }> = {
+  'lake-house-nojiriko': {
+    body: '野尻湖畔の1日1組限定ヴィラ。サウナ・桟橋を備えた高級一棟貸し。',
+    result: '稼働率 43% → 66%',
+    review: '評価 10.0 / 10（Booking.com）',
+  },
+  'lakeside-inn-nojiriko': {
+    body: '野尻湖畔のトレーラーハウス4棟。グループ旅行・研修に強い複合施設。',
+    result: '稼働率 40% → 63%',
+    review: '評価 4.6 → 4.8',
+  },
+  'mountain-villa-niseko': {
+    body: 'ゲレンデ近くの一棟貸し山岳ロッジ。冬のインバウンド需要を取り込む。',
+    result: '稼働率 38% → 60%',
+    review: '評価 4.95 / 5（20件）',
+  },
+  'ogura-yotsuya-203': {
+    body: '四ツ谷駅から徒歩約5分の1室貸し。セルフチェックインで観光・出張の需要を受ける。',
+    result: '2026年7月 運用開始',
+    review: '実績は集計中',
+  },
+  'ogura-yotsuya-205': {
+    body: '同じ建物のもう1室。ソファ・ダイニング付きでグループ滞在にも対応。',
+    result: '2026年7月 運用開始',
+    review: '実績は集計中',
+  },
 }
 
 /* オーナーの声（ペルソナ付き・リアルな声） */
@@ -101,8 +121,6 @@ const INTERVIEW = {
 
 export default function CaseStudiesPage() {
   const caseStudies = getCaseStudies()
-  // データ取得は維持（件数・スーパーホスト数の参照に使用）
-  const metrics = getAverageMetrics()
 
   return (
     <>
@@ -118,8 +136,61 @@ export default function CaseStudiesPage() {
               hero
               en="CASE STUDIES"
               sub="民泊運営代行の実績"
-              lead={`運用をお預かりした物件で、稼働率も評価も着実に伸びています。全${metrics.totalProperties}件の事例と、その打ち手を数字とあわせて公開しています。`}
+              lead="運用をお預かりした物件で、稼働率も評価も着実に伸びています。実際の事例と、その打ち手を数字とあわせて公開しています。"
             />
+          </div>
+        </section>
+
+        {/* 事例紹介 — 横スライドカルーセル（/pricing INCLUDED 型） */}
+        <section className="w-full bg-paper section-2xl">
+          <div className="container-edit">
+            <SectionHead en="WORKS" sub="事例紹介" />
+          </div>
+          <div className="container-edit mt-12 sm:mt-16">
+            <SlideCarousel
+              fullBleed
+              ariaLabel="運用事例"
+              items={caseStudies.map((c) => {
+                const m = WORKS_META[c.id]
+                return {
+                  image: c.image,
+                  alt: c.name,
+                  tag: c.type,
+                  title: `${c.name}（${c.location}）`,
+                  body: m?.body ?? c.description,
+                  result: m?.result ?? (c.results.reviewScore ? `レビュー ${c.results.reviewScore}` : c.type),
+                  result2: m?.review,
+                }
+              })}
+            />
+          </div>
+        </section>
+
+        {/* 全体平均（navy）— ResultsSense と同型 */}
+        <section className="w-full bg-navy section-2xl text-white">
+          <div className="container-edit">
+            <SectionHead
+              light
+              en="What changed?"
+              sub="数字にもインパクトのある変化を"
+              lead="運用を任せた前と後で、数字は確かに動きました。一棟の偶然ではなく、私たちが預かる物件全体で起きている変化です。継続6ヶ月以上の管理物件の平均値を、そのまま公開します。"
+            />
+            <div className="mt-14 grid grid-cols-2 gap-x-8 gap-y-12 sm:mt-16 md:grid-cols-4">
+              {RESULT_STATS.map((s) => (
+                <div key={s.l} className="border-t border-white/20 pt-5">
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-grotesk text-[clamp(3rem,7vw,4.5rem)] font-bold leading-none tracking-tight text-white">
+                      {s.v}
+                    </span>
+                    <span className="font-grotesk text-2xl font-bold text-bright-teal">{s.u}</span>
+                  </div>
+                  <p className="mt-3 text-[13px] text-white/70">{s.l}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-10 text-[11px] text-white/45">
+              ※ 2026年4月時点／継続6ヶ月以上の管理物件平均。成果は物件の立地・条件により異なります。
+            </p>
           </div>
         </section>
 
@@ -181,58 +252,6 @@ export default function CaseStudiesPage() {
                 </figure>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* 全体平均（navy）— ResultsSense と同型 */}
-        <section className="w-full bg-navy section-2xl text-white">
-          <div className="container-edit">
-            <SectionHead
-              light
-              en="What changed?"
-              sub="数字にもインパクトのある変化を"
-              lead="運用を任せた前と後で、数字は確かに動きました。一棟の偶然ではなく、私たちが預かる物件全体で起きている変化です。継続6ヶ月以上の管理物件の平均値を、そのまま公開します。"
-            />
-            <div className="mt-14 grid grid-cols-2 gap-x-8 gap-y-12 sm:mt-16 md:grid-cols-4">
-              {RESULT_STATS.map((s) => (
-                <div key={s.l} className="border-t border-white/20 pt-5">
-                  <div className="flex items-baseline gap-1">
-                    <span className="font-grotesk text-[clamp(3rem,7vw,4.5rem)] font-bold leading-none tracking-tight text-white">
-                      {s.v}
-                    </span>
-                    <span className="font-grotesk text-2xl font-bold text-bright-teal">{s.u}</span>
-                  </div>
-                  <p className="mt-3 text-[13px] text-white/70">{s.l}</p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-10 text-[11px] text-white/45">
-              ※ 2026年4月時点／継続6ヶ月以上の管理物件平均。成果は物件の立地・条件により異なります。
-            </p>
-          </div>
-        </section>
-
-        {/* 事例紹介 — 横スライドカルーセル（/pricing INCLUDED 型） */}
-        <section className="w-full bg-paper section-2xl">
-          <div className="container-edit">
-            <SectionHead en="WORKS" sub="事例紹介" />
-          </div>
-          <div className="container-edit mt-12 sm:mt-16">
-            <SlideCarousel
-              fullBleed
-              ariaLabel="運用事例"
-              items={caseStudies.map((c) => {
-                const m = WORKS_META[c.id]
-                return {
-                  image: c.image,
-                  alt: c.name,
-                  tag: c.type,
-                  title: `${c.name}（${c.location}）`,
-                  body: m?.body ?? c.description,
-                  result: m?.result ?? (c.results.reviewScore ? `レビュー ${c.results.reviewScore}` : c.type),
-                }
-              })}
-            />
           </div>
         </section>
 

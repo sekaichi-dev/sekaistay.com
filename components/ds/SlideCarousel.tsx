@@ -14,6 +14,8 @@ export type SlideItem = {
   body?: string
   /** カード下部の成果タグ（例: 稼働率 +11%） */
   result?: string
+  /** 成果タグの2行目（例: 評価 4.6 → 4.8）。省略可 */
+  result2?: string
   /** 指定するとカード全体がこのURLへのリンクになる */
   href?: string
 }
@@ -150,6 +152,14 @@ export default function SlideCarousel({
                         </svg>
                         {it.result}
                       </span>
+                      {it.result2 && (
+                        <span className="mt-2 flex w-fit items-center gap-1.5 text-[13px] font-bold tracking-wide text-ink/55">
+                          <svg className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5-5 5M6 12h12" />
+                          </svg>
+                          {it.result2}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
