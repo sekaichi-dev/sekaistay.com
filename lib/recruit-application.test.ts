@@ -49,7 +49,7 @@ test('"sales" position is accepted and labelled in the subject', () => {
   const r = validateRecruitApplication({ ...valid, position: 'sales' })
   assert.equal(r.ok, true)
   if (!r.ok) return
-  assert.equal(buildRecruitSubject(r.value), '【採用応募】営業（オーナー成約担当） / 山田 太郎 様')
+  assert.equal(buildRecruitSubject(r.value), '【採用応募】フィールドセールス / 山田 太郎 様')
 })
 
 test('too short message is rejected', () => {

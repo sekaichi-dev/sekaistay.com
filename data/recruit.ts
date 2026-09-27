@@ -40,8 +40,8 @@ export const RECRUIT_POSITIONS: RecruitPosition[] = [
   },
   {
     id: 'sales',
-    title: '営業（オーナー成約担当）',
-    en: 'Sales',
+    title: 'フィールドセールス',
+    en: 'Field Sales',
     image: '/images/included/INCLUDED7.png',
     alt: '物件オーナーに運用プランを説明するスタッフ',
     employment: '正社員 / 業務委託（応相談）',
