@@ -49,7 +49,7 @@ test('"sales" position is accepted and labelled in the subject', () => {
   const r = validateRecruitApplication({ ...valid, position: 'sales' })
   assert.equal(r.ok, true)
   if (!r.ok) return
-  assert.equal(buildRecruitSubject(r.value), '【採用応募】フィールドセールス / 山田 太郎 様')
+  assert.equal(buildRecruitSubject(r.value), '【採用応募】営業 / アカウントエグゼクティブ / 山田 太郎 様')
 })
 
 test('too short message is rejected', () => {
@@ -78,7 +78,7 @@ test('subject carries position label and name', () => {
   const r = validateRecruitApplication(valid)
   assert.equal(r.ok, true)
   if (!r.ok) return
-  assert.equal(buildRecruitSubject(r.value), '【採用応募】運営オペレーション / 山田 太郎 様')
+  assert.equal(buildRecruitSubject(r.value), '【採用応募】運営 / オペレーションマネージャー / 山田 太郎 様')
 })
 
 test('body contains every submitted field', () => {
@@ -86,7 +86,7 @@ test('body contains every submitted field', () => {
   assert.equal(r.ok, true)
   if (!r.ok) return
   const body = buildRecruitBody(r.value, { submittedAt: '2026-09-22 10:00 JST' })
-  for (const needle of [valid.email, valid.phone, valid.message, valid.portfolioUrl, '運営オペレーション']) {
+  for (const needle of [valid.email, valid.phone, valid.message, valid.portfolioUrl, '運営 / オペレーションマネージャー']) {
     assert.ok(body.includes(needle), `missing: ${needle}`)
   }
 })
@@ -116,7 +116,7 @@ test('raw message has headers, reply-to and base64 body', () => {
     fromName: 'SEKAI STAY 採用フォーム',
     replyTo: 'taro@example.com',
     replyToName: '山田 太郎',
-    subject: '【採用応募】運営オペレーション / 山田 太郎 様',
+    subject: '【採用応募】運営 / オペレーションマネージャー / 山田 太郎 様',
     text: '本文テスト',
   })
   const decoded = Buffer.from(raw, 'base64url').toString('utf8')

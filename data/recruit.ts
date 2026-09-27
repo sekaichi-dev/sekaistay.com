@@ -18,8 +18,8 @@ export type RecruitPosition = {
 export const RECRUIT_POSITIONS: RecruitPosition[] = [
   {
     id: 'operations',
-    title: '運営オペレーション',
-    en: 'Guest Operations',
+    title: '運営 / オペレーションマネージャー',
+    en: 'Operations',
     image: '/images/included/INCLUDED3.png',
     alt: 'ヘッドセットでゲストからの問い合わせに対応するスタッフ',
     employment: '正社員 / 業務委託（応相談）',
@@ -40,8 +40,8 @@ export const RECRUIT_POSITIONS: RecruitPosition[] = [
   },
   {
     id: 'sales',
-    title: 'フィールドセールス',
-    en: 'Field Sales',
+    title: '営業 / アカウントエグゼクティブ',
+    en: 'Sales',
     image: '/images/included/INCLUDED7.png',
     alt: '物件オーナーに運用プランを説明するスタッフ',
     employment: '正社員 / 業務委託（応相談）',
@@ -63,7 +63,7 @@ export const RECRUIT_POSITIONS: RecruitPosition[] = [
   },
   {
     id: 'business',
-    title: '事業開発 / オーナーサクセス',
+    title: '事業開発 / ビズデブマネージャー',
     en: 'Business Development',
     image: '/images/included/INCLUDED9.png',
     alt: 'オンラインでオーナーと打ち合わせをするスタッフ',
