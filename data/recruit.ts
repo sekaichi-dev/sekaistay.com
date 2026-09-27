@@ -43,7 +43,7 @@ export const RECRUIT_POSITIONS: RecruitPosition[] = [
     title: '営業 / アカウントエグゼクティブ',
     en: 'Sales',
     image: '/images/recruit/sales-site-visit.jpg',
-    alt: '物件を訪問し、玄関でオーナーにタブレットで運用プランを説明する営業スタッフ',
+    alt: '物件を訪問し、リビングでオーナーにタブレットで運用プランを説明する営業スタッフ',
     employment: '正社員 / 業務委託（応相談）',
     location: '東京（中目黒）・リモート可・全国への出張あり',
     summary:
