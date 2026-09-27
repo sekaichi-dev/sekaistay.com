@@ -42,8 +42,8 @@ export const RECRUIT_POSITIONS: RecruitPosition[] = [
     id: 'sales',
     title: '営業 / アカウントエグゼクティブ',
     en: 'Sales',
-    image: '/images/recruit/sales-site-visit.jpg',
-    alt: '建物模型と資料を前に、デスクでオーナーへ運用プランを説明する営業スタッフ',
+    image: '/images/included/INCLUDED9.png',
+    alt: 'オンラインでオーナーと打ち合わせをする営業スタッフ',
     employment: '正社員 / 業務委託（応相談）',
     location: '東京（中目黒）・リモート可・全国への出張あり',
     summary:
@@ -65,8 +65,8 @@ export const RECRUIT_POSITIONS: RecruitPosition[] = [
     id: 'business',
     title: '事業開発 / ビズデブマネージャー',
     en: 'Business Development',
-    image: '/images/included/INCLUDED9.png',
-    alt: 'オンラインでオーナーと打ち合わせをするスタッフ',
+    image: '/images/recruit/business-development.jpg',
+    alt: '提携先の不動産会社の担当者と握手を交わす事業開発スタッフ',
     employment: '正社員 / 業務委託（応相談）',
     location: '東京（中目黒）・リモート可',
     summary:
