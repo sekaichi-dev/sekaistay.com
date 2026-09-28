@@ -270,7 +270,7 @@ test("bookingRef: 数字の予約番号だけ受け取り、両タブの U 列�
 });
 
 // ───────── 写真の直接アップロード（受付中フォルダ→送信時に名簿フォルダへ移動）─────────
-const { verifyStagedFileMeta, isStillStaged, stagingFileName, photoExt, MAX_UPLOAD_BYTES } = await import("./guest-register.ts");
+const { verifyStagedFileMeta, stagingFileName, photoExt, MAX_UPLOAD_BYTES } = await import("./guest-register.ts");
 
 test("parseRegisterInput: 写真のファイルIDは Drive ID 形式だけ受け、それ以外は空にする", () => {
   const ok = parseRegisterInput(input({ guests: [guest({ photoFileId: "1xvIXWnVDmtT7PrPBXnxb5DUqIFvWa6jr", facePhotoFileId: "abc_DEF-123456" })] }));
@@ -281,11 +281,10 @@ test("parseRegisterInput: 写真のファイルIDは Drive ID 形式だけ受け
   assert.equal(bad.input!.guests[0].facePhotoFileId, "");
 });
 
-test("verifyStagedFileMeta: 当フォームの印つき・許可MIME・空でない・上限内だけ通す（置き場所は問わない＝再送可）", () => {
+test("verifyStagedFileMeta: 当フォームの印つき（staged）・許可MIME・空でない・上限内だけ通す", () => {
   const good = { id: "f1", parents: ["STAGING"], mimeType: "image/jpeg", size: "1234", appProperties: { guestRegister: "staged" } };
   assert.equal(verifyStagedFileMeta(good), null);
-  // 前回の送信で名簿フォルダへ移動済みでも、印があれば再送で使える
-  assert.equal(verifyStagedFileMeta({ ...good, parents: ["REGISTER_FOLDER"] }), null);
+  assert.equal(verifyStagedFileMeta({ ...good, parents: ["ANYWHERE"] }), null); // 置き場所は見ない
   assert.match(verifyStagedFileMeta({ ...good, appProperties: undefined })!, /register photo/);
   assert.match(verifyStagedFileMeta({ ...good, appProperties: { guestRegister: "x" } })!, /register photo/);
   assert.match(verifyStagedFileMeta({ ...good, mimeType: "application/pdf" })!, /mime/);
@@ -293,17 +292,8 @@ test("verifyStagedFileMeta: 当フォームの印つき・許可MIME・空でな
   assert.match(verifyStagedFileMeta({ ...good, size: String(MAX_UPLOAD_BYTES + 1) })!, /large/);
   assert.match(verifyStagedFileMeta({ ...good, trashed: true })!, /trashed/);
   assert.equal(verifyStagedFileMeta({ ...good, mimeType: "image/heic" }), null);
-  // 送信で確定済み（claimed）の写真も再送で使える
-  assert.equal(verifyStagedFileMeta({ ...good, appProperties: { guestRegister: "claimed" } }), null);
-});
-
-test("isStillStaged: 掃除で消してよいのは受付中フォルダにあり未確定（staged）の写真だけ", () => {
-  const staged = { id: "f", parents: ["STAGING"], appProperties: { guestRegister: "staged" } };
-  assert.equal(isStillStaged(staged, "STAGING"), true);
-  assert.equal(isStillStaged({ ...staged, parents: ["REGISTER_FOLDER"] }, "STAGING"), false); // 一覧後に送信で移動
-  assert.equal(isStillStaged({ ...staged, appProperties: { guestRegister: "claimed" } }, "STAGING"), false); // 確定済み
-  assert.equal(isStillStaged({ ...staged, trashed: true }, "STAGING"), false);
-  assert.equal(isStillStaged({ id: "f" }, "STAGING"), false);
+  // 名簿フォルダ側のコピー（claimed）を原本として再利用させない
+  assert.match(verifyStagedFileMeta({ ...good, appProperties: { guestRegister: "claimed" } })!, /register photo/);
 });
 
 test("stagingFileName / photoExt: MIME に応じた拡張子・一意な名前", () => {
