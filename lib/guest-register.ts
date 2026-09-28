@@ -60,8 +60,11 @@ export const ALLOWED_PHOTO_MIME: ReadonlySet<string> = new Set(["image/jpeg", "i
 /** 送信前の写真の置き場。送信時に claimStagedPhoto が名簿フォルダへ移す。残骸は cleanupStagedPhotos が消す */
 const STAGING_FOLDER_NAME = "受付中（未送信）";
 const DRIVE_ID_RE = /^[A-Za-z0-9_-]{10,128}$/;
-/** 当フォームのセッションで作られた写真の印（Drive の appProperties・当アプリの認証でしか付けられない） */
-const STAGED_MARK = { guestRegister: "staged" } as const;
+/** 当フォームのセッションで作られた写真の印（Drive の appProperties・当アプリの認証でしか付けられない）。
+ *  staged = 受付中（未送信）/ claimed = 送信で名簿フォルダへ確定済み。掃除は staged だけを消す */
+const MARK_KEY = "guestRegister";
+const MARK_STAGED = "staged";
+const MARK_CLAIMED = "claimed";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -425,7 +428,7 @@ export async function createPhotoUploadSession(mime: string, size: number, origi
         "X-Upload-Content-Length": String(size),
         Origin: origin,
       },
-      body: JSON.stringify({ name: stagingFileName(mime), parents: [parent], appProperties: STAGED_MARK }),
+      body: JSON.stringify({ name: stagingFileName(mime), parents: [parent], appProperties: { [MARK_KEY]: MARK_STAGED } }),
     },
   );
   if (!resp.ok) {
@@ -448,7 +451,8 @@ export class StagedPhotoError extends Error {}
 // 同じ写真で再送できるようにするため（Codex レビュー 2026-09-28）。
 export function verifyStagedFileMeta(meta: StagedFileMeta): string | null {
   if (meta.trashed) return "trashed";
-  if (meta.appProperties?.guestRegister !== STAGED_MARK.guestRegister) return "not an uploaded register photo";
+  const mark = meta.appProperties?.[MARK_KEY];
+  if (mark !== MARK_STAGED && mark !== MARK_CLAIMED) return "not an uploaded register photo";
   if (!ALLOWED_PHOTO_MIME.has(meta.mimeType || "")) return `mime ${meta.mimeType || "(none)"}`;
   const size = Number(meta.size || 0);
   if (!(size > 0)) return "empty";
@@ -479,7 +483,7 @@ export async function claimStagedPhoto(fileId: string, baseName: string, parentI
     {
       method: "PATCH",
       headers: { ...auth, "Content-Type": "application/json" },
-      body: JSON.stringify({ name: `${baseName}.${photoExt(meta.mimeType || "")}` }),
+      body: JSON.stringify({ name: `${baseName}.${photoExt(meta.mimeType || "")}`, appProperties: { [MARK_KEY]: MARK_CLAIMED } }),
     },
   );
   if (!moved.ok) {
@@ -490,13 +494,21 @@ export async function claimStagedPhoto(fileId: string, baseName: string, parentI
   return data.webViewLink || `https://drive.google.com/file/d/${data.id}/view`;
 }
 
+/** 削除してよいのは「今も受付中フォルダにあり、送信で確定（claimed）されていない」写真だけ。
+ *  一覧を取ってから削除するまでの間に送信が入り名簿フォルダへ移った写真を消さないよう、削除直前に1件ずつ見る */
+export function isStillStaged(meta: StagedFileMeta, stagingFolderId: string): boolean {
+  return !meta.trashed && !!meta.parents?.includes(stagingFolderId) && meta.appProperties?.[MARK_KEY] === MARK_STAGED;
+}
+
 /** 受付中フォルダに残った古い写真（送信されなかった分）を消す。消した件数を返す */
 export async function cleanupStagedPhotos(olderThanMs: number, now: number = Date.now()): Promise<number> {
   const token = await getAccessToken();
   const staging = await ensureStagingFolder();
   const auth = { Authorization: `Bearer ${token}` };
   const cutoff = new Date(now - olderThanMs).toISOString();
-  const q = encodeURIComponent(`'${staging}' in parents and createdTime < '${cutoff}' and trashed = false`);
+  const q = encodeURIComponent(
+    `'${staging}' in parents and createdTime < '${cutoff}' and trashed = false and appProperties has { key='${MARK_KEY}' and value='${MARK_STAGED}' }`,
+  );
   let deleted = 0;
   let pageToken = "";
   do {
@@ -507,6 +519,12 @@ export async function cleanupStagedPhotos(olderThanMs: number, now: number = Dat
     if (!res.ok) throw new Error(`drive list ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
     const data = (await res.json()) as { nextPageToken?: string; files?: { id: string }[] };
     for (const f of data.files || []) {
+      const fresh = await fetchWithTimeout(
+        `https://www.googleapis.com/drive/v3/files/${f.id}?fields=id,parents,trashed,appProperties&supportsAllDrives=true`,
+        { headers: auth },
+      );
+      if (!fresh.ok) continue; // 消えていた・読めない → 触らない
+      if (!isStillStaged((await fresh.json()) as StagedFileMeta, staging)) continue; // 一覧後に送信で確定された
       const del = await fetchWithTimeout(`https://www.googleapis.com/drive/v3/files/${f.id}?supportsAllDrives=true`, { method: "DELETE", headers: auth });
       if (del.ok || del.status === 404) deleted++;
       else console.error(`[guest-register] staging delete ${f.id} -> ${del.status}`);
