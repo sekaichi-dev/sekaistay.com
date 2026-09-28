@@ -268,3 +268,39 @@ test("bookingRef: 数字の予約番号だけ受け取り、両タブの U 列�
   assert.equal(r[0][20], "93363867");
   assert.equal(r[0][18], "2026/09/20 10:00"); // S=受付日時 は動かさない（ops が列固定で読む）
 });
+
+// ───────── 写真の直接アップロード（受付中フォルダ→送信時に名簿フォルダへ移動）─────────
+const { verifyStagedFileMeta, stagingFileName, photoExt, MAX_UPLOAD_BYTES } = await import("./guest-register.ts");
+
+test("parseRegisterInput: 写真のファイルIDは Drive ID 形式だけ受け、それ以外は空にする", () => {
+  const ok = parseRegisterInput(input({ guests: [guest({ photoFileId: "1xvIXWnVDmtT7PrPBXnxb5DUqIFvWa6jr", facePhotoFileId: "abc_DEF-123456" })] }));
+  assert.equal(ok.input!.guests[0].photoFileId, "1xvIXWnVDmtT7PrPBXnxb5DUqIFvWa6jr");
+  assert.equal(ok.input!.guests[0].facePhotoFileId, "abc_DEF-123456");
+  const bad = parseRegisterInput(input({ guests: [guest({ photoFileId: "../etc?x=1", facePhotoFileId: 123 })] }));
+  assert.equal(bad.input!.guests[0].photoFileId, "");
+  assert.equal(bad.input!.guests[0].facePhotoFileId, "");
+});
+
+test("verifyStagedFileMeta: 当フォームの印つき（staged）・許可MIME・空でない・上限内だけ通す", () => {
+  const good = { id: "f1", parents: ["STAGING"], mimeType: "image/jpeg", size: "1234", appProperties: { guestRegister: "staged" } };
+  assert.equal(verifyStagedFileMeta(good), null);
+  assert.equal(verifyStagedFileMeta({ ...good, parents: ["ANYWHERE"] }), null); // 置き場所は見ない
+  assert.match(verifyStagedFileMeta({ ...good, appProperties: undefined })!, /register photo/);
+  assert.match(verifyStagedFileMeta({ ...good, appProperties: { guestRegister: "x" } })!, /register photo/);
+  assert.match(verifyStagedFileMeta({ ...good, mimeType: "application/pdf" })!, /mime/);
+  assert.match(verifyStagedFileMeta({ ...good, size: "0" })!, /empty/);
+  assert.match(verifyStagedFileMeta({ ...good, size: String(MAX_UPLOAD_BYTES + 1) })!, /large/);
+  assert.match(verifyStagedFileMeta({ ...good, trashed: true })!, /trashed/);
+  assert.equal(verifyStagedFileMeta({ ...good, mimeType: "image/heic" }), null);
+  // 名簿フォルダ側のコピー（claimed）を原本として再利用させない
+  assert.match(verifyStagedFileMeta({ ...good, appProperties: { guestRegister: "claimed" } })!, /register photo/);
+});
+
+test("stagingFileName / photoExt: MIME に応じた拡張子・一意な名前", () => {
+  assert.equal(photoExt("image/jpeg"), "jpg");
+  assert.equal(photoExt("image/heic"), "heic");
+  assert.equal(photoExt("image/png"), "png");
+  const a = stagingFileName("image/heic", 1700000000000);
+  assert.match(a, /^staging_1700000000000_[a-z0-9]+\.heic$/);
+  assert.notEqual(a, stagingFileName("image/heic", 1700000000000));
+});

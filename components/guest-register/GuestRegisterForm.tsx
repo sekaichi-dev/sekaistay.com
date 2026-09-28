@@ -8,8 +8,11 @@
  * （予約後の人数変更に対応。2026-09-07 テンイチ指示。代表者カードは削除不可・上限 MAX_GUESTS）。
  * パスポート欄は「日本国外に居住」を選んだ時のみ表示（表示時は国籍を問わず必須）。
  * 顔写真は居住地・国籍を問わず全ゲスト必須（2026-07-24 テンイチ指示・本人確認用）。
- * 写真はクライアントで圧縮してから送信（旅券 1600px/450KB・顔 1200px/300KB 目安。
- * 合計が Vercel の 4.5MB 制限に近づく場合は送信前にもう一段縮小する）。
+ * 写真は選んだ時点で1枚ずつ、ブラウザから Google Drive の受付中フォルダへ直接置く
+ * （/api/guest-register/photo-session が発行する URL へ PUT）。送信本体は Drive のファイル ID だけを送る。
+ * こうすると Vercel 関数の 4.5MB 上限が枚数・原本サイズに関係しなくなる（2026-09-28 予約 93483531 の送信失敗の再発防止）。
+ * 縮小はブラウザで可能なときだけ（旅券 1600px/450KB・顔 1200px/300KB 目安）。HEIC 等でデコードできない原本は
+ * 20MB までそのまま置く。
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -39,9 +42,10 @@ interface GuestForm {
   contact: string;
   sameContact: boolean;
   passportNo: string;
-  photo: File | null;
+  /** Drive 受付中フォルダに置いた写真のファイル ID（"" = 未添付） */
+  photoFileId: string;
   photoName: string;
-  facePhoto: File | null;
+  facePhotoFileId: string;
   facePhotoName: string;
   gender: string;
   age: string;
@@ -52,7 +56,7 @@ interface GuestForm {
 const emptyGuest = (isChild = false): GuestForm => ({
   name: "", isChild, jaResident: null, address: "", sameAddress: false, nationality: "",
   occupation: "", contact: "", sameContact: false, passportNo: "",
-  photo: null, photoName: "", facePhoto: null, facePhotoName: "",
+  photoFileId: "", photoName: "", facePhotoFileId: "", facePhotoName: "",
   gender: "", age: "", prevStay: "", nextDest: "",
 });
 
@@ -105,8 +109,9 @@ const T = {
     photoRemove: "削除",
     photoAttached: "添付済み",
     photoHint: "顔写真のあるページを撮影してください。画像は自動で圧縮されます。",
-    photoTooLarge: "画像が大きすぎます。設定を下げて撮影するか、スクリーンショットをお試しください。",
-    photosTotalTooLarge: "写真の合計サイズが大きすぎます。JPEG形式の小さめの画像に変更してお試しください。",
+    photoTooLarge: "画像が大きすぎます（20MBまで）。設定を下げて撮影するか、スクリーンショットをお試しください。",
+    photoUploadFailed: "写真のアップロードに失敗しました。通信状況をご確認のうえ、もう一度写真を選択してください。",
+    photoUploading: "アップロード中…",
     facePhotoLabel: "顔写真",
     facePhotoWhy: "ご本人確認のため、ご宿泊者全員にお顔がはっきり写った写真のご提出をお願いしています（自撮り写真で構いません）。",
     facePhotoHint: "正面からお顔がはっきり写った画像を添付してください。画像は自動で圧縮されます。",
@@ -193,8 +198,9 @@ const T = {
     photoRemove: "Remove",
     photoAttached: "Attached",
     photoHint: "Take a photo of the page with your portrait. The image is compressed automatically.",
-    photoTooLarge: "The image is too large. Please try a smaller photo or a screenshot.",
-    photosTotalTooLarge: "The combined size of the photos is too large. Please use smaller JPEG images.",
+    photoTooLarge: "The image is too large (max 20MB). Please try a smaller photo or a screenshot.",
+    photoUploadFailed: "The photo could not be uploaded. Please check your connection and select the photo again.",
+    photoUploading: "Uploading…",
     facePhotoLabel: "Face photo",
     facePhotoWhy: "For identity verification, every guest is asked to provide a clear photo of their face (a selfie is fine).",
     facePhotoHint: "Attach a clear, front-facing photo of your face. The image is compressed automatically.",
@@ -249,7 +255,9 @@ async function loadBitmap(file: File): Promise<ImageBitmap | HTMLImageElement> {
   }
 }
 
-// maxDim px・targetBytes 目安にJPEG圧縮。デコード不可(HEIC等)は3.5MB以下ならそのまま送る。
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // サーバー側 MAX_UPLOAD_BYTES と同値
+
+// maxDim px・targetBytes 目安にJPEG圧縮。デコード不可(HEIC等)や巨大画像は MAX_UPLOAD_BYTES 以下ならそのまま送る。
 async function compressImage(file: File, maxDim = 1600, targetBytes = 450_000, outName = "photo.jpg"): Promise<File> {
   if (file.size <= targetBytes) return file;
   try {
@@ -270,12 +278,47 @@ async function compressImage(file: File, maxDim = 1600, targetBytes = 450_000, o
       if (result && result.size <= targetBytes) break;
     }
     if (!result) throw new Error("toBlob failed");
-    if (result.size > 3_500_000) throw new Error("TOO_LARGE");
     return new File([result], outName, { type: "image/jpeg" });
-  } catch (e) {
-    if (file.size <= 3_500_000) return file;
+  } catch {
+    if (file.size <= MAX_UPLOAD_BYTES) return file;
     throw new Error("TOO_LARGE");
   }
+}
+
+// Android 等で file.type が空になる HEIC は拡張子から補う
+function guessMime(file: File): string {
+  if (file.type) return file.type;
+  const m = /\.([a-z0-9]+)$/i.exec(file.name);
+  return ({ heic: "image/heic", heif: "image/heif", png: "image/png", webp: "image/webp" } as Record<string, string>)[(m?.[1] || "").toLowerCase()] || "image/jpeg";
+}
+
+// ゲスト端末での失敗を運営に見えるようにする（送信の可否には影響させない）
+function reportFailure(stage: string, message: string, detail = "", bookingRef = "") {
+  try {
+    void fetch("/api/guest-register/telemetry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stage, message, detail, bookingRef }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {}
+}
+
+// 1枚ぶんの直接アップロード: セッション URL を貰い、そこへ PUT。Drive がファイル ID を返す
+async function uploadPhoto(file: File): Promise<string> {
+  const mime = guessMime(file);
+  const sessionRes = await fetch("/api/guest-register/photo-session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mime, size: file.size }),
+  });
+  const session = (await sessionRes.json().catch(() => ({}))) as { uploadUrl?: string; error?: string };
+  if (!sessionRes.ok || !session.uploadUrl) throw new Error(session.error || `session ${sessionRes.status}`);
+  const put = await fetch(session.uploadUrl, { method: "PUT", headers: { "Content-Type": mime }, body: file });
+  if (!put.ok) throw new Error(`drive put ${put.status}`);
+  const created = (await put.json().catch(() => ({}))) as { id?: string };
+  if (!created.id) throw new Error("drive put: no id");
+  return created.id;
 }
 
 const inputCls = "w-full rounded-switch-md border border-switch-stone-border bg-white px-3.5 py-2.5 text-[15px] text-switch-charcoal placeholder:text-switch-stone-text-disabled focus:outline-none focus:border-switch-teal focus:ring-2 focus:ring-switch-teal/20 transition-colors";
@@ -377,21 +420,34 @@ export default function GuestRegisterForm() {
     return [...OTHER_NATIONALITIES].sort((a, b) => a[idx].localeCompare(b[idx], lang === "en" ? "en" : "ja"));
   }, [lang]);
 
-  // 旅券写しは判読性重視の 1600px/450KB・顔写真は本人確認できれば足りるので 1200px/300KB
+  // 旅券写しは判読性重視の 1600px/450KB・顔写真は本人確認できれば足りるので 1200px/300KB。
+  // 縮小したらその場で Drive へ置き、フォームにはファイル ID だけ持つ。
   async function onPhotoChange(kind: "passport" | "face", index: number, file: File | null) {
     if (!file) return;
     setError("");
     setPhotoBusy(`${kind === "passport" ? "p" : "f"}${index}`);
+    const clear = kind === "passport" ? { photoFileId: "", photoName: "" } : { facePhotoFileId: "", facePhotoName: "" };
+    let compressed: File;
     try {
-      const compressed = kind === "passport"
+      compressed = kind === "passport"
         ? await compressImage(file, 1600, 450_000, "passport.jpg")
         : await compressImage(file, 1200, 300_000, "face.jpg");
-      updateGuest(index, kind === "passport"
-        ? { photo: compressed, photoName: file.name }
-        : { facePhoto: compressed, facePhotoName: file.name });
     } catch {
-      updateGuest(index, kind === "passport" ? { photo: null, photoName: "" } : { facePhoto: null, facePhotoName: "" });
+      updateGuest(index, clear);
       setError(t.photoTooLarge);
+      setPhotoBusy(null);
+      reportFailure("compress", "TOO_LARGE", `${kind} ${file.type || "(no type)"} ${file.size}B`, bookingRef);
+      return;
+    }
+    try {
+      const fileId = await uploadPhoto(compressed);
+      updateGuest(index, kind === "passport"
+        ? { photoFileId: fileId, photoName: file.name }
+        : { facePhotoFileId: fileId, facePhotoName: file.name });
+    } catch (e) {
+      updateGuest(index, clear);
+      setError(t.photoUploadFailed);
+      reportFailure("upload", String((e as Error)?.message || e), `${kind} ${compressed.type} ${compressed.size}B (orig ${file.size}B)`, bookingRef);
     } finally {
       setPhotoBusy(null);
     }
@@ -409,10 +465,10 @@ export default function GuestRegisterForm() {
       if (!(i > 0 && g.sameAddress) && !g.address.trim()) return t.errAddress(who);
       if (property.type === "民泊" && !g.occupation.trim()) return t.errOccupation(who);
       if (!(i > 0 && g.sameContact) && !g.contact.trim()) return t.errContact(who);
-      if (!g.facePhoto) return t.errFacePhoto(who);
+      if (!g.facePhotoFileId) return t.errFacePhoto(who);
       if (needsPassport(g)) {
         if (!g.passportNo.trim()) return t.errPassportNo(who);
-        if (!g.photo) return t.errPhoto(who);
+        if (!g.photoFileId) return t.errPhoto(who);
       }
     }
     if (!consent) return t.errConsent;
@@ -425,28 +481,6 @@ export default function GuestRegisterForm() {
     const validationError = validate();
     if (validationError) {
       setError(validationError);
-      return;
-    }
-    // Vercel のリクエスト上限 ~4.5MB 対策。顔写真8名+旅券8名で超えうるので、
-    // 合計が閾値を超えたら送信前にもう一段小さく再圧縮してから最終ガード。
-    let sendGuests = guests;
-    const totalBytes = (arr: GuestForm[]) =>
-      arr.reduce((sum, g) => sum + (g.jaResident === false && g.photo ? g.photo.size : 0) + (g.facePhoto ? g.facePhoto.size : 0), 0);
-    if (totalBytes(sendGuests) > 3_600_000) {
-      try {
-        sendGuests = await Promise.all(guests.map(async (g) => ({
-          ...g,
-          photo: g.photo ? await compressImage(g.photo, 1100, 260_000, "passport.jpg") : g.photo,
-          facePhoto: g.facePhoto ? await compressImage(g.facePhoto, 900, 180_000, "face.jpg") : g.facePhoto,
-        })));
-        setGuests(sendGuests);
-      } catch {
-        setError(t.photosTotalTooLarge);
-        return;
-      }
-    }
-    if (totalBytes(sendGuests) > 3_800_000) {
-      setError(t.photosTotalTooLarge);
       return;
     }
     setSubmitting(true);
@@ -472,25 +506,26 @@ export default function GuestRegisterForm() {
           age: g.age,
           prevStay: g.prevStay,
           nextDest: g.nextDest,
+          photoFileId: g.jaResident === false ? g.photoFileId : "",
+          facePhotoFileId: g.facePhotoFileId,
         })),
       };
-      const form = new FormData();
-      form.set("payload", JSON.stringify(payload));
-      form.set("website", (document.getElementById("gr-website") as HTMLInputElement)?.value || "");
-      sendGuests.forEach((g, i) => {
-        if (g.jaResident === false && g.photo) form.set(`photo_${i}`, g.photo);
-        if (g.facePhoto) form.set(`face_photo_${i}`, g.facePhoto);
+      const res = await fetch("/api/guest-register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payload, website: (document.getElementById("gr-website") as HTMLInputElement)?.value || "" }),
       });
-      const res = await fetch("/api/guest-register", { method: "POST", body: form });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         setError(data.error || t.errSubmit);
+        reportFailure("submit", data.error || `HTTP ${res.status}`, "", bookingRef);
         return;
       }
       setReceiptId(data.receiptId || "OK");
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {
+    } catch (e) {
       setError(t.errSubmit);
+      reportFailure("submit", String((e as Error)?.message || e), "fetch threw", bookingRef);
     } finally {
       setSubmitting(false);
     }
@@ -739,7 +774,7 @@ export default function GuestRegisterForm() {
                       <div>
                         <label className={labelCls}>{t.facePhotoLabel}{requiredMark}</label>
                         <p className="text-[11.5px] text-switch-gray-mid leading-relaxed mb-2">{t.facePhotoWhy}</p>
-                        <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.facePhoto ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}`}>
+                        <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.facePhotoFileId ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}`}>
                           <input
                             type="file"
                             accept="image/*"
@@ -747,14 +782,14 @@ export default function GuestRegisterForm() {
                             onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
                             onChange={(e) => onPhotoChange("face", i, e.target.files?.[0] || null)}
                           />
-                          {photoBusy === `f${i}` ? "…" : g.facePhoto ? `✓ ${t.photoAttached}` : t.photoSelect}
+                          {photoBusy === `f${i}` ? t.photoUploading : g.facePhotoFileId ? `✓ ${t.photoAttached}` : t.photoSelect}
                         </label>
-                        {g.facePhoto && (
+                        {g.facePhotoFileId && (
                           <span className="ml-3 text-[12px] text-switch-gray-mid">
                             <span className="break-all">{g.facePhotoName}</span>
                             <button
                               type="button"
-                              onClick={() => updateGuest(i, { facePhoto: null, facePhotoName: "" })}
+                              onClick={() => updateGuest(i, { facePhotoFileId: "", facePhotoName: "" })}
                               className="ml-2 underline underline-offset-2 hover:text-danger"
                             >
                               {t.photoRemove}
@@ -777,7 +812,7 @@ export default function GuestRegisterForm() {
                           </div>
                           <div>
                             <label className={labelCls}>{t.passportPhoto}{requiredMark}</label>
-                            <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.photo ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}`}>
+                            <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.photoFileId ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}`}>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -785,14 +820,14 @@ export default function GuestRegisterForm() {
                                 onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
                                 onChange={(e) => onPhotoChange("passport", i, e.target.files?.[0] || null)}
                               />
-                              {photoBusy === `p${i}` ? "…" : g.photo ? `✓ ${t.photoAttached}` : t.photoSelect}
+                              {photoBusy === `p${i}` ? t.photoUploading : g.photoFileId ? `✓ ${t.photoAttached}` : t.photoSelect}
                             </label>
-                            {g.photo && (
+                            {g.photoFileId && (
                               <span className="ml-3 text-[12px] text-switch-gray-mid">
                                 <span className="break-all">{g.photoName}</span>
                                 <button
                                   type="button"
-                                  onClick={() => updateGuest(i, { photo: null, photoName: "" })}
+                                  onClick={() => updateGuest(i, { photoFileId: "", photoName: "" })}
                                   className="ml-2 underline underline-offset-2 hover:text-danger"
                                 >
                                   {t.photoRemove}
