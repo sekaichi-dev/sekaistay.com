@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
   console.error("[guest-register] client failure:", line);
   const channel = (process.env.SLACK_GUEST_REGISTER_ALERT_CHANNEL_ID || "").trim();
   if (channel) {
-    await postToSlack(channel, { text: `宿泊者名簿フォームでゲスト側の失敗\n${line}` }).catch(() => {});
+    const r = await postToSlack(channel, { text: `宿泊者名簿フォームでゲスト側の失敗\n${line}` }).catch((e) => ({ ok: false, error: String(e) }));
+    if (!r.ok) console.error("[guest-register] telemetry slack failed:", r.error);
   }
   return NextResponse.json({ ok: true });
 }

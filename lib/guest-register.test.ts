@@ -281,17 +281,18 @@ test("parseRegisterInput: 写真のファイルIDは Drive ID 形式だけ受け
   assert.equal(bad.input!.guests[0].facePhotoFileId, "");
 });
 
-test("verifyStagedFileMeta: 受付中フォルダにある許可MIMEの空でないファイルだけ通す", () => {
-  const staging = "STAGING";
-  const good = { id: "f1", parents: [staging], mimeType: "image/jpeg", size: "1234" };
-  assert.equal(verifyStagedFileMeta(good, staging), null);
-  assert.match(verifyStagedFileMeta({ ...good, parents: ["OTHER"] }, staging)!, /staging/);
-  assert.match(verifyStagedFileMeta({ ...good, parents: undefined }, staging)!, /staging/);
-  assert.match(verifyStagedFileMeta({ ...good, mimeType: "application/pdf" }, staging)!, /mime/);
-  assert.match(verifyStagedFileMeta({ ...good, size: "0" }, staging)!, /empty/);
-  assert.match(verifyStagedFileMeta({ ...good, size: String(MAX_UPLOAD_BYTES + 1) }, staging)!, /large/);
-  assert.match(verifyStagedFileMeta({ ...good, trashed: true }, staging)!, /trashed/);
-  assert.equal(verifyStagedFileMeta({ ...good, mimeType: "image/heic" }, staging), null);
+test("verifyStagedFileMeta: 当フォームの印つき・許可MIME・空でない・上限内だけ通す（置き場所は問わない＝再送可）", () => {
+  const good = { id: "f1", parents: ["STAGING"], mimeType: "image/jpeg", size: "1234", appProperties: { guestRegister: "staged" } };
+  assert.equal(verifyStagedFileMeta(good), null);
+  // 前回の送信で名簿フォルダへ移動済みでも、印があれば再送で使える
+  assert.equal(verifyStagedFileMeta({ ...good, parents: ["REGISTER_FOLDER"] }), null);
+  assert.match(verifyStagedFileMeta({ ...good, appProperties: undefined })!, /register photo/);
+  assert.match(verifyStagedFileMeta({ ...good, appProperties: { guestRegister: "x" } })!, /register photo/);
+  assert.match(verifyStagedFileMeta({ ...good, mimeType: "application/pdf" })!, /mime/);
+  assert.match(verifyStagedFileMeta({ ...good, size: "0" })!, /empty/);
+  assert.match(verifyStagedFileMeta({ ...good, size: String(MAX_UPLOAD_BYTES + 1) })!, /large/);
+  assert.match(verifyStagedFileMeta({ ...good, trashed: true })!, /trashed/);
+  assert.equal(verifyStagedFileMeta({ ...good, mimeType: "image/heic" }), null);
 });
 
 test("stagingFileName / photoExt: MIME に応じた拡張子・一意な名前", () => {

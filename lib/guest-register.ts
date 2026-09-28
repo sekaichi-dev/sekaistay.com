@@ -60,6 +60,8 @@ export const ALLOWED_PHOTO_MIME: ReadonlySet<string> = new Set(["image/jpeg", "i
 /** 送信前の写真の置き場。送信時に claimStagedPhoto が名簿フォルダへ移す。残骸は cleanupStagedPhotos が消す */
 const STAGING_FOLDER_NAME = "受付中（未送信）";
 const DRIVE_ID_RE = /^[A-Za-z0-9_-]{10,128}$/;
+/** 当フォームのセッションで作られた写真の印（Drive の appProperties・当アプリの認証でしか付けられない） */
+const STAGED_MARK = { guestRegister: "staged" } as const;
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -423,7 +425,7 @@ export async function createPhotoUploadSession(mime: string, size: number, origi
         "X-Upload-Content-Length": String(size),
         Origin: origin,
       },
-      body: JSON.stringify({ name: stagingFileName(mime), parents: [parent] }),
+      body: JSON.stringify({ name: stagingFileName(mime), parents: [parent], appProperties: STAGED_MARK }),
     },
   );
   if (!resp.ok) {
@@ -435,16 +437,18 @@ export async function createPhotoUploadSession(mime: string, size: number, origi
   return uri;
 }
 
-export interface StagedFileMeta { id: string; parents?: string[]; mimeType?: string; size?: string; trashed?: boolean }
+export interface StagedFileMeta { id: string; parents?: string[]; mimeType?: string; size?: string; trashed?: boolean; appProperties?: Record<string, string> }
 
 /** ゲストの操作で直る失敗（写真の再添付で解消）。それ以外の Error はサーバー障害として扱う */
 export class StagedPhotoError extends Error {}
 
-// 送信で受け取った ID が「このフォームがさっき受付中フォルダに置いた写真」であることを確かめる。
-// 当社 Drive 上の別ファイルの ID を渡して名簿フォルダへ移動させる悪用と、二重送信の再利用を防ぐ。
-export function verifyStagedFileMeta(meta: StagedFileMeta, stagingFolderId: string): string | null {
+// 送信で受け取った ID が「このフォームのセッションで置かれた写真」であることを印で確かめる。
+// 当社 Drive 上の別ファイルの ID を渡して名簿フォルダへ移動させる悪用を防ぐ。
+// 置き場所（受付中か名簿フォルダか）は見ない: 前回の送信で移動まで済んでシート書き込みだけ失敗した場合に、
+// 同じ写真で再送できるようにするため（Codex レビュー 2026-09-28）。
+export function verifyStagedFileMeta(meta: StagedFileMeta): string | null {
   if (meta.trashed) return "trashed";
-  if (!meta.parents?.includes(stagingFolderId)) return "not in staging folder";
+  if (meta.appProperties?.guestRegister !== STAGED_MARK.guestRegister) return "not an uploaded register photo";
   if (!ALLOWED_PHOTO_MIME.has(meta.mimeType || "")) return `mime ${meta.mimeType || "(none)"}`;
   const size = Number(meta.size || 0);
   if (!(size > 0)) return "empty";
@@ -452,14 +456,13 @@ export function verifyStagedFileMeta(meta: StagedFileMeta, stagingFolderId: stri
   return null;
 }
 
-/** 受付中フォルダの写真を検証して名簿フォルダへ移動・改名し、閲覧リンクを返す */
+/** アップロード済みの写真を検証して名簿フォルダへ移動・改名し、閲覧リンクを返す（再送でも同じ写真を使える） */
 export async function claimStagedPhoto(fileId: string, baseName: string, parentId: string = DRIVE_FOLDER_ID): Promise<string> {
   if (!DRIVE_ID_RE.test(fileId)) throw new StagedPhotoError("bad id");
   const token = await getAccessToken();
-  const staging = await ensureStagingFolder();
   const auth = { Authorization: `Bearer ${token}` };
   const metaRes = await fetchWithTimeout(
-    `https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,parents,mimeType,size,trashed&supportsAllDrives=true`,
+    `https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,parents,mimeType,size,trashed,appProperties&supportsAllDrives=true`,
     { headers: auth },
   );
   if (metaRes.status === 404) throw new StagedPhotoError("not found");
@@ -468,10 +471,11 @@ export async function claimStagedPhoto(fileId: string, baseName: string, parentI
     throw new Error(`drive get ${metaRes.status}: ${text.slice(0, 200)}`);
   }
   const meta = (await metaRes.json()) as StagedFileMeta;
-  const problem = verifyStagedFileMeta(meta, staging);
+  const problem = verifyStagedFileMeta(meta);
   if (problem) throw new StagedPhotoError(problem);
+  const removeParents = (meta.parents || []).filter((p) => p !== parentId).join(",");
   const moved = await fetchWithTimeout(
-    `https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${parentId}&removeParents=${staging}&supportsAllDrives=true&fields=id,webViewLink`,
+    `https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${parentId}${removeParents ? `&removeParents=${removeParents}` : ""}&supportsAllDrives=true&fields=id,webViewLink`,
     {
       method: "PATCH",
       headers: { ...auth, "Content-Type": "application/json" },
