@@ -1,53 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   parseRegisterInput, validateGuests, needsPassport, makeGroupId, nowJstString,
-  buildMinpakuRows, buildRyokanRows, appendRows, uploadPassportPhoto, ensurePassportFolder,
-  fetchProperties, sanitizeFilePart, MAX_PHOTO_BYTES,
+  buildMinpakuRows, buildRyokanRows, appendRows, claimStagedPhoto, ensurePassportFolder,
+  fetchProperties, sanitizeFilePart, StagedPhotoError,
 } from "@/lib/guest-register";
+import { allowedOrigin, getClientIp, makeRateLimiter } from "@/lib/guest-register-request";
 
+// 写真はここには来ない。ブラウザが /photo-session の URL へ直接置いた Drive ファイル ID だけを受け取り、
+// 検証して名簿フォルダへ移す（送信本体は小さな JSON なので Vercel の 4.5MB 上限に当たらない）。
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const ALLOWED_HOSTS = new Set(["sekaistay.com", "www.sekaistay.com", "localhost:3000", "localhost"]);
-const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
-
-function getOriginHost(req: NextRequest): string | null {
-  for (const header of ["origin", "referer"]) {
-    const value = req.headers.get(header);
-    if (value) {
-      try {
-        return new URL(value).host.toLowerCase();
-      } catch {}
-    }
-  }
-  return null;
-}
-
-function getClientIp(req: NextRequest): string {
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return req.headers.get("x-real-ip") || "unknown";
-}
-
-// In-memory rate limiter（インスタンス単位・低トラフィック用途には十分）
-const rateMap = new Map<string, number[]>();
-const RATE_WINDOW_MS = 60 * 60 * 1000;
-const RATE_LIMIT = 10;
-
-function checkRate(ip: string): boolean {
-  const now = Date.now();
-  const recent = (rateMap.get(ip) || []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) return false;
-  recent.push(now);
-  rateMap.set(ip, recent);
-  return true;
-}
+const checkRate = makeRateLimiter(10, 60 * 60 * 1000);
 
 export async function POST(req: NextRequest) {
-  const host = getOriginHost(req);
-  if (process.env.NODE_ENV === "production" && (!host || !ALLOWED_HOSTS.has(host))) {
-    return NextResponse.json({ error: "Forbidden origin" }, { status: 403 });
-  }
+  if (!allowedOrigin(req)) return NextResponse.json({ error: "Forbidden origin" }, { status: 403 });
   if (!checkRate(getClientIp(req))) {
     return NextResponse.json(
       { error: "送信回数の上限に達しました。時間をおいてお試しください / Too many requests. Please try again later." },
@@ -55,26 +22,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let form: FormData;
+  let body: Record<string, unknown>;
   try {
-    form = await req.formData();
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "リクエストの形式が不正です / Invalid request" }, { status: 400 });
   }
 
   // honeypot: bot が埋めたら成功を装って破棄
-  if (typeof form.get("website") === "string" && (form.get("website") as string).length > 0) {
+  if (typeof body.website === "string" && body.website.length > 0) {
     return NextResponse.json({ ok: true, receiptId: makeGroupId() });
   }
 
-  let payload: unknown;
-  try {
-    payload = JSON.parse((form.get("payload") as string) || "");
-  } catch {
-    return NextResponse.json({ error: "リクエストの形式が不正です / Invalid request" }, { status: 400 });
-  }
-
-  const { input, error: parseError } = parseRegisterInput(payload);
+  const { input, error: parseError } = parseRegisterInput(body.payload);
   if (!input) return NextResponse.json({ error: parseError }, { status: 400 });
 
   let property;
@@ -102,68 +62,21 @@ export async function POST(req: NextRequest) {
   const guestError = validateGuests(input, property.type);
   if (guestError) return NextResponse.json({ error: guestError }, { status: 400 });
 
-  // 旅券写真の検証（国内住所なし外国籍ゲストは必須・その他のゲストも任意で添付可）
-  const photos: ({ buffer: Buffer; mime: string } | null)[] = [];
+  // 写真の有無（旅券: 国内住所なしは必須・顔写真: 全員必須 2026-07-24）
   for (let i = 0; i < input.guests.length; i++) {
     const guest = input.guests[i];
-    const file = form.get(`photo_${i}`);
     const who = `宿泊者${i + 1} / Guest ${i + 1}`;
-    if (!(file instanceof File) || file.size === 0) {
-      if (needsPassport(guest)) {
-        return NextResponse.json(
-          { error: `${who}: パスポート写真を添付してください / Passport photo is required` },
-          { status: 400 },
-        );
-      }
-      photos.push(null);
-      continue;
+    if (needsPassport(guest) && !guest.photoFileId) {
+      return NextResponse.json({ error: `${who}: パスポート写真を添付してください / Passport photo is required` }, { status: 400 });
     }
-    if (file.size > MAX_PHOTO_BYTES) {
-      return NextResponse.json(
-        { error: `${who}: 写真のサイズが大きすぎます（4MBまで）/ Photo too large (max 4MB)` },
-        { status: 400 },
-      );
+    if (!guest.facePhotoFileId) {
+      return NextResponse.json({ error: `${who}: 顔写真を添付してください / Face photo is required` }, { status: 400 });
     }
-    if (!ALLOWED_MIME.has(file.type)) {
-      return NextResponse.json(
-        { error: `${who}: 写真は JPEG / PNG 形式で添付してください / Photo must be JPEG or PNG` },
-        { status: 400 },
-      );
-    }
-    photos.push({ buffer: Buffer.from(await file.arrayBuffer()), mime: file.type });
-  }
-
-  // 顔写真の検証（居住地・国籍を問わず全ゲスト必須・2026-07-24 テンイチ指示）
-  const facePhotos: { buffer: Buffer; mime: string }[] = [];
-  for (let i = 0; i < input.guests.length; i++) {
-    const file = form.get(`face_photo_${i}`);
-    const who = `宿泊者${i + 1} / Guest ${i + 1}`;
-    if (!(file instanceof File) || file.size === 0) {
-      return NextResponse.json(
-        { error: `${who}: 顔写真を添付してください / Face photo is required` },
-        { status: 400 },
-      );
-    }
-    if (file.size > MAX_PHOTO_BYTES) {
-      return NextResponse.json(
-        { error: `${who}: 顔写真のサイズが大きすぎます（4MBまで）/ Face photo too large (max 4MB)` },
-        { status: 400 },
-      );
-    }
-    if (!ALLOWED_MIME.has(file.type)) {
-      return NextResponse.json(
-        { error: `${who}: 顔写真は JPEG / PNG 形式で添付してください / Face photo must be JPEG or PNG` },
-        { status: 400 },
-      );
-    }
-    facePhotos.push({ buffer: Buffer.from(await file.arrayBuffer()), mime: file.type });
   }
 
   const groupId = makeGroupId();
   const receivedAt = nowJstString();
-
-  const ext = (mime: string) =>
-    ({ "image/png": "png", "image/webp": "webp", "image/heic": "heic", "image/heif": "heif" })[mime] || "jpg";
+  const datePart = input.checkin.replaceAll("-", "");
 
   let photoLinks: (string | null)[];
   let facePhotoLinks: (string | null)[];
@@ -176,22 +89,23 @@ export async function POST(req: NextRequest) {
       console.error("[guest-register] passport folder ensure failed (fallback to root):", e);
     }
     [photoLinks, facePhotoLinks] = await Promise.all([
-      Promise.all(
-        photos.map((photo, i) => {
-          if (!photo) return Promise.resolve(null);
-          const filename = `${property.id}_${input.checkin.replaceAll("-", "")}_${sanitizeFilePart(input.guests[i].name)}_${groupId}.${ext(photo.mime)}`;
-          return uploadPassportPhoto(photo.buffer, photo.mime, filename, folderId);
-        }),
-      ),
-      Promise.all(
-        facePhotos.map((photo, i) => {
-          const filename = `顔写真_${property.id}_${input.checkin.replaceAll("-", "")}_${sanitizeFilePart(input.guests[i].name)}_${groupId}.${ext(photo.mime)}`;
-          return uploadPassportPhoto(photo.buffer, photo.mime, filename, folderId);
-        }),
-      ),
+      Promise.all(input.guests.map((g, i) => {
+        if (!needsPassport(g) || !g.photoFileId) return Promise.resolve(null);
+        return claimStagedPhoto(g.photoFileId, `${property.id}_${datePart}_${sanitizeFilePart(g.name)}_${groupId}`, folderId);
+      })),
+      Promise.all(input.guests.map((g) =>
+        claimStagedPhoto(g.facePhotoFileId, `顔写真_${property.id}_${datePart}_${sanitizeFilePart(g.name)}_${groupId}`, folderId),
+      )),
     ]);
   } catch (e) {
-    console.error("[guest-register] drive upload failed:", e);
+    if (e instanceof StagedPhotoError) {
+      console.error("[guest-register] staged photo rejected:", e.message);
+      return NextResponse.json(
+        { error: "写真を読み込めませんでした。写真をもう一度添付してください / We could not read a photo. Please attach it again." },
+        { status: 400 },
+      );
+    }
+    console.error("[guest-register] drive claim failed:", e);
     return NextResponse.json(
       { error: "写真のアップロードに失敗しました。時間をおいてお試しください / Photo upload failed. Please try again." },
       { status: 500 },

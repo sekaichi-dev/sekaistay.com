@@ -268,3 +268,37 @@ test("bookingRef: 数字の予約番号だけ受け取り、両タブの U 列�
   assert.equal(r[0][20], "93363867");
   assert.equal(r[0][18], "2026/09/20 10:00"); // S=受付日時 は動かさない（ops が列固定で読む）
 });
+
+// ───────── 写真の直接アップロード（受付中フォルダ→送信時に名簿フォルダへ移動）─────────
+const { verifyStagedFileMeta, stagingFileName, photoExt, MAX_UPLOAD_BYTES } = await import("./guest-register.ts");
+
+test("parseRegisterInput: 写真のファイルIDは Drive ID 形式だけ受け、それ以外は空にする", () => {
+  const ok = parseRegisterInput(input({ guests: [guest({ photoFileId: "1xvIXWnVDmtT7PrPBXnxb5DUqIFvWa6jr", facePhotoFileId: "abc_DEF-123456" })] }));
+  assert.equal(ok.input!.guests[0].photoFileId, "1xvIXWnVDmtT7PrPBXnxb5DUqIFvWa6jr");
+  assert.equal(ok.input!.guests[0].facePhotoFileId, "abc_DEF-123456");
+  const bad = parseRegisterInput(input({ guests: [guest({ photoFileId: "../etc?x=1", facePhotoFileId: 123 })] }));
+  assert.equal(bad.input!.guests[0].photoFileId, "");
+  assert.equal(bad.input!.guests[0].facePhotoFileId, "");
+});
+
+test("verifyStagedFileMeta: 受付中フォルダにある許可MIMEの空でないファイルだけ通す", () => {
+  const staging = "STAGING";
+  const good = { id: "f1", parents: [staging], mimeType: "image/jpeg", size: "1234" };
+  assert.equal(verifyStagedFileMeta(good, staging), null);
+  assert.match(verifyStagedFileMeta({ ...good, parents: ["OTHER"] }, staging)!, /staging/);
+  assert.match(verifyStagedFileMeta({ ...good, parents: undefined }, staging)!, /staging/);
+  assert.match(verifyStagedFileMeta({ ...good, mimeType: "application/pdf" }, staging)!, /mime/);
+  assert.match(verifyStagedFileMeta({ ...good, size: "0" }, staging)!, /empty/);
+  assert.match(verifyStagedFileMeta({ ...good, size: String(MAX_UPLOAD_BYTES + 1) }, staging)!, /large/);
+  assert.match(verifyStagedFileMeta({ ...good, trashed: true }, staging)!, /trashed/);
+  assert.equal(verifyStagedFileMeta({ ...good, mimeType: "image/heic" }, staging), null);
+});
+
+test("stagingFileName / photoExt: MIME に応じた拡張子・一意な名前", () => {
+  assert.equal(photoExt("image/jpeg"), "jpg");
+  assert.equal(photoExt("image/heic"), "heic");
+  assert.equal(photoExt("image/png"), "png");
+  const a = stagingFileName("image/heic", 1700000000000);
+  assert.match(a, /^staging_1700000000000_[a-z0-9]+\.heic$/);
+  assert.notEqual(a, stagingFileName("image/heic", 1700000000000));
+});

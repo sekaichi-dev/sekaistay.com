@@ -36,6 +36,9 @@ export interface GuestInput {
   age: string;
   prevStay: string;
   nextDest: string;
+  /** 送信前にブラウザから Drive「受付中」フォルダへ直接置いた写真のファイル ID（"" = 未添付） */
+  photoFileId: string;
+  facePhotoFileId: string;
 }
 
 export interface RegisterInput {
@@ -51,7 +54,12 @@ export interface RegisterInput {
 }
 
 export const MAX_GUESTS = 8;
-export const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
+/** 写真1枚の上限。ブラウザで縮小できない原本（HEIC・巨大 JPEG）もそのまま置けるよう Vercel の 4.5MB とは無関係に取る */
+export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+export const ALLOWED_PHOTO_MIME: ReadonlySet<string> = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
+/** 送信前の写真の置き場。送信時に claimStagedPhoto が名簿フォルダへ移す。残骸は cleanupStagedPhotos が消す */
+const STAGING_FOLDER_NAME = "受付中（未送信）";
+const DRIVE_ID_RE = /^[A-Za-z0-9_-]{10,128}$/;
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -84,6 +92,10 @@ export function calcNights(checkin: string, checkout: string): number {
 function trimTo(value: unknown, max: number): string {
   if (typeof value !== "string") return "";
   return value.trim().slice(0, max);
+}
+
+function driveIdOrEmpty(value: unknown): string {
+  return typeof value === "string" && DRIVE_ID_RE.test(value) ? value : "";
 }
 
 // クライアント送信 JSON を検証済み RegisterInput に正規化。不正なら日英併記のエラー文字列を返す。
@@ -127,6 +139,8 @@ export function parseRegisterInput(raw: unknown): { input?: RegisterInput; error
       age: trimTo(g.age, FIELD_MAX.age),
       prevStay: trimTo(g.prevStay, FIELD_MAX.prevStay),
       nextDest: trimTo(g.nextDest, FIELD_MAX.nextDest),
+      photoFileId: driveIdOrEmpty(g.photoFileId),
+      facePhotoFileId: driveIdOrEmpty(g.facePhotoFileId),
     });
   }
   return { input: { propertyId, checkin, checkout, checkinTime, checkoutTime, note, bookingRef, guests } };
@@ -371,29 +385,131 @@ export async function ensurePassportFolder(checkin: string, propertyName: string
   return parent;
 }
 
-export async function uploadPassportPhoto(buffer: Buffer, mimeType: string, filename: string, parentId: string = DRIVE_FOLDER_ID): Promise<string> {
+export function photoExt(mime: string): string {
+  return ({ "image/png": "png", "image/webp": "webp", "image/heic": "heic", "image/heif": "heif" } as Record<string, string>)[mime] || "jpg";
+}
+
+export function stagingFileName(mime: string, now: number = Date.now()): string {
+  return `staging_${now}_${Math.random().toString(36).slice(2, 8)}.${photoExt(mime)}`;
+}
+
+export async function ensureStagingFolder(): Promise<string> {
+  const key = `${DRIVE_FOLDER_ID}/${STAGING_FOLDER_NAME}`;
+  let promise = folderCache.get(key);
+  if (!promise) {
+    promise = findOrCreateFolder(STAGING_FOLDER_NAME, DRIVE_FOLDER_ID);
+    folderCache.set(key, promise);
+    promise.catch(() => folderCache.delete(key));
+  }
+  return promise;
+}
+
+/**
+ * ブラウザが写真を Drive へ直接 PUT するための再開可能アップロードのセッション URL を発行する。
+ * Origin を付けて開始すると、その Origin からの PUT が CORS を通る（2026-09-28 実測）。
+ * サイズは X-Upload-Content-Length で固定され、超過分は Drive 側が 400 で拒否する。
+ */
+export async function createPhotoUploadSession(mime: string, size: number, origin: string): Promise<string> {
   const token = await getAccessToken();
-  const boundary = "gr_boundary_" + Math.random().toString(36).slice(2);
-  const metadata = JSON.stringify({ name: filename, parents: [parentId] });
-  const head = Buffer.from(
-    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n` +
-    `--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`, "utf8");
-  const tail = Buffer.from(`\r\n--${boundary}--`, "utf8");
-  const body = Buffer.concat([head, buffer, tail]);
+  const parent = await ensureStagingFolder();
   const resp = await fetchWithTimeout(
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink&supportsAllDrives=true",
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true",
     {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": `multipart/related; boundary=${boundary}` },
-      body: body as unknown as BodyInit,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json; charset=UTF-8",
+        "X-Upload-Content-Type": mime,
+        "X-Upload-Content-Length": String(size),
+        Origin: origin,
+      },
+      body: JSON.stringify({ name: stagingFileName(mime), parents: [parent] }),
     },
   );
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
-    throw new Error(`drive upload ${resp.status}: ${text.slice(0, 300)}`);
+    throw new Error(`drive upload session ${resp.status}: ${text.slice(0, 300)}`);
   }
-  const data = (await resp.json()) as { id: string; webViewLink?: string };
+  const uri = resp.headers.get("location");
+  if (!uri) throw new Error("drive upload session: no Location header");
+  return uri;
+}
+
+export interface StagedFileMeta { id: string; parents?: string[]; mimeType?: string; size?: string; trashed?: boolean }
+
+/** ゲストの操作で直る失敗（写真の再添付で解消）。それ以外の Error はサーバー障害として扱う */
+export class StagedPhotoError extends Error {}
+
+// 送信で受け取った ID が「このフォームがさっき受付中フォルダに置いた写真」であることを確かめる。
+// 当社 Drive 上の別ファイルの ID を渡して名簿フォルダへ移動させる悪用と、二重送信の再利用を防ぐ。
+export function verifyStagedFileMeta(meta: StagedFileMeta, stagingFolderId: string): string | null {
+  if (meta.trashed) return "trashed";
+  if (!meta.parents?.includes(stagingFolderId)) return "not in staging folder";
+  if (!ALLOWED_PHOTO_MIME.has(meta.mimeType || "")) return `mime ${meta.mimeType || "(none)"}`;
+  const size = Number(meta.size || 0);
+  if (!(size > 0)) return "empty";
+  if (size > MAX_UPLOAD_BYTES) return "too large";
+  return null;
+}
+
+/** 受付中フォルダの写真を検証して名簿フォルダへ移動・改名し、閲覧リンクを返す */
+export async function claimStagedPhoto(fileId: string, baseName: string, parentId: string = DRIVE_FOLDER_ID): Promise<string> {
+  if (!DRIVE_ID_RE.test(fileId)) throw new StagedPhotoError("bad id");
+  const token = await getAccessToken();
+  const staging = await ensureStagingFolder();
+  const auth = { Authorization: `Bearer ${token}` };
+  const metaRes = await fetchWithTimeout(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,parents,mimeType,size,trashed&supportsAllDrives=true`,
+    { headers: auth },
+  );
+  if (metaRes.status === 404) throw new StagedPhotoError("not found");
+  if (!metaRes.ok) {
+    const text = await metaRes.text().catch(() => "");
+    throw new Error(`drive get ${metaRes.status}: ${text.slice(0, 200)}`);
+  }
+  const meta = (await metaRes.json()) as StagedFileMeta;
+  const problem = verifyStagedFileMeta(meta, staging);
+  if (problem) throw new StagedPhotoError(problem);
+  const moved = await fetchWithTimeout(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${parentId}&removeParents=${staging}&supportsAllDrives=true&fields=id,webViewLink`,
+    {
+      method: "PATCH",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ name: `${baseName}.${photoExt(meta.mimeType || "")}` }),
+    },
+  );
+  if (!moved.ok) {
+    const text = await moved.text().catch(() => "");
+    throw new Error(`drive move ${moved.status}: ${text.slice(0, 300)}`);
+  }
+  const data = (await moved.json()) as { id: string; webViewLink?: string };
   return data.webViewLink || `https://drive.google.com/file/d/${data.id}/view`;
+}
+
+/** 受付中フォルダに残った古い写真（送信されなかった分）を消す。消した件数を返す */
+export async function cleanupStagedPhotos(olderThanMs: number, now: number = Date.now()): Promise<number> {
+  const token = await getAccessToken();
+  const staging = await ensureStagingFolder();
+  const auth = { Authorization: `Bearer ${token}` };
+  const cutoff = new Date(now - olderThanMs).toISOString();
+  const q = encodeURIComponent(`'${staging}' in parents and createdTime < '${cutoff}' and trashed = false`);
+  let deleted = 0;
+  let pageToken = "";
+  do {
+    const res = await fetchWithTimeout(
+      `https://www.googleapis.com/drive/v3/files?q=${q}&fields=nextPageToken,files(id)&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true${pageToken ? `&pageToken=${pageToken}` : ""}`,
+      { headers: auth },
+    );
+    if (!res.ok) throw new Error(`drive list ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
+    const data = (await res.json()) as { nextPageToken?: string; files?: { id: string }[] };
+    for (const f of data.files || []) {
+      const del = await fetchWithTimeout(`https://www.googleapis.com/drive/v3/files/${f.id}?supportsAllDrives=true`, { method: "DELETE", headers: auth });
+      if (del.ok || del.status === 404) deleted++;
+      else console.error(`[guest-register] staging delete ${f.id} -> ${del.status}`);
+    }
+    pageToken = data.nextPageToken || "";
+  } while (pageToken);
+  return deleted;
 }
 
 // ───────────────────────── 物件マスタ ─────────────────────────
