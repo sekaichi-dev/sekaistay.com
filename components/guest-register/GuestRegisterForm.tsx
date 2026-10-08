@@ -111,6 +111,7 @@ const T = {
     photoHint: "顔写真のあるページを撮影してください。画像は自動で圧縮されます。",
     photoTooLarge: "画像が大きすぎます（20MBまで）。設定を下げて撮影するか、スクリーンショットをお試しください。",
     photoUploadFailed: "写真のアップロードに失敗しました。通信状況をご確認のうえ、もう一度写真を選択してください。",
+    photoUnreadable: "写真を読み込めませんでした。撮影し直すか、別の写真を選んでください。",
     photoUploading: "アップロード中…",
     facePhotoLabel: "顔写真",
     facePhotoWhy: "ご本人確認のため、ご宿泊者全員にお顔がはっきり写った写真のご提出をお願いしています（自撮り写真で構いません）。",
@@ -200,6 +201,7 @@ const T = {
     photoHint: "Take a photo of the page with your portrait. The image is compressed automatically.",
     photoTooLarge: "The image is too large (max 20MB). Please try a smaller photo or a screenshot.",
     photoUploadFailed: "The photo could not be uploaded. Please check your connection and select the photo again.",
+    photoUnreadable: "The photo could not be read. Please retake it or choose another photo.",
     photoUploading: "Uploading…",
     facePhotoLabel: "Face photo",
     facePhotoWhy: "For identity verification, every guest is asked to provide a clear photo of their face (a selfie is fine).",
@@ -257,9 +259,10 @@ async function loadBitmap(file: File): Promise<ImageBitmap | HTMLImageElement> {
 
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // サーバー側 MAX_UPLOAD_BYTES と同値
 
-// maxDim px・targetBytes 目安にJPEG圧縮。デコード不可(HEIC等)や巨大画像は MAX_UPLOAD_BYTES 以下ならそのまま送る。
-async function compressImage(file: File, maxDim = 1600, targetBytes = 450_000, outName = "photo.jpg"): Promise<File> {
-  if (file.size <= targetBytes) return file;
+// maxDim px・targetBytes 目安にJPEG圧縮。デコード不可(HEIC等)や巨大画像は MAX_UPLOAD_BYTES 以下ならそのまま送る
+// （compressed=false。運営がどれだけ起きているか見えるよう呼び出し側で記録する）。
+async function compressImage(file: File, maxDim = 1600, targetBytes = 450_000, outName = "photo.jpg"): Promise<{ file: File; compressed: boolean }> {
+  if (file.size <= targetBytes) return { file, compressed: true };
   try {
     const bitmap = await loadBitmap(file);
     const w = "width" in bitmap ? bitmap.width : 0;
@@ -278,10 +281,23 @@ async function compressImage(file: File, maxDim = 1600, targetBytes = 450_000, o
       if (result && result.size <= targetBytes) break;
     }
     if (!result) throw new Error("toBlob failed");
-    return new File([result], outName, { type: "image/jpeg" });
+    return { file: new File([result], outName, { type: "image/jpeg" }), compressed: true };
   } catch {
-    if (file.size <= MAX_UPLOAD_BYTES) return file;
+    if (file.size <= MAX_UPLOAD_BYTES) return { file, compressed: false };
     throw new Error("TOO_LARGE");
+  }
+}
+
+// 選んだ写真をその場でメモリに読み切る。Android では撮影直後やクラウド上の写真を選ぶと、選択後に
+// ファイルが読めなくなることがあり（2026-10-08 実例）、そのままだと縮小もアップロードも黙って失敗する。
+// 読めなければここで止めてゲストに選び直しを案内し、読めたらメモリ上のコピーを以降の処理に使う。
+async function readIntoMemory(file: File): Promise<File | null> {
+  try {
+    const bytes = await file.arrayBuffer();
+    if (bytes.byteLength === 0) return null;
+    return new File([bytes], file.name, { type: file.type });
+  } catch {
+    return null;
   }
 }
 
@@ -343,6 +359,8 @@ export default function GuestRegisterForm() {
   const [receiptId, setReceiptId] = useState("");
   // 圧縮中の写真キー（旅券 = "p0"〜 / 顔写真 = "f0"〜）
   const [photoBusy, setPhotoBusy] = useState<string | null>(null);
+  // 写真欄ごとの失敗理由。ページ末尾のエラー欄はスマホだと写真ボタンから遠く、ゲストが気づけない（2026-10-08 に 5 回やり直し）
+  const [photoErrors, setPhotoErrors] = useState<Record<string, string>>({});
 
   const t = T[lang];
 
@@ -425,16 +443,29 @@ export default function GuestRegisterForm() {
   async function onPhotoChange(kind: "passport" | "face", index: number, file: File | null) {
     if (!file) return;
     setError("");
-    setPhotoBusy(`${kind === "passport" ? "p" : "f"}${index}`);
+    const slot = `${kind === "passport" ? "p" : "f"}${index}`;
+    setPhotoBusy(slot);
+    setPhotoErrors((prev) => ({ ...prev, [slot]: "" }));
+    const failSlot = (msg: string) => { setError(msg); setPhotoErrors((prev) => ({ ...prev, [slot]: msg })); };
     const clear = kind === "passport" ? { photoFileId: "", photoName: "" } : { facePhotoFileId: "", facePhotoName: "" };
+    const source = await readIntoMemory(file);
+    if (!source) {
+      updateGuest(index, clear);
+      failSlot(t.photoUnreadable);
+      setPhotoBusy(null);
+      reportFailure("read", "UNREADABLE", `${kind} ${file.type || "(no type)"} ${file.size}B`, bookingRef);
+      return;
+    }
     let compressed: File;
     try {
-      compressed = kind === "passport"
-        ? await compressImage(file, 1600, 450_000, "passport.jpg")
-        : await compressImage(file, 1200, 300_000, "face.jpg");
+      const r = kind === "passport"
+        ? await compressImage(source, 1600, 450_000, "passport.jpg")
+        : await compressImage(source, 1200, 300_000, "face.jpg");
+      compressed = r.file;
+      if (!r.compressed) reportFailure("compress-fallback", "ORIGINAL_SENT", `${kind} ${source.type || "(no type)"} ${source.size}B`, bookingRef);
     } catch {
       updateGuest(index, clear);
-      setError(t.photoTooLarge);
+      failSlot(t.photoTooLarge);
       setPhotoBusy(null);
       reportFailure("compress", "TOO_LARGE", `${kind} ${file.type || "(no type)"} ${file.size}B`, bookingRef);
       return;
@@ -446,7 +477,7 @@ export default function GuestRegisterForm() {
         : { facePhotoFileId: fileId, facePhotoName: file.name });
     } catch (e) {
       updateGuest(index, clear);
-      setError(t.photoUploadFailed);
+      failSlot(t.photoUploadFailed);
       reportFailure("upload", String((e as Error)?.message || e), `${kind} ${compressed.type} ${compressed.size}B (orig ${file.size}B)`, bookingRef);
     } finally {
       setPhotoBusy(null);
@@ -784,6 +815,7 @@ export default function GuestRegisterForm() {
                           />
                           {photoBusy === `f${i}` ? t.photoUploading : g.facePhotoFileId ? `✓ ${t.photoAttached}` : t.photoSelect}
                         </label>
+                        {photoErrors[`f${i}`] && <p className="mt-2 text-[12px] text-danger leading-relaxed" role="alert">{photoErrors[`f${i}`]}</p>}
                         {g.facePhotoFileId && (
                           <span className="ml-3 text-[12px] text-switch-gray-mid">
                             <span className="break-all">{g.facePhotoName}</span>
@@ -822,6 +854,7 @@ export default function GuestRegisterForm() {
                               />
                               {photoBusy === `p${i}` ? t.photoUploading : g.photoFileId ? `✓ ${t.photoAttached}` : t.photoSelect}
                             </label>
+                            {photoErrors[`p${i}`] && <p className="mt-2 text-[12px] text-danger leading-relaxed" role="alert">{photoErrors[`p${i}`]}</p>}
                             {g.photoFileId && (
                               <span className="ml-3 text-[12px] text-switch-gray-mid">
                                 <span className="break-all">{g.photoName}</span>
