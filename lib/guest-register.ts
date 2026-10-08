@@ -440,6 +440,18 @@ export async function createPhotoUploadSession(mime: string, size: number, origi
   return uri;
 }
 
+/** ゲスト端末の失敗記録（telemetry）に添える運営向けの説明。通知を読む人が次に何をすべきか分かる文にする */
+export function clientFailureHint(stage: string): string {
+  switch (stage) {
+    case "read": return "ゲストの端末が選んだ写真を読めませんでした（撮影直後やクラウド上の写真で起きます）。画面には選び直しの案内が出ているので、対応は不要です。";
+    case "compress-fallback": return "写真を縮小できず原本のまま送りました（HEIC など）。アップロード自体は続いているので、同じ予約で upload の失敗が続かなければ対応は不要です。";
+    case "compress": return "写真が 20MB を超えていました。画面には小さい写真を選ぶ案内が出ています。";
+    case "upload": return "写真のアップロードが失敗しました。同じ予約で続くようなら、ゲストに別の写真で試すよう案内してください。";
+    case "submit": return "名簿の送信が失敗しました。同じ予約で成功の記録が無ければ、ゲストに再送をお願いしてください。";
+    default: return "";
+  }
+}
+
 export interface StagedFileMeta { id: string; parents?: string[]; mimeType?: string; size?: string; trashed?: boolean; appProperties?: Record<string, string> }
 
 /** ゲストの操作で直る失敗（写真の再添付で解消）。それ以外の Error はサーバー障害として扱う */

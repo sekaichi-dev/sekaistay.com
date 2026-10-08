@@ -304,3 +304,12 @@ test("stagingFileName / photoExt: MIME に応じた拡張子・一意な名前",
   assert.match(a, /^staging_1700000000000_[a-z0-9]+\.heic$/);
   assert.notEqual(a, stagingFileName("image/heic", 1700000000000));
 });
+
+test("clientFailureHint: 運営が読む説明は既知の stage にだけ付く", async () => {
+  const { clientFailureHint } = await import("./guest-register.ts");
+  for (const stage of ["read", "compress-fallback", "compress", "upload", "submit"]) {
+    assert.ok(clientFailureHint(stage).length > 10, stage);
+  }
+  assert.equal(clientFailureHint("unknown"), "");
+  assert.match(clientFailureHint("read"), /選び直し/);
+});
