@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: '紹介者登録 | SEKAI STAY',
-  description: 'SEKAI STAY に物件オーナーをご紹介いただける方の登録フォーム。紹介コードを発行します。',
+  title: '紹介制度', // 親の template（%s | SEKAI STAY）で「紹介制度 | SEKAI STAY」になる
+  description: '紹介制度の受付は終了しました。',
   robots: { index: false, follow: false },
 }
 
