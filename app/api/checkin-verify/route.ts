@@ -6,7 +6,7 @@ import {
   appendSheetRows, claimStagedPhoto, ensurePassportFolder, fetchProperties, nowJstString, sanitizeFilePart, StagedPhotoError,
 } from "@/lib/guest-register";
 import {
-  CHECKIN_COOKIE, CHECKIN_SHEET_RANGE, buildCheckinRows, checkinPhotoBaseName, makeCheckinReceiptId, parseCheckinInput, verifyCheckinCookie,
+  CHECKIN_COOKIE, CHECKIN_SHEET_RANGE, buildCheckinRows, checkinPhotoBaseName, listCheckinPhotos, makeCheckinReceiptId, parseCheckinInput, verifyCheckinCookie,
 } from "@/lib/checkin-verify";
 import { allowedOrigin, getClientIp, makeRateLimiter } from "@/lib/guest-register-request";
 
@@ -21,7 +21,9 @@ const ERR = {
   format: "リクエストの形式が不正です / Invalid request",
   qr: "このQRコードは無効です。お部屋に掲示のQRコードを読み取ってください / This QR code is not valid. Please scan the code posted in your room.",
   booking: "予約番号、または姓と到着日を入力してください / Enter your booking number, or your last name and arrival date.",
-  photos: "写真を撮影してください / Please take the photo.",
+  photos: "宿泊者全員の写真を撮影してください / Please take the photos for every guest.",
+  name: "宿泊者の氏名を入力してください / Please enter each guest's name.",
+  passport: "国外にお住まいの方はパスポートの顔写真ページも撮影してください / Guests living outside Japan: please also photograph the passport photo page.",
   closed: "現在受付できません。運営までご連絡ください / Not accepting right now. Please contact us.",
   server: "サーバーエラーが発生しました。時間をおいてお試しください / Server error. Please try again later.",
   photoRead: "写真を読み込めませんでした。もう一度撮影してください / We could not read the photo. Please take it again.",
@@ -51,7 +53,11 @@ export async function POST(req: NextRequest) {
   const { input, error } = parseCheckinInput(body.payload);
   if (!input) {
     const status = error === "invalid qr" ? 403 : 400;
-    const message = error === "invalid qr" ? ERR.qr : error === "photos" ? ERR.photos : error === "invalid payload" ? ERR.format : ERR.booking;
+    const message = error === "invalid qr" ? ERR.qr
+      : error === "guests" || error === "selfie" ? ERR.photos
+      : error === "name" || error === "residence" ? ERR.name
+      : error === "passport" ? ERR.passport
+      : error === "invalid payload" ? ERR.format : ERR.booking;
     return NextResponse.json({ error: message }, { status });
   }
 
@@ -77,7 +83,7 @@ export async function POST(req: NextRequest) {
   const receiptId = makeCheckinReceiptId();
   const receivedAt = nowJstString();
   const periodDate = input.arrivalDate || todayJstIso();
-  const bookingLabel = `本人確認_${input.bookingRef || sanitizeFilePart(input.lastName)}`;
+  const bookingLabel = `本人確認_${input.bookingRef || sanitizeFilePart(input.lastName || input.guests[0].name)}`;
 
   let photoLinks: string[];
   try {
@@ -88,7 +94,7 @@ export async function POST(req: NextRequest) {
       console.error("[checkin-verify] folder ensure failed (fallback to root):", e);
     }
     photoLinks = await Promise.all(
-      input.photoFileIds.map((id, i) => claimStagedPhoto(id, checkinPhotoBaseName(property.id, receiptId, i), folderId)),
+      listCheckinPhotos(input).map((ref) => claimStagedPhoto(ref.fileId, checkinPhotoBaseName(property.id, receiptId, ref), folderId)),
     );
   } catch (e) {
     if (e instanceof StagedPhotoError) {
