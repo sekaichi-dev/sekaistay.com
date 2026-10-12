@@ -1,4 +1,6 @@
-// チェックイン時の本人確認（/checkin/<物件ID>?k=<鍵>）— 室内 QR から送られた「顔＋身分証」の自撮りの受付。
+// チェックイン時の本人確認 — 室内 QR から送られた「顔＋身分証」の自撮りの受付。
+// QR の URL は /c/<物件ID>?k=<鍵>。鍵を検証して httpOnly Cookie に移し、/checkin/<物件ID>（鍵なし URL）へ転送する。
+// 鍵入りの URL ではページを描画しないので、解析・広告タグに鍵が渡らない（Codex P1・2026-10-12）。
 // 法令（住宅宿泊事業法ガイドライン）の「顔と旅券が鮮明に画像で確認できる」「住宅内またはその近傍から発信」に対応する。
 // 「室内から」の一次証拠は QR に埋めた物件ごとの鍵（HMAC・室内掲示でしか配らない）。受信時刻と位置情報を添えて記録する。
 // 写真は名簿フォームと同じ経路（photo-session で Drive 受付中フォルダへ直接 PUT → 送信で名簿フォルダへコピー）。
@@ -18,7 +20,8 @@ export const MAX_CHECKIN_PHOTOS = 8;
 const KEY_LEN = 16;
 const DRIVE_ID_RE = /^[A-Za-z0-9_-]{10,128}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const BOOKING_RE = /^\d{1,12}$/;
+// Beds24 の予約番号（数字）のほか、Airbnb の確認コード（英数字）もそのまま受ける。突合は Phase 1 で ops 側が行う
+const BOOKING_RE = /^[A-Za-z0-9]{1,20}$/;
 
 /** 物件ごとの QR 鍵。秘密 1 本から導くので鍵の表を持たない（秘密を替えれば全物件の QR が無効になる＝刷り直し）。 */
 export function roomKey(propertyId: string, secret: string): string {
@@ -33,7 +36,22 @@ export function verifyRoomKey(propertyId: string, key: string, secret: string): 
 }
 
 export function checkinUrl(baseUrl: string, propertyId: string, secret: string): string {
-  return `${baseUrl.replace(/\/+$/, "")}/checkin/${encodeURIComponent(propertyId)}?k=${roomKey(propertyId, secret)}`;
+  return `${baseUrl.replace(/\/+$/, "")}/c/${encodeURIComponent(propertyId)}?k=${roomKey(propertyId, secret)}`;
+}
+
+export const CHECKIN_COOKIE = "checkin_key";
+export const CHECKIN_COOKIE_MAX_AGE = 24 * 60 * 60;
+
+export function checkinCookieValue(propertyId: string, key: string): string {
+  return `${propertyId}:${key}`;
+}
+
+/** Cookie の値が「この物件の正しい鍵」か。物件が違う・鍵が違う・秘密なしは false */
+export function verifyCheckinCookie(value: string | undefined, propertyId: string, secret: string): boolean {
+  if (!value) return false;
+  const i = value.indexOf(":");
+  if (i <= 0) return false;
+  return value.slice(0, i) === propertyId && verifyRoomKey(propertyId, value.slice(i + 1), secret);
 }
 
 export type GeoStatus = "ok" | "denied" | "unavailable" | "skipped";
@@ -47,7 +65,6 @@ export interface GeoInput {
 
 export interface CheckinInput {
   propertyId: string;
-  key: string;
   bookingRef: string;
   lastName: string;
   arrivalDate: string;
@@ -80,9 +97,8 @@ export function parseCheckinInput(raw: unknown): { input?: CheckinInput; error?:
   if (!raw || typeof raw !== "object") return { error: "invalid payload" };
   const r = raw as Record<string, unknown>;
   const propertyId = str(r.propertyId, 20);
-  const key = str(r.key, 64);
-  if (!propertyId || !key) return { error: "invalid qr" };
-  const bookingRef = str(r.bookingRef, 12);
+  if (!propertyId) return { error: "invalid qr" };
+  const bookingRef = str(r.bookingRef, 21).toUpperCase(); // 21 文字目まで見て、長すぎれば切らずに拒否する
   if (bookingRef && !BOOKING_RE.test(bookingRef)) return { error: "booking" };
   const lastName = str(r.lastName, 100);
   const arrivalDate = str(r.arrivalDate, 10);
@@ -95,7 +111,7 @@ export function parseCheckinInput(raw: unknown): { input?: CheckinInput; error?:
     if (typeof id !== "string" || !DRIVE_ID_RE.test(id)) return { error: "photos" };
     photoFileIds.push(id);
   }
-  return { input: { propertyId, key, bookingRef, lastName, arrivalDate, photoFileIds, geo: parseGeo(r.geo) } };
+  return { input: { propertyId, bookingRef, lastName, arrivalDate, photoFileIds, geo: parseGeo(r.geo) } };
 }
 
 export function makeCheckinReceiptId(now: Date = new Date()): string {
@@ -114,6 +130,12 @@ export function geoLabel(geo: GeoInput): string {
   }
 }
 
+/** 数字だけ＝Beds24 予約番号は名簿の U 列と同じ `b:` 付き。英数字（Airbnb 確認コード等）はそのまま */
+export function bookingCell(bookingRef: string): string {
+  if (!bookingRef) return "";
+  return /^\d+$/.test(bookingRef) ? `b:${bookingRef}` : bookingRef;
+}
+
 export function buildCheckinRows(
   input: CheckinInput,
   property: { id: string; name: string },
@@ -128,7 +150,7 @@ export function buildCheckinRows(
     receivedAt,
     property.id,
     property.name,
-    input.bookingRef ? `b:${input.bookingRef}` : "",
+    bookingCell(input.bookingRef),
     escapeCell(input.lastName), // ゲスト入力は数式として解釈させない
     input.arrivalDate,
     `${i + 1}/${photoLinks.length}`,

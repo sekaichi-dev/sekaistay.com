@@ -1,11 +1,12 @@
 // チェックイン時の本人確認の受付。室内 QR の鍵が合う物件だけ受け、写真を名簿フォルダへ置き「本人確認」タブに記録する。
 // 写真本体はここに来ない（名簿フォームと同じく /api/guest-register/photo-session の URL へ直接 PUT 済みの Drive ID を受ける）。
+// QR の鍵は /c/<物件ID> が置いた httpOnly Cookie から読む（本文には入れない）。
 import { NextRequest, NextResponse } from "next/server";
 import {
   appendSheetRows, claimStagedPhoto, ensurePassportFolder, fetchProperties, nowJstString, sanitizeFilePart, StagedPhotoError,
 } from "@/lib/guest-register";
 import {
-  CHECKIN_SHEET_RANGE, buildCheckinRows, checkinPhotoBaseName, makeCheckinReceiptId, parseCheckinInput, verifyRoomKey,
+  CHECKIN_COOKIE, CHECKIN_SHEET_RANGE, buildCheckinRows, checkinPhotoBaseName, makeCheckinReceiptId, parseCheckinInput, verifyCheckinCookie,
 } from "@/lib/checkin-verify";
 import { allowedOrigin, getClientIp, makeRateLimiter } from "@/lib/guest-register-request";
 
@@ -60,7 +61,9 @@ export async function POST(req: NextRequest) {
     console.error("[checkin-verify] CHECKIN_QR_SECRET not configured");
     return NextResponse.json({ error: ERR.closed }, { status: 503 });
   }
-  if (!verifyRoomKey(input.propertyId, input.key, secret)) return NextResponse.json({ error: ERR.qr }, { status: 403 });
+  if (!verifyCheckinCookie(req.cookies.get(CHECKIN_COOKIE)?.value, input.propertyId, secret)) {
+    return NextResponse.json({ error: ERR.qr }, { status: 403 });
+  }
 
   let property;
   try {

@@ -66,7 +66,7 @@ h1 small{display:block;font-size:15px;font-weight:600;color:#4e4c49;margin-top:4
 await mkdir(OUT, { recursive: true });
 const index = [];
 for (const p of targets) {
-  const url = `${BASE}/checkin/${encodeURIComponent(p.id)}?k=${roomKey(p.id)}`;
+  const url = `${BASE}/c/${encodeURIComponent(p.id)}?k=${roomKey(p.id)}`; // /c/ は鍵を Cookie に移して /checkin/ へ転送する入口
   const svg = await QRCode.toString(url, { type: "svg", errorCorrectionLevel: "M", margin: 0 });
   const file = path.join(OUT, `${p.id}.html`);
   await writeFile(file, sheetHtml(p, url, svg));

@@ -2,15 +2,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 const {
-  roomKey, verifyRoomKey, checkinUrl, parseCheckinInput, parseGeo, buildCheckinRows,
-  makeCheckinReceiptId, checkinPhotoBaseName, CHECKIN_SHEET_HEADER, MAX_CHECKIN_PHOTOS,
+  roomKey, verifyRoomKey, checkinUrl, parseCheckinInput, parseGeo, buildCheckinRows, bookingCell,
+  makeCheckinReceiptId, checkinPhotoBaseName, checkinCookieValue, verifyCheckinCookie, CHECKIN_SHEET_HEADER, MAX_CHECKIN_PHOTOS,
 } = await import("./checkin-verify.ts");
 
 const SECRET = "test-secret";
 const ID = "a1b2c3d4e5f6g7h8i9";
 
 function payload(over: Record<string, unknown> = {}) {
-  return { propertyId: "351180", key: roomKey("351180", SECRET), bookingRef: "94204472", photoFileIds: [ID], geo: { status: "denied" }, ...over };
+  return { propertyId: "351180", bookingRef: "94204472", photoFileIds: [ID], geo: { status: "denied" }, ...over };
 }
 
 test("roomKey: 物件ごとに違う 16 文字・同じ入力なら同じ鍵", () => {
@@ -31,9 +31,19 @@ test("verifyRoomKey: 正しい鍵だけ通す（別物件・長さ違い・秘�
   assert.equal(verifyRoomKey("", k, SECRET), false);
 });
 
-test("checkinUrl: /checkin/<物件ID>?k=<鍵>（末尾スラッシュは重ねない）", () => {
+test("checkinUrl: /c/<物件ID>?k=<鍵>（末尾スラッシュは重ねない）", () => {
   const u = checkinUrl("https://sekaistay.com/", "351180", SECRET);
-  assert.equal(u, `https://sekaistay.com/checkin/351180?k=${roomKey("351180", SECRET)}`);
+  assert.equal(u, `https://sekaistay.com/c/351180?k=${roomKey("351180", SECRET)}`);
+});
+
+test("verifyCheckinCookie: 物件と鍵が揃ったときだけ通す", () => {
+  const v = checkinCookieValue("351180", roomKey("351180", SECRET));
+  assert.equal(verifyCheckinCookie(v, "351180", SECRET), true);
+  assert.equal(verifyCheckinCookie(v, "351183", SECRET), false);
+  assert.equal(verifyCheckinCookie(checkinCookieValue("351183", roomKey("351180", SECRET)), "351183", SECRET), false);
+  assert.equal(verifyCheckinCookie(undefined, "351180", SECRET), false);
+  assert.equal(verifyCheckinCookie("351180", "351180", SECRET), false);
+  assert.equal(verifyCheckinCookie(v, "351180", ""), false);
 });
 
 test("parseCheckinInput: 予約番号ありの正常系", () => {
@@ -51,12 +61,17 @@ test("parseCheckinInput: 予約番号が無ければ姓＋到着日が必須", (
   assert.equal(parseCheckinInput(payload({ bookingRef: "", lastName: "Kim", arrivalDate: "12/10/2026" })).error, "arrival");
 });
 
-test("parseCheckinInput: 予約番号は数字だけ・写真は 1〜8 枚の Drive ID 形式だけ", () => {
+test("parseCheckinInput: 予約番号は英数字 20 文字まで（Airbnb 確認コードは大文字に揃える）・写真は 1〜8 枚の Drive ID 形式だけ", () => {
   assert.equal(parseCheckinInput(payload({ bookingRef: "AB-12" })).error, "booking");
+  assert.equal(parseCheckinInput(payload({ bookingRef: "hmabc12345" })).input!.bookingRef, "HMABC12345");
+  assert.equal(parseCheckinInput(payload({ bookingRef: "A".repeat(21) })).error, "booking");
+  assert.equal(bookingCell("94204472"), "b:94204472");
+  assert.equal(bookingCell("HMABC12345"), "HMABC12345");
+  assert.equal(bookingCell(""), "");
   assert.equal(parseCheckinInput(payload({ photoFileIds: [] })).error, "photos");
   assert.equal(parseCheckinInput(payload({ photoFileIds: ["../etc"] })).error, "photos");
   assert.equal(parseCheckinInput(payload({ photoFileIds: Array(MAX_CHECKIN_PHOTOS + 1).fill(ID) })).error, "photos");
-  assert.equal(parseCheckinInput(payload({ propertyId: "", key: "x" })).error, "invalid qr");
+  assert.equal(parseCheckinInput(payload({ propertyId: "" })).error, "invalid qr");
   assert.equal(parseCheckinInput(null).error, "invalid payload");
 });
 

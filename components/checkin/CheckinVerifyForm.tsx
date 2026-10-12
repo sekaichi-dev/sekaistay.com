@@ -1,6 +1,6 @@
 "use client";
 
-/* チェックイン時の本人確認（/checkin/<物件ID>?k=<鍵>）
+/* チェックイン時の本人確認（/checkin/<物件ID>・鍵は /c/<物件ID>?k= が置いた httpOnly Cookie）
  * 室内の QR から開く 1 画面: 予約の特定（予約番号 or 姓＋到着日）→ 顔の横に身分証を持った自撮り（1 人 1 枚・最大 8 枚）→ 送信。
  * 写真は名簿フォームと同じく選んだ時点で Drive の受付中フォルダへ直接置き、送信にはファイル ID だけを送る。
  * 位置情報は送信時に 1 回だけ求め、拒否・取得不可でも送信は止めない（結果だけ記録する）。
@@ -26,7 +26,7 @@ const T: Record<Lang, {
   ja: {
     label: "日本語", title: "チェックイン時の本人確認", property: "ご宿泊施設",
     lead: "法令に基づき、ご到着の確認として「顔と身分証を一緒に写した写真」を1枚お送りください。1分で終わります。",
-    step1: "ご予約の確認", bookingRef: "予約番号", bookingRefHint: "予約確認メールやアプリに記載の数字です", noBooking: "予約番号がわからない場合は、姓と到着日を入力してください",
+    step1: "ご予約の確認", bookingRef: "予約番号", bookingRefHint: "予約確認メールやアプリに記載の番号です（Airbnb は HM で始まる確認コード）", noBooking: "予約番号がわからない場合は、姓と到着日を入力してください",
     lastName: "姓", arrivalDate: "到着日",
     step2: "写真を撮る", photoWhy: "顔の横に身分証を持って、1枚撮影してください。外国籍の方はパスポートの顔写真ページをお使いください。",
     photoTips: ["顔と身分証が同じ画面に入るように", "身分証の文字が読めるまで近づけて", "明るい場所で、マスクやサングラスは外して"],
@@ -43,7 +43,7 @@ const T: Record<Lang, {
   en: {
     label: "EN", title: "ID check at check-in", property: "Property",
     lead: "Japanese law requires us to confirm your arrival. Please send one photo of your face together with your ID. It takes about a minute.",
-    step1: "Your booking", bookingRef: "Booking number", bookingRefHint: "The number in your confirmation email or app", noBooking: "If you don't know it, enter your last name and arrival date instead",
+    step1: "Your booking", bookingRef: "Booking number", bookingRefHint: "The number in your confirmation email or app (Airbnb: the code starting with HM)", noBooking: "If you don't know it, enter your last name and arrival date instead",
     lastName: "Last name", arrivalDate: "Arrival date",
     step2: "Take the photo", photoWhy: "Hold your ID next to your face and take one photo. Non-Japanese guests: use the photo page of your passport.",
     photoTips: ["Face and ID in the same frame", "Close enough that the ID text is readable", "Good light, no mask or sunglasses"],
@@ -60,7 +60,7 @@ const T: Record<Lang, {
   ko: {
     label: "한국어", title: "체크인 본인 확인", property: "숙박 시설",
     lead: "일본 법령에 따라 도착 확인을 위해 얼굴과 신분증을 함께 찍은 사진 1장을 보내 주세요. 1분이면 끝납니다.",
-    step1: "예약 확인", bookingRef: "예약번호", bookingRefHint: "예약 확인 메일이나 앱에 적힌 숫자입니다", noBooking: "예약번호를 모르면 성과 도착일을 입력하세요",
+    step1: "예약 확인", bookingRef: "예약번호", bookingRefHint: "예약 확인 메일이나 앱에 적힌 번호입니다(Airbnb는 HM으로 시작하는 확인 코드)", noBooking: "예약번호를 모르면 성과 도착일을 입력하세요",
     lastName: "성", arrivalDate: "도착일",
     step2: "사진 촬영", photoWhy: "얼굴 옆에 신분증을 들고 1장 촬영하세요. 외국인은 여권의 사진면을 사용해 주세요.",
     photoTips: ["얼굴과 신분증이 한 화면에 들어오게", "신분증 글자가 읽힐 만큼 가까이", "밝은 곳에서, 마스크·선글라스는 벗고"],
@@ -77,7 +77,7 @@ const T: Record<Lang, {
   zh: {
     label: "中文", title: "入住身份核验", property: "住宿设施",
     lead: "根据日本法律，为确认您已到达，请发送一张脸部与证件同框的照片。约需1分钟。",
-    step1: "确认预订", bookingRef: "预订号", bookingRefHint: "预订确认邮件或App中的数字", noBooking: "不知道预订号时，请输入姓氏和到达日期",
+    step1: "确认预订", bookingRef: "预订号", bookingRefHint: "预订确认邮件或App中的编号（Airbnb为以HM开头的确认码）", noBooking: "不知道预订号时，请输入姓氏和到达日期",
     lastName: "姓氏", arrivalDate: "到达日期",
     step2: "拍摄照片", photoWhy: "请将证件举在脸旁拍一张照片。外籍旅客请使用护照的照片页。",
     photoTips: ["脸部与证件在同一画面内", "靠近到能看清证件文字", "在明亮处拍摄，摘下口罩和墨镜"],
@@ -105,23 +105,31 @@ function detectLang(): Lang {
   return "en";
 }
 
-// 位置情報は 1 回だけ・8 秒で諦める。許可ダイアログはこの呼び出しで出る
+// 位置情報は 1 回だけ。getCurrentPosition の timeout は許可ダイアログの待ち時間を含まないので、
+// 別のタイマーで 10 秒経ったら「取得不可」として送信を進める（位置情報は任意・送信を止めない）
+const GEO_WAIT_MS = 10_000;
 function getGeo(): Promise<Geo> {
   return new Promise((resolve) => {
     if (typeof navigator === "undefined" || !navigator.geolocation) return resolve({ status: "unavailable" });
-    const done = (g: Geo) => resolve(g);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => done({ status: "ok", lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
-      (err) => done({ status: err.code === 1 ? "denied" : "unavailable" }),
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
-    );
+    let settled = false;
+    const done = (g: Geo) => { if (!settled) { settled = true; clearTimeout(timer); resolve(g); } };
+    const timer = setTimeout(() => done({ status: "unavailable" }), GEO_WAIT_MS);
+    try {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => done({ status: "ok", lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+        (err) => done({ status: err.code === 1 ? "denied" : "unavailable" }),
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
+      );
+    } catch {
+      done({ status: "unavailable" });
+    }
   });
 }
 
 const inputCls = "w-full rounded-switch-md border border-switch-stone-border bg-white px-3.5 py-3 text-[16px] text-switch-charcoal placeholder:text-switch-stone-text-disabled focus:outline-none focus:border-switch-teal focus:ring-2 focus:ring-switch-teal/20 transition-colors";
 const labelCls = "block text-[13px] font-semibold text-switch-charcoal mb-1.5";
 
-export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId?: string; roomKey?: string; propertyName?: string; propertyNameEn?: string }) {
+export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId?: string; propertyName?: string; propertyNameEn?: string }) {
   const [lang, setLang] = useState<Lang>("ja");
   useEffect(() => { setLang(detectLang()); }, []);
   const t = T[lang];
@@ -216,10 +224,12 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
     });
   }
 
+  // 表示中の入力方式だけを検証・送信する（切り替え前の値は使わない）
   function validate(): string | null {
-    const hasBooking = /^\d{1,12}$/.test(bookingRef.trim());
-    const hasName = lastName.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(arrivalDate);
-    if (!hasBooking && !hasName) return t.errBooking;
+    const ok = useName
+      ? lastName.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(arrivalDate)
+      : /^[A-Za-z0-9]{1,20}$/.test(bookingRef.trim());
+    if (!ok) return t.errBooking;
     if (shots.length === 0) return t.errPhoto;
     if (!consent) return t.errConsent;
     return null;
@@ -240,10 +250,9 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
           website: "",
           payload: {
             propertyId: props.propertyId,
-            key: props.roomKey,
-            bookingRef: bookingRef.trim(),
-            lastName: useName || !bookingRef.trim() ? lastName.trim() : "",
-            arrivalDate: useName || !bookingRef.trim() ? arrivalDate : "",
+            bookingRef: useName ? "" : bookingRef.trim(),
+            lastName: useName ? lastName.trim() : "",
+            arrivalDate: useName ? arrivalDate : "",
             photoFileIds: shots.map((s) => s.fileId),
             geo,
           },
@@ -303,8 +312,8 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
             {!useName ? (
               <div>
                 <label htmlFor="bookingRef" className={labelCls}>{t.bookingRef}</label>
-                <input id="bookingRef" inputMode="numeric" pattern="\d*" className={inputCls} value={bookingRef}
-                  onChange={(e) => setBookingRef(e.target.value.replace(/\D/g, "").slice(0, 12))} placeholder="12345678" />
+                <input id="bookingRef" autoCapitalize="characters" autoComplete="off" className={inputCls} value={bookingRef}
+                  onChange={(e) => setBookingRef(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 20))} placeholder="12345678 / HMABC12345" />
                 <p className="mt-1.5 text-[12px] text-switch-gray-mid">{t.bookingRefHint}</p>
                 <button type="button" onClick={() => setUseName(true)} className="mt-3 text-[13px] text-switch-teal-deep underline underline-offset-2">{t.noBooking}</button>
               </div>
