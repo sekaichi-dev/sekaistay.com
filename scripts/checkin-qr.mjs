@@ -52,9 +52,9 @@ h1 small{display:block;font-size:15px;font-weight:600;color:#4e4c49;margin-top:4
 <div class="qrwrap">
   <div class="qr">${svg}</div>
   <div class="steps"><ol>
-    <li><b>お部屋に入ったら、このQRコードをスマートフォンで読み取ってください。</b><span class="sub">Scan this code with your phone after entering the room. ／ 입실 후 이 QR 코드를 스마트폰으로 스캔하세요. ／ 进入房间后请用手机扫描此二维码。</span></li>
-    <li><b>予約番号（または姓と到着日）を入力します。</b><span class="sub">Enter your booking number (or last name and arrival date). ／ 예약번호(또는 성과 도착일)를 입력하세요. ／ 输入预订号（或姓氏和到达日期）。</span></li>
-    <li><b>顔の横に身分証（外国籍の方はパスポートの顔写真ページ）を持って、写真を1枚撮ります。</b><span class="sub">Hold your ID (passport photo page for non-Japanese guests) next to your face and take one photo. ／ 얼굴 옆에 신분증(외국인은 여권 사진면)을 들고 사진 1장을 찍으세요. ／ 将证件（外籍旅客为护照照片页）举在脸旁，拍一张照片。</span></li>
+    <li><b>ご到着時に、このQRコードをスマートフォンで読み取ってください。</b><span class="sub">Scan this code with your phone on arrival. ／ 도착 시 이 QR 코드를 스마트폰으로 스캔하세요. ／ 到达时请用手机扫描此二维码。</span></li>
+    <li><b>予約番号（または姓と到着日）と、宿泊される全員のお名前を入力します。</b><span class="sub">Enter your booking number (or last name and arrival date) and the name of every guest. ／ 예약번호(또는 성과 도착일)와 투숙객 전원의 이름을 입력하세요. ／ 输入预订号（或姓氏和到达日期）及全部住客姓名。</span></li>
+    <li><b>宿泊される方全員が、顔の横に身分証を持って1人1枚ずつその場で撮影します。日本国外にお住まいの方はパスポートの顔写真ページも撮影します。</b><span class="sub">Every guest takes one photo on the spot holding their ID next to their face. Guests living outside Japan also photograph the passport photo page. ／ 투숙객 전원이 얼굴 옆에 신분증을 들고 1인 1장씩 그 자리에서 촬영합니다. 일본 외 거주자는 여권 사진면도 촬영합니다. ／ 全部住客各自将证件举在脸旁当场拍一张照片；居住在日本以外的旅客还需拍摄护照照片页。</span></li>
   </ol>
   <div class="why">法令（旅館業法・住宅宿泊事業法）に基づく本人確認です。写真は宿泊者名簿とともに3年間保管し、行政機関の求めに応じて提示します。<br>Required by Japanese law. The photo is kept with the guest register for 3 years and shown to authorities on request.</div>
   </div>

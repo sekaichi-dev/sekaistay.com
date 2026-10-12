@@ -2,15 +2,21 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 const {
-  roomKey, verifyRoomKey, checkinUrl, parseCheckinInput, parseGeo, buildCheckinRows, bookingCell,
-  makeCheckinReceiptId, checkinPhotoBaseName, checkinCookieValue, verifyCheckinCookie, CHECKIN_SHEET_HEADER, MAX_CHECKIN_PHOTOS,
+  roomKey, verifyRoomKey, checkinUrl, parseCheckinInput, parseCheckinGuest, parseGeo, buildCheckinRows, bookingCell,
+  listCheckinPhotos, photoNote, makeCheckinReceiptId, checkinPhotoBaseName, checkinCookieValue, verifyCheckinCookie,
+  CHECKIN_SHEET_HEADER, MAX_CHECKIN_GUESTS,
 } = await import("./checkin-verify.ts");
 
 const SECRET = "test-secret";
 const ID = "a1b2c3d4e5f6g7h8i9";
+const ID2 = "z9y8x7w6v5u4t3s2r1";
+
+function guest(over: Record<string, unknown> = {}) {
+  return { name: "Kim Minsu", jaResident: true, selfieFileId: ID, passportFileId: "", method: "camera", ...over };
+}
 
 function payload(over: Record<string, unknown> = {}) {
-  return { propertyId: "351180", bookingRef: "94204472", photoFileIds: [ID], geo: { status: "denied" }, ...over };
+  return { propertyId: "351180", bookingRef: "94204472", guests: [guest()], geo: { status: "denied" }, ...over };
 }
 
 test("roomKey: 物件ごとに違う 16 文字・同じ入力なら同じ鍵", () => {
@@ -50,7 +56,8 @@ test("parseCheckinInput: 予約番号ありの正常系", () => {
   const { input, error } = parseCheckinInput(payload());
   assert.equal(error, undefined);
   assert.equal(input!.bookingRef, "94204472");
-  assert.deepEqual(input!.photoFileIds, [ID]);
+  assert.equal(input!.guests.length, 1);
+  assert.equal(input!.guests[0].selfieFileId, ID);
   assert.equal(input!.geo.status, "denied");
 });
 
@@ -61,18 +68,33 @@ test("parseCheckinInput: 予約番号が無ければ姓＋到着日が必須", (
   assert.equal(parseCheckinInput(payload({ bookingRef: "", lastName: "Kim", arrivalDate: "12/10/2026" })).error, "arrival");
 });
 
-test("parseCheckinInput: 予約番号は英数字 20 文字まで（Airbnb 確認コードは大文字に揃える）・写真は 1〜8 枚の Drive ID 形式だけ", () => {
+test("parseCheckinInput: 予約番号は英数字 20 文字まで（Airbnb 確認コードは大文字に揃える）", () => {
   assert.equal(parseCheckinInput(payload({ bookingRef: "AB-12" })).error, "booking");
   assert.equal(parseCheckinInput(payload({ bookingRef: "hmabc12345" })).input!.bookingRef, "HMABC12345");
   assert.equal(parseCheckinInput(payload({ bookingRef: "A".repeat(21) })).error, "booking");
   assert.equal(bookingCell("94204472"), "b:94204472");
   assert.equal(bookingCell("HMABC12345"), "HMABC12345");
   assert.equal(bookingCell(""), "");
-  assert.equal(parseCheckinInput(payload({ photoFileIds: [] })).error, "photos");
-  assert.equal(parseCheckinInput(payload({ photoFileIds: ["../etc"] })).error, "photos");
-  assert.equal(parseCheckinInput(payload({ photoFileIds: Array(MAX_CHECKIN_PHOTOS + 1).fill(ID) })).error, "photos");
   assert.equal(parseCheckinInput(payload({ propertyId: "" })).error, "invalid qr");
   assert.equal(parseCheckinInput(null).error, "invalid payload");
+});
+
+test("parseCheckinInput: 宿泊者は 1〜8 名・全員分の自撮りが要る", () => {
+  assert.equal(parseCheckinInput(payload({ guests: [] })).error, "guests");
+  assert.equal(parseCheckinInput(payload({ guests: Array(MAX_CHECKIN_GUESTS + 1).fill(guest()) })).error, "guests");
+  assert.equal(parseCheckinInput(payload({ guests: [guest(), guest({ selfieFileId: "" })] })).error, "selfie");
+  assert.equal(parseCheckinInput(payload({ guests: [guest(), guest({ name: "" })] })).error, "name");
+  assert.equal(parseCheckinInput(payload({ guests: [guest(), guest()] })).input!.guests.length, 2);
+});
+
+test("parseCheckinGuest: 国内住所が無ければ旅券ページ必須・Drive ID 形式以外は拒否・撮影方法は camera 既定", () => {
+  assert.equal(parseCheckinGuest(guest({ jaResident: false })).error, "passport");
+  assert.equal(parseCheckinGuest(guest({ jaResident: false, passportFileId: ID2 })).guest!.passportFileId, ID2);
+  assert.equal(parseCheckinGuest(guest({ jaResident: "yes" })).error, "residence");
+  assert.equal(parseCheckinGuest(guest({ selfieFileId: "../etc" })).error, "selfie");
+  assert.equal(parseCheckinGuest(guest({ passportFileId: "bad" })).error, "passport");
+  assert.equal(parseCheckinGuest(guest({ method: "gallery" })).guest!.method, "camera");
+  assert.equal(parseCheckinGuest(guest({ method: "file" })).guest!.method, "file");
 });
 
 test("parseGeo: ok は緯度経度が要る・範囲外は取得不可・不明な状態は未取得", () => {
@@ -84,34 +106,42 @@ test("parseGeo: ok は緯度経度が要る・範囲外は取得不可・不明�
   assert.deepEqual(parseGeo(undefined), { status: "skipped" });
 });
 
-test("buildCheckinRows: 1 枚 1 行・列順は見出しどおり・予約番号は b: 付き", () => {
-  const { input } = parseCheckinInput(payload({ photoFileIds: [ID, ID], geo: { status: "ok", lat: 35.68, lng: 139.69, accuracy: 10 } }));
-  const rows = buildCheckinRows(input!, { id: "351180", name: "FIKA渋谷本町 101" }, "C20261012-AB12", ["https://drive/1", "https://drive/2"], "2026/10/12 16:05");
-  assert.equal(rows.length, 2);
-  assert.equal(rows[0].length, CHECKIN_SHEET_HEADER.length);
-  assert.deepEqual(rows[0], ["2026/10/12 16:05", "351180", "FIKA渋谷本町 101", "b:94204472", "", "", "1/2", "取得", "35.68,139.69", "10", "https://drive/1", "", "", "", "C20261012-AB12"]);
-  assert.equal(rows[1][6], "2/2");
-  assert.equal(rows[1][10], "https://drive/2");
+test("listCheckinPhotos / photoNote / checkinPhotoBaseName: 宿泊者順に自撮り→旅券の並び", () => {
+  const { input } = parseCheckinInput(payload({ guests: [guest(), guest({ name: "Lee", jaResident: false, passportFileId: ID2, method: "file" })] }));
+  const photos = listCheckinPhotos(input!);
+  assert.deepEqual(photos.map((p) => [p.guestIndex, p.kind]), [[0, "selfie"], [1, "selfie"], [1, "passport"]]);
+  assert.equal(photoNote(input!, photos[0]), "宿泊者1/2 顔+身分証・画面内カメラ・国内住所あり");
+  assert.equal(photoNote(input!, photos[2]), "宿泊者2/2 旅券ページ・ファイル選択・国内住所なし");
+  assert.equal(checkinPhotoBaseName("351180", "C1", photos[2]), "本人確認_351180_C1_2_旅券");
+  assert.equal(checkinPhotoBaseName("351180", "C1", photos[0]), "本人確認_351180_C1_1_顔身分証");
 });
 
-test("buildCheckinRows: 位置情報を拒否したら「拒否」で座標は空", () => {
-  const { input } = parseCheckinInput(payload({ bookingRef: "", lastName: "Kim", arrivalDate: "2026-10-12" }));
+test("buildCheckinRows: 1 枚 1 行・列順は見出しどおり・氏名は宿泊者ごと・予約番号は b: 付き", () => {
+  const { input } = parseCheckinInput(payload({
+    guests: [guest(), guest({ name: "Lee Jiwoo", jaResident: false, passportFileId: ID2 })],
+    geo: { status: "ok", lat: 35.68, lng: 139.69, accuracy: 10 },
+  }));
+  const rows = buildCheckinRows(input!, { id: "351180", name: "FIKA渋谷本町 101" }, "C20261012-AB12", ["https://drive/1", "https://drive/2", "https://drive/3"], "2026/10/12 16:05");
+  assert.equal(rows.length, 3);
+  assert.equal(rows[0].length, CHECKIN_SHEET_HEADER.length);
+  assert.deepEqual(rows[0], ["2026/10/12 16:05", "351180", "FIKA渋谷本町 101", "b:94204472", "Kim Minsu", "", "1/3", "取得", "35.68,139.69", "10", "https://drive/1", "", "", "宿泊者1/2 顔+身分証・画面内カメラ・国内住所あり", "C20261012-AB12"]);
+  assert.equal(rows[1][4], "Lee Jiwoo");
+  assert.equal(rows[2][6], "3/3");
+  assert.equal(rows[2][10], "https://drive/3");
+  assert.equal(rows[2][13], "宿泊者2/2 旅券ページ・画面内カメラ・国内住所なし");
+});
+
+test("buildCheckinRows: 位置情報を拒否したら「拒否」で座標は空・氏名の先頭の = は数式として解釈させない", () => {
+  const { input } = parseCheckinInput(payload({ bookingRef: "", lastName: "Kim", arrivalDate: "2026-10-12", guests: [guest({ name: "=HYPERLINK(1)" })] }));
   const [row] = buildCheckinRows(input!, { id: "351180", name: "x" }, "C1", ["l"], "t");
   assert.equal(row[3], "");
-  assert.equal(row[4], "Kim");
+  assert.equal(row[4], "'=HYPERLINK(1)");
   assert.equal(row[5], "2026-10-12");
   assert.equal(row[7], "拒否");
   assert.equal(row[8], "");
   assert.equal(row[9], "");
 });
 
-test("buildCheckinRows: 姓の先頭の = + - @ は数式として解釈させない", () => {
-  const { input } = parseCheckinInput(payload({ bookingRef: "", lastName: "=HYPERLINK(1)", arrivalDate: "2026-10-12" }));
-  const [row] = buildCheckinRows(input!, { id: "351180", name: "x" }, "C1", ["l"], "t");
-  assert.equal(row[4], "'=HYPERLINK(1)");
-});
-
-test("makeCheckinReceiptId / checkinPhotoBaseName: 形式", () => {
+test("makeCheckinReceiptId: 形式", () => {
   assert.match(makeCheckinReceiptId(new Date("2026-10-12T20:00:00Z")), /^C20261013-[A-Z0-9]{4}$/);
-  assert.equal(checkinPhotoBaseName("351180", "C20261012-AB12", 0), "本人確認_351180_C20261012-AB12_1");
 });
