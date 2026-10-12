@@ -211,6 +211,9 @@ function CameraCapture({ kind, t, onCapture, onClose }: { kind: Kind; t: (typeof
 
   useEffect(() => {
     let cancelled = false;
+    // 開発モードでは effect が「実行→片付け→再実行」と走るので、ここで印を戻す（片付けで closed=true のままだと撮影できない）
+    closedRef.current = false;
+    takenRef.current = false;
     (async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
