@@ -304,8 +304,10 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
         {propertyLabel && <p className="text-[13px] text-switch-gray-mid mb-3">{t.property}: <span className="text-switch-charcoal font-semibold">{propertyLabel}</span></p>}
         <p className="text-[15px] text-switch-gray-dark leading-relaxed mb-8">{t.lead}</p>
 
-        <form onSubmit={onSubmit} noValidate className="space-y-10">
+        <form onSubmit={onSubmit} noValidate>
           <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+          {/* 送信中（位置情報の取得待ちを含む・最大 10 秒）は全入力を止め、開始時の値と違う内容が送られないようにする（Codex 2 巡目） */}
+          <fieldset disabled={submitting} className="space-y-10 min-w-0 border-0 p-0 m-0">
 
           <section>
             {sectionHead("01", t.step1)}
@@ -388,6 +390,7 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
             </button>
             <p className="mt-4 text-[11.5px] text-switch-gray-mid leading-relaxed">{t.legal}</p>
           </section>
+          </fieldset>
         </form>
       </main>
     </div>
