@@ -301,8 +301,13 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
 }
 
 export async function appendRows(tab: "旅館業用" | "民泊用", rows: unknown[][]): Promise<void> {
+  return appendSheetRows(`${tab}!A6:U`, rows);
+}
+
+/** 名簿スプシの任意のタブ・範囲へ追記（本人確認タブなど名簿本体以外もここを通す） */
+export async function appendSheetRows(a1Range: string, rows: unknown[][]): Promise<void> {
   const token = await getAccessToken();
-  const range = encodeURIComponent(`${tab}!A6:U`);
+  const range = encodeURIComponent(a1Range);
   const resp = await fetchWithTimeout(
     `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
     {

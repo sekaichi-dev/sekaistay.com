@@ -16,3 +16,6 @@ tsconfig.tsbuildinfo
 
 # Claude Code local tooling
 .claude/
+
+# 本人確認 QR シートの出力先（scripts/checkin-qr.mjs）
+/tmp/checkin-qr/
