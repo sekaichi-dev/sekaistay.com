@@ -154,6 +154,8 @@ const T: Record<Lang, {
 interface Shot { fileId: string; previewUrl: string; method: "camera" | "file" }
 
 interface GuestForm {
+  /** 不変の宿泊者 ID。写真の保存完了を「どの宿泊者に付けるか」はこの ID で決める（添字だと保存中の削除で別人に付く・Codex P1） */
+  id: number;
   name: string;
   jaResident: boolean | null;
   selfie: Shot | null;
@@ -162,7 +164,8 @@ interface GuestForm {
 
 interface Geo { status: "ok" | "denied" | "unavailable"; lat?: number; lng?: number; accuracy?: number }
 
-const emptyGuest = (): GuestForm => ({ name: "", jaResident: null, selfie: null, passport: null });
+let nextGuestId = 1;
+const emptyGuest = (): GuestForm => ({ id: nextGuestId++, name: "", jaResident: null, selfie: null, passport: null });
 
 function detectLang(): Lang {
   const l = (typeof navigator !== "undefined" ? navigator.language : "ja").toLowerCase();
@@ -289,8 +292,8 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
   const [lastName, setLastName] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
   const [guests, setGuests] = useState<GuestForm[]>([emptyGuest()]);
-  const [camera, setCamera] = useState<{ index: number; kind: Kind } | null>(null);
-  const [busy, setBusy] = useState<string | null>(null); // `${index}:${kind}`
+  const [camera, setCamera] = useState<{ guestId: number; kind: Kind } | null>(null);
+  const [busy, setBusy] = useState<string | null>(null); // `${guestId}:${kind}`
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -303,8 +306,8 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
     return lang !== "ja" && props.propertyNameEn ? props.propertyNameEn : props.propertyName;
   }, [lang, props.propertyName, props.propertyNameEn]);
 
-  const updateGuest = useCallback((index: number, patch: Partial<GuestForm>) => {
-    setGuests((prev) => prev.map((g, i) => (i === index ? { ...g, ...patch } : g)));
+  const updateGuest = useCallback((guestId: number, patch: Partial<GuestForm>) => {
+    setGuests((prev) => prev.map((g) => (g.id === guestId ? { ...g, ...patch } : g)));
   }, []);
 
   const langToggle = (
@@ -339,11 +342,12 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
     );
   }
 
-  // 撮った写真（画面内カメラ or カメラ直接起動のファイル）を縮小して Drive へ置き、ファイル ID をカードに持つ
-  async function onPhoto(index: number, kind: Kind, file: File | null, method: "camera" | "file") {
+  // 撮った写真（画面内カメラ or カメラ直接起動のファイル）を縮小して Drive へ置き、ファイル ID をカードに持つ。
+  // 既存の写真は新しい写真の保存が成功したときだけ置き換える（撮り直しをキャンセルしても元の写真が残る・Codex P2）
+  async function onPhoto(guestId: number, kind: Kind, file: File | null, method: "camera" | "file") {
     if (!file) return;
     setError("");
-    const slot = `${index}:${kind}`;
+    const slot = `${guestId}:${kind}`;
     setBusy(slot);
     const ref = bookingRef;
     try {
@@ -367,7 +371,12 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
       try {
         const fileId = await uploadPhoto(compressed);
         const shot: Shot = { fileId, previewUrl: URL.createObjectURL(compressed), method };
-        updateGuest(index, kind === "selfie" ? { selfie: shot } : { passport: shot });
+        setGuests((prev) => prev.map((g) => {
+          if (g.id !== guestId) return g; // 保存中に削除された宿泊者なら捨てる（別人に付けない）
+          const old = kind === "selfie" ? g.selfie : g.passport;
+          if (old) URL.revokeObjectURL(old.previewUrl);
+          return kind === "selfie" ? { ...g, selfie: shot } : { ...g, passport: shot };
+        }));
       } catch (e) {
         setError(t.errUpload);
         reportFailure("upload", String((e as Error)?.message || e), `checkin ${kind} ${compressed.type} ${compressed.size}B (orig ${file.size}B)`, ref);
@@ -377,19 +386,12 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
     }
   }
 
-  function clearShot(index: number, kind: Kind) {
-    const g = guests[index];
-    const shot = kind === "selfie" ? g.selfie : g.passport;
-    if (shot) URL.revokeObjectURL(shot.previewUrl);
-    updateGuest(index, kind === "selfie" ? { selfie: null } : { passport: null });
-  }
-
-  function removeGuest(index: number) {
+  function removeGuest(guestId: number) {
     setGuests((prev) => {
-      const g = prev[index];
-      if (g.selfie) URL.revokeObjectURL(g.selfie.previewUrl);
-      if (g.passport) URL.revokeObjectURL(g.passport.previewUrl);
-      return prev.filter((_, i) => i !== index);
+      const g = prev.find((x) => x.id === guestId);
+      if (g?.selfie) URL.revokeObjectURL(g.selfie.previewUrl);
+      if (g?.passport) URL.revokeObjectURL(g.passport.previewUrl);
+      return prev.filter((x) => x.id !== guestId);
     });
   }
 
@@ -463,21 +465,21 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
   );
 
   // 撮影ボタン。カメラ API がある端末は画面内カメラ、無い端末だけカメラ直接起動のファイル選択（method=file を記録）
-  const shotButton = (index: number, kind: Kind, shot: Shot | null) => {
-    const slot = `${index}:${kind}`;
+  const shotButton = (guestId: number, kind: Kind, shot: Shot | null) => {
+    const slot = `${guestId}:${kind}`;
     const isBusy = busy === slot;
     const cls = `inline-flex items-center gap-2 rounded-switch-md px-4 py-2.5 text-[14px] font-semibold cursor-pointer transition-colors ${shot ? "border border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over" : "bg-switch-teal text-white hover:bg-switch-teal-deep"}`;
     const label = isBusy ? t.uploading : shot ? t.retake : `📷 ${t.take}`;
     if (cameraApi) {
       return (
-        <button type="button" disabled={isBusy || !!busy} onClick={() => { if (shot) clearShot(index, kind); setCamera({ index, kind }); }} className={cls}>{label}</button>
+        <button type="button" disabled={isBusy || !!busy} onClick={() => setCamera({ guestId, kind })} className={cls}>{label}</button>
       );
     }
     return (
       <label className={cls}>
         <input type="file" accept="image/*" capture={kind === "selfie" ? "user" : "environment"} className="hidden" disabled={isBusy || !!busy}
           onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
-          onChange={(e) => onPhoto(index, kind, e.target.files?.[0] || null, "file")} />
+          onChange={(e) => onPhoto(guestId, kind, e.target.files?.[0] || null, "file")} />
         {label}
       </label>
     );
@@ -510,7 +512,7 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
           kind={camera.kind}
           t={t}
           onClose={() => setCamera(null)}
-          onCapture={(file) => { const c = camera; setCamera(null); void onPhoto(c.index, c.kind, file, "camera"); }}
+          onCapture={(file) => { const c = camera; setCamera(null); void onPhoto(c.guestId, c.kind, file, "camera"); }}
         />
       )}
       <main className="max-w-xl mx-auto px-5 py-8">
@@ -570,24 +572,24 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
 
             <div className="space-y-5">
               {guests.map((g, i) => (
-                <div key={i} className="rounded-switch-lg border border-switch-stone-border bg-white p-4 sm:p-5">
+                <div key={g.id} className="rounded-switch-lg border border-switch-stone-border bg-white p-4 sm:p-5">
                   <div className="flex items-center justify-between gap-3 mb-4">
                     <h3 className="text-[15px] font-bold text-switch-charcoal">{t.guestN(i + 1)}</h3>
                     {guests.length > 1 && (
-                      <button type="button" onClick={() => removeGuest(i)} className="text-[12px] text-switch-gray-mid underline underline-offset-2 hover:text-danger">{t.removeGuest}</button>
+                      <button type="button" disabled={!!busy} onClick={() => removeGuest(g.id)} className="text-[12px] text-switch-gray-mid underline underline-offset-2 hover:text-danger disabled:opacity-50">{t.removeGuest}</button>
                     )}
                   </div>
                   <div className="space-y-4">
                     <div>
                       <label htmlFor={`name-${i}`} className={labelCls}>{t.name}</label>
-                      <input id={`name-${i}`} className={inputCls} value={g.name} onChange={(e) => updateGuest(i, { name: e.target.value.slice(0, 100) })} autoComplete="name" placeholder="TARO YAMADA" />
+                      <input id={`name-${i}`} className={inputCls} value={g.name} onChange={(e) => updateGuest(g.id, { name: e.target.value.slice(0, 100) })} autoComplete="name" placeholder="TARO YAMADA" />
                       <p className="mt-1 text-[12px] text-switch-gray-mid">{t.nameHint}</p>
                     </div>
                     <div>
                       <span className={labelCls}>{t.residence}</span>
                       <div className="grid grid-cols-2 gap-2">
                         {([true, false] as const).map((val) => (
-                          <button key={String(val)} type="button" onClick={() => updateGuest(i, { jaResident: val })}
+                          <button key={String(val)} type="button" onClick={() => updateGuest(g.id, { jaResident: val })}
                             className={`rounded-switch-md border px-3 py-2.5 text-[13px] font-semibold transition-colors ${g.jaResident === val ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}`}>
                             {val ? t.resJa : t.resAbroad}
                           </button>
@@ -599,7 +601,7 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
                       <p className="text-[12px] text-switch-gray-mid mb-2">{t.selfieWhy}</p>
                       <div className="flex items-center gap-3 flex-wrap">
                         {preview(g.selfie, "selfie")}
-                        {shotButton(i, "selfie", g.selfie)}
+                        {shotButton(g.id, "selfie", g.selfie)}
                       </div>
                     </div>
                     {g.jaResident === false && (
@@ -608,7 +610,7 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
                         <p className="text-[12px] text-switch-gray-mid mb-2">{t.passportWhy}</p>
                         <div className="flex items-center gap-3 flex-wrap">
                           {preview(g.passport, "passport")}
-                          {shotButton(i, "passport", g.passport)}
+                          {shotButton(g.id, "passport", g.passport)}
                         </div>
                       </div>
                     )}
