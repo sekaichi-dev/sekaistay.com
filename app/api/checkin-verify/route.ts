@@ -97,7 +97,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await appendSheetRows(CHECKIN_SHEET_RANGE, buildCheckinRows(input, property, receiptId, photoLinks, receivedAt));
+    // RAW: ゲスト入力（姓）を含むので数式として解釈させない
+    await appendSheetRows(CHECKIN_SHEET_RANGE, buildCheckinRows(input, property, receiptId, photoLinks, receivedAt), "RAW");
   } catch (e) {
     console.error("[checkin-verify] sheets append failed:", e);
     return NextResponse.json({ error: ERR.record }, { status: 500 });

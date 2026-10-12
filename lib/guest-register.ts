@@ -304,12 +304,13 @@ export async function appendRows(tab: "旅館業用" | "民泊用", rows: unknow
   return appendSheetRows(`${tab}!A6:U`, rows);
 }
 
-/** 名簿スプシの任意のタブ・範囲へ追記（本人確認タブなど名簿本体以外もここを通す） */
-export async function appendSheetRows(a1Range: string, rows: unknown[][]): Promise<void> {
+/** 名簿スプシの任意のタブ・範囲へ追記（本人確認タブなど名簿本体以外もここを通す）。
+ *  RAW はセルを数式として解釈しない（ゲスト入力をそのまま書くタブは RAW にする） */
+export async function appendSheetRows(a1Range: string, rows: unknown[][], valueInputOption: "USER_ENTERED" | "RAW" = "USER_ENTERED"): Promise<void> {
   const token = await getAccessToken();
   const range = encodeURIComponent(a1Range);
   const resp = await fetchWithTimeout(
-    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}:append?valueInputOption=${valueInputOption}&insertDataOption=INSERT_ROWS`,
     {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
