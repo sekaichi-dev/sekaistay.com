@@ -178,7 +178,7 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
     if (!file || shots.length >= MAX_PHOTOS) return;
     setError("");
     setBusy(true);
-    const ref = bookingRef || lastName;
+    const ref = bookingRef; // テレメトリには予約番号だけ（姓は送らない）
     try {
       const source = await readIntoMemory(file);
       if (!source) {
@@ -252,13 +252,13 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; receiptId?: string; error?: string };
       if (!res.ok || !data.ok) {
         setError(data.error || t.errSubmit);
-        reportFailure("submit", data.error || `HTTP ${res.status}`, "checkin", bookingRef || lastName);
+        reportFailure("submit", data.error || `HTTP ${res.status}`, "checkin", bookingRef);
         return;
       }
       setReceiptId(data.receiptId || "");
     } catch (e) {
       setError(t.errSubmit);
-      reportFailure("submit", String((e as Error)?.message || e), "checkin fetch threw", bookingRef || lastName);
+      reportFailure("submit", String((e as Error)?.message || e), "checkin fetch threw", bookingRef);
     } finally {
       setSubmitting(false);
     }

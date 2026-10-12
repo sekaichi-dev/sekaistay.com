@@ -90,6 +90,12 @@ test("buildCheckinRows: 位置情報を拒否したら「拒否」で座標は�
   assert.equal(row[9], "");
 });
 
+test("buildCheckinRows: 姓の先頭の = + - @ は数式として解釈させない", () => {
+  const { input } = parseCheckinInput(payload({ bookingRef: "", lastName: "=HYPERLINK(1)", arrivalDate: "2026-10-12" }));
+  const [row] = buildCheckinRows(input!, { id: "351180", name: "x" }, "C1", ["l"], "t");
+  assert.equal(row[4], "'=HYPERLINK(1)");
+});
+
 test("makeCheckinReceiptId / checkinPhotoBaseName: 形式", () => {
   assert.match(makeCheckinReceiptId(new Date("2026-10-12T20:00:00Z")), /^C20261013-[A-Z0-9]{4}$/);
   assert.equal(checkinPhotoBaseName("351180", "C20261012-AB12", 0), "本人確認_351180_C20261012-AB12_1");

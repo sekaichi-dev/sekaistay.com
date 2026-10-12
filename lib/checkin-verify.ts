@@ -5,6 +5,7 @@
 // 記録先: 名簿スプシの「本人確認」タブに 1 枚 1 行（A〜O 列・見出しは 1 行目・データは 2 行目から）。
 
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { escapeCell } from "./guest-register.ts";
 
 export const CHECKIN_SHEET_TAB = "本人確認";
 export const CHECKIN_SHEET_RANGE = `${CHECKIN_SHEET_TAB}!A2:O`;
@@ -128,7 +129,7 @@ export function buildCheckinRows(
     property.id,
     property.name,
     input.bookingRef ? `b:${input.bookingRef}` : "",
-    input.lastName,
+    escapeCell(input.lastName), // ゲスト入力は数式として解釈させない
     input.arrivalDate,
     `${i + 1}/${photoLinks.length}`,
     geoLabel(geo),
