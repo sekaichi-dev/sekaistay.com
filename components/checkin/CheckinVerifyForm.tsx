@@ -204,6 +204,9 @@ function getGeo(): Promise<Geo> {
 function CameraCapture({ kind, t, onCapture, onClose }: { kind: Kind; t: (typeof T)[Lang]; onCapture: (file: File) => void; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  // 撮影は 1 セッション 1 回だけ採用する。閉じた後や 2 回目以降の toBlob 完了は捨てる（連打・閉じた後の上書き防止・Codex P2）
+  const takenRef = useRef(false);
+  const closedRef = useRef(false);
   const [state, setState] = useState<"starting" | "ready" | "denied" | "unavailable">("starting");
 
   useEffect(() => {
@@ -228,6 +231,7 @@ function CameraCapture({ kind, t, onCapture, onClose }: { kind: Kind; t: (typeof
     })();
     return () => {
       cancelled = true;
+      closedRef.current = true;
       streamRef.current?.getTracks().forEach((tr) => tr.stop());
       streamRef.current = null;
     };
@@ -235,7 +239,8 @@ function CameraCapture({ kind, t, onCapture, onClose }: { kind: Kind; t: (typeof
 
   function shoot() {
     const video = videoRef.current;
-    if (!video || !video.videoWidth) return;
+    if (!video || !video.videoWidth || takenRef.current || closedRef.current) return;
+    takenRef.current = true;
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -243,7 +248,9 @@ function CameraCapture({ kind, t, onCapture, onClose }: { kind: Kind; t: (typeof
     if (!ctx) return;
     ctx.drawImage(video, 0, 0);
     canvas.toBlob((blob) => {
-      if (!blob) return;
+      if (closedRef.current) return; // 閉じた後に届いた結果は採用しない
+      if (!blob) { takenRef.current = false; return; }
+      closedRef.current = true;
       onCapture(new File([blob], `${kind}.jpg`, { type: "image/jpeg" }));
     }, "image/jpeg", 0.92);
   }
@@ -270,7 +277,7 @@ function CameraCapture({ kind, t, onCapture, onClose }: { kind: Kind; t: (typeof
         )}
       </div>
       <div className="px-5 pb-8 pt-4 flex items-center justify-center gap-4">
-        <button type="button" onClick={onClose} className="rounded-pill border border-white/40 px-5 py-3 text-[14px] font-semibold text-white">{t.camClose}</button>
+        <button type="button" onClick={() => { closedRef.current = true; onClose(); }} className="rounded-pill border border-white/40 px-5 py-3 text-[14px] font-semibold text-white">{t.camClose}</button>
         {state === "ready" && (
           <button type="button" onClick={shoot} className="rounded-pill bg-white px-8 py-3 text-[15px] font-bold text-switch-charcoal">● {t.camShutter}</button>
         )}

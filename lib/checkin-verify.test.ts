@@ -140,6 +140,7 @@ test("buildCheckinRows: 位置情報を拒否したら「拒否」で座標は�
   assert.equal(row[7], "拒否");
   assert.equal(row[8], "");
   assert.equal(row[9], "");
+  assert.equal(row[13], "宿泊者1/1 顔+身分証・画面内カメラ・国内住所あり・予約の姓=Kim");
 });
 
 test("makeCheckinReceiptId: 形式", () => {

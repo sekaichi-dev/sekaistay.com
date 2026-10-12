@@ -192,10 +192,12 @@ export function listCheckinPhotos(input: Pick<CheckinInput, "guests">): CheckinP
 const KIND_LABEL: Record<CheckinPhotoKind, string> = { selfie: "顔+身分証", passport: "旅券ページ" };
 const METHOD_LABEL: Record<CaptureMethod, string> = { camera: "画面内カメラ", file: "ファイル選択" };
 
-/** 備考列: どの宿泊者の何の写真を、どの方法で撮ったか（Phase 1 の判定と保健所への説明に使う） */
-export function photoNote(input: Pick<CheckinInput, "guests">, ref: CheckinPhotoRef): string {
+/** 備考列: どの宿泊者の何の写真を、どの方法で撮ったか（Phase 1 の判定と保健所への説明に使う）。
+ *  予約番号なしで「姓＋到着日」を使った場合はその姓も残す（代理予約だと宿泊者の氏名と違う・Codex P2） */
+export function photoNote(input: Pick<CheckinInput, "guests" | "lastName">, ref: CheckinPhotoRef): string {
   const g = input.guests[ref.guestIndex];
-  return `宿泊者${ref.guestIndex + 1}/${input.guests.length} ${KIND_LABEL[ref.kind]}・${METHOD_LABEL[g.method]}・${g.jaResident ? "国内住所あり" : "国内住所なし"}`;
+  const base = `宿泊者${ref.guestIndex + 1}/${input.guests.length} ${KIND_LABEL[ref.kind]}・${METHOD_LABEL[g.method]}・${g.jaResident ? "国内住所あり" : "国内住所なし"}`;
+  return input.lastName ? `${base}・予約の姓=${input.lastName}` : base;
 }
 
 export function buildCheckinRows(
