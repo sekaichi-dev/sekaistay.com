@@ -2,6 +2,7 @@
 
 /* チェックイン時の本人確認（/checkin/<物件ID>・鍵は /c/<物件ID>?k= が置いた httpOnly Cookie）
  * 保健所要件（Yugo 2026-10-12）に合わせた 1 画面:
+ *  - 到着後〜チェックアウトまでの間に室内 QR から送る（チェックイン前には強制しない・テンイチ 2026-10-13）
  *  - 予約の特定（予約番号 or 姓＋到着日）
  *  - 宿泊者全員分: 1 人ずつ氏名・居住地（国内/国外）・顔の横に身分証を持った自撮り。国外居住は旅券の顔写真ページも別に撮る
  *  - 撮影は画面内カメラ（getUserMedia）でその場撮影のみ。カメラロールからの選択はできない。
@@ -35,7 +36,7 @@ const T: Record<Lang, {
 }> = {
   ja: {
     label: "日本語", title: "チェックイン時の本人確認", property: "ご宿泊施設",
-    lead: "法令に基づき、ご到着時に宿泊される方全員の本人確認を行います。お一人ずつ「顔の横に身分証を持った写真」をその場で撮影してください。",
+    lead: "法令に基づき、ご宿泊の方全員の本人確認をお願いしています。チェックアウトまでに、お部屋でお一人ずつ「顔の横に身分証を持った写真」をその場で撮影してください。",
     step1: "ご予約の確認", bookingRef: "予約番号", bookingRefHint: "予約確認メールやアプリに記載の番号です（Airbnb は HM で始まる確認コード）", noBooking: "予約番号がわからない場合は、姓と到着日を入力してください",
     lastName: "姓", arrivalDate: "到着日",
     step2: "宿泊者全員の写真", allGuests: "宿泊される方全員分が必要です。お一人ずつ追加してください。", guestN: (n) => `宿泊者 ${n}`,
@@ -64,7 +65,7 @@ const T: Record<Lang, {
   },
   en: {
     label: "EN", title: "ID check at check-in", property: "Property",
-    lead: "Japanese law requires us to verify every guest on arrival. Each guest takes one photo on the spot holding their ID next to their face.",
+    lead: "Japanese law requires us to verify every guest. Before check-out, each guest takes one photo in the room, on the spot, holding their ID next to their face.",
     step1: "Your booking", bookingRef: "Booking number", bookingRefHint: "The number in your confirmation email or app (Airbnb: the code starting with HM)", noBooking: "If you don't know it, enter your last name and arrival date instead",
     lastName: "Last name", arrivalDate: "Arrival date",
     step2: "Photos of every guest", allGuests: "Required for every guest staying. Add each person below.", guestN: (n) => `Guest ${n}`,
@@ -93,7 +94,7 @@ const T: Record<Lang, {
   },
   ko: {
     label: "한국어", title: "체크인 본인 확인", property: "숙박 시설",
-    lead: "일본 법령에 따라 도착 시 투숙객 전원의 본인 확인을 합니다. 한 분씩 얼굴 옆에 신분증을 들고 그 자리에서 사진을 찍어 주세요.",
+    lead: "일본 법령에 따라 투숙객 전원의 본인 확인을 부탁드립니다. 체크아웃 전까지 객실에서 한 분씩 얼굴 옆에 신분증을 들고 그 자리에서 사진을 찍어 주세요.",
     step1: "예약 확인", bookingRef: "예약번호", bookingRefHint: "예약 확인 메일이나 앱에 적힌 번호입니다(Airbnb는 HM으로 시작하는 확인 코드)", noBooking: "예약번호를 모르면 성과 도착일을 입력하세요",
     lastName: "성", arrivalDate: "도착일",
     step2: "투숙객 전원의 사진", allGuests: "투숙하는 모든 분이 필요합니다. 한 분씩 추가하세요.", guestN: (n) => `투숙객 ${n}`,
@@ -122,7 +123,7 @@ const T: Record<Lang, {
   },
   zh: {
     label: "中文", title: "入住身份核验", property: "住宿设施",
-    lead: "根据日本法律，到达时需对全部住客进行身份核验。请每位住客将证件举在脸旁，当场拍一张照片。",
+    lead: "根据日本法律，需对全部住客进行身份核验。请在退房前，于房间内由每位住客将证件举在脸旁当场拍一张照片。",
     step1: "确认预订", bookingRef: "预订号", bookingRefHint: "预订确认邮件或App中的编号（Airbnb为以HM开头的确认码）", noBooking: "不知道预订号时，请输入姓氏和到达日期",
     lastName: "姓氏", arrivalDate: "到达日期",
     step2: "全部住客的照片", allGuests: "需要全部住客的照片。请逐一添加。", guestN: (n) => `住客 ${n}`,
