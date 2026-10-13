@@ -1,4 +1,4 @@
-// 室内掲示用の本人確認 QR シートを物件ごとに作る（印刷して玄関内側かテーブルに置く）。
+// 室内掲示用の本人確認 QR シートを物件ごとに作る（印刷して室内の玄関内側かテーブルに置く。チェックアウトまでに送ってもらう・2026-10-13 テンイチ決定）。
 // 使い方: CHECKIN_QR_SECRET=... node scripts/checkin-qr.mjs [--base https://sekaistay.com] [--out tmp/checkin-qr] [--only 351180,351183]
 // 物件一覧は本番の /api/guest-register/properties（公開・有効物件のみ）から取る。
 // 秘密は Vercel の CHECKIN_QR_SECRET と同じ値を渡す（違う値で作った QR は本番で「無効」になる）。
@@ -52,7 +52,7 @@ h1 small{display:block;font-size:15px;font-weight:600;color:#4e4c49;margin-top:4
 <div class="qrwrap">
   <div class="qr">${svg}</div>
   <div class="steps"><ol>
-    <li><b>ご到着時に、このQRコードをスマートフォンで読み取ってください。</b><span class="sub">Scan this code with your phone on arrival. ／ 도착 시 이 QR 코드를 스마트폰으로 스캔하세요. ／ 到达时请用手机扫描此二维码。</span></li>
+    <li><b>チェックアウトまでに、お部屋でこのQRコードをスマートフォンで読み取ってください。</b><span class="sub">Before check-out, scan this code with your phone in the room. ／ 체크아웃 전까지 객실에서 이 QR 코드를 스마트폰으로 스캔하세요. ／ 退房前请在房间内用手机扫描此二维码。</span></li>
     <li><b>予約番号（または姓と到着日）と、宿泊される全員のお名前を入力します。</b><span class="sub">Enter your booking number (or last name and arrival date) and the name of every guest. ／ 예약번호(또는 성과 도착일)와 투숙객 전원의 이름을 입력하세요. ／ 输入预订号（或姓氏和到达日期）及全部住客姓名。</span></li>
     <li><b>宿泊される方全員が、顔の横に身分証を持って1人1枚ずつその場で撮影します。日本国外にお住まいの方はパスポートの顔写真ページも撮影します。</b><span class="sub">Every guest takes one photo on the spot holding their ID next to their face. Guests living outside Japan also photograph the passport photo page. ／ 투숙객 전원이 얼굴 옆에 신분증을 들고 1인 1장씩 그 자리에서 촬영합니다. 일본 외 거주자는 여권 사진면도 촬영합니다. ／ 全部住客各自将证件举在脸旁当场拍一张照片；居住在日本以外的旅客还需拍摄护照照片页。</span></li>
   </ol>
