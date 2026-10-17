@@ -313,3 +313,42 @@ test("clientFailureHint: 運営が読む説明は既知の stage にだけ付く
   assert.equal(clientFailureHint("unknown"), "");
   assert.match(clientFailureHint("read"), /選び直し/);
 });
+
+test("retryTransientOnce: 無応答・5xx・429 は 1 回だけ再試行し、それ以外はそのまま返す", async () => {
+  const { retryTransientOnce } = await import("./guest-register.ts");
+  const abort = () => Object.assign(new Error("This operation was aborted"), { name: "AbortError" });
+  const seq = (...steps: (number | Error)[]) => {
+    let n = 0;
+    const call = async () => {
+      const s = steps[n++];
+      if (s instanceof Error) throw s;
+      return new Response("x", { status: s });
+    };
+    return { call, calls: () => n };
+  };
+
+  let s = seq(abort(), 200);
+  assert.equal((await retryTransientOnce(s.call, 0)).status, 200);
+  assert.equal(s.calls(), 2);
+
+  s = seq(503, 200);
+  assert.equal((await retryTransientOnce(s.call, 0)).status, 200);
+  s = seq(429, 200);
+  assert.equal((await retryTransientOnce(s.call, 0)).status, 200);
+  s = seq(new TypeError("fetch failed"), 200);
+  assert.equal((await retryTransientOnce(s.call, 0)).status, 200);
+
+  for (const status of [200, 404, 403]) {
+    s = seq(status, 200);
+    assert.equal((await retryTransientOnce(s.call, 0)).status, status);
+    assert.equal(s.calls(), 1);
+  }
+
+  s = seq(abort(), abort());
+  await assert.rejects(retryTransientOnce(s.call, 0), { name: "AbortError" });
+  assert.equal(s.calls(), 2);
+
+  s = seq(new RangeError("bug"), 200);
+  await assert.rejects(retryTransientOnce(s.call, 0), RangeError);
+  assert.equal(s.calls(), 1);
+});

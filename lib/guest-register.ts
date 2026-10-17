@@ -300,6 +300,20 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
   }
 }
 
+// Drive は 1 件だけ応答が返らないことがある（2026-10-17: 8 枚中 7 枚は 2 秒で複製、1 枚だけ 15 秒無応答で送信全体が失敗）。
+// 写真の確認と複製に限り、無応答・通信断・5xx・429 を 1 回だけ再試行する。複製が二重になっても同じフォルダに同じ写真が残るだけ。
+export async function retryTransientOnce(call: () => Promise<Response>, waitMs = 1000): Promise<Response> {
+  try {
+    const res = await call();
+    if (res.status !== 429 && res.status < 500) return res;
+    await res.body?.cancel().catch(() => {});
+  } catch (e) {
+    if (!(e instanceof Error) || (e.name !== "AbortError" && e.name !== "TypeError")) throw e;
+  }
+  await new Promise((r) => setTimeout(r, waitMs));
+  return call();
+}
+
 export async function appendRows(tab: "旅館業用" | "民泊用", rows: unknown[][]): Promise<void> {
   return appendSheetRows(`${tab}!A6:U`, rows);
 }
@@ -486,10 +500,10 @@ export async function claimStagedPhoto(fileId: string, baseName: string, parentI
   if (!DRIVE_ID_RE.test(fileId)) throw new StagedPhotoError("bad id");
   const token = await getAccessToken();
   const auth = { Authorization: `Bearer ${token}` };
-  const metaRes = await fetchWithTimeout(
+  const metaRes = await retryTransientOnce(() => fetchWithTimeout(
     `https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,parents,mimeType,size,trashed,appProperties&supportsAllDrives=true`,
     { headers: auth },
-  );
+  ));
   if (metaRes.status === 404) throw new StagedPhotoError("not found");
   if (!metaRes.ok) {
     const text = await metaRes.text().catch(() => "");
@@ -498,7 +512,7 @@ export async function claimStagedPhoto(fileId: string, baseName: string, parentI
   const meta = (await metaRes.json()) as StagedFileMeta;
   const problem = verifyStagedFileMeta(meta);
   if (problem) throw new StagedPhotoError(problem);
-  const copied = await fetchWithTimeout(
+  const copied = await retryTransientOnce(() => fetchWithTimeout(
     `https://www.googleapis.com/drive/v3/files/${fileId}/copy?supportsAllDrives=true&fields=id,webViewLink`,
     {
       method: "POST",
@@ -509,7 +523,7 @@ export async function claimStagedPhoto(fileId: string, baseName: string, parentI
         appProperties: { [MARK_KEY]: MARK_CLAIMED },
       }),
     },
-  );
+  ));
   if (copied.status === 404) throw new StagedPhotoError("deleted before claim");
   if (!copied.ok) {
     const text = await copied.text().catch(() => "");
