@@ -1,4 +1,5 @@
-// チェックイン時の本人確認の受付。室内 QR の鍵が合う物件だけ受け、写真を名簿フォルダへ置き「本人確認」タブに記録する。
+// チェックイン時の本人確認の受付。室内 QR か予約ごとのリンクの鍵が合う物件だけ受け、写真を名簿フォルダへ置き「本人確認」タブに記録する。
+// 予約ごとのリンクから来た送信は、位置情報が物件の近く（GEO_NEAR_M 以内）のときだけ受ける。予約番号はリンクの予約 ID で上書きする。
 // 写真本体はここに来ない（名簿フォームと同じく /api/guest-register/photo-session の URL へ直接 PUT 済みの Drive ID を受ける）。
 // QR の鍵は /c/<物件ID> が置いた httpOnly Cookie から読む（本文には入れない）。
 import { NextRequest, NextResponse } from "next/server";
@@ -6,7 +7,8 @@ import {
   appendSheetRows, claimStagedPhoto, ensurePassportFolder, fetchProperties, nowJstString, sanitizeFilePart, StagedPhotoError,
 } from "@/lib/guest-register";
 import {
-  CHECKIN_COOKIE, CHECKIN_SHEET_RANGE, buildCheckinRows, checkinPhotoBaseName, listCheckinPhotos, makeCheckinReceiptId, parseCheckinInput, verifyCheckinCookie,
+  CHECKIN_COOKIE, CHECKIN_SHEET_RANGE, buildCheckinRows, checkGeoNear, checkinPhotoBaseName, checkinSecretsFromEnv, geoDistance, listCheckinPhotos,
+  makeCheckinReceiptId, parseCheckinInput, readCheckinAccess,
 } from "@/lib/checkin-verify";
 import { allowedOrigin, getClientIp, makeRateLimiter } from "@/lib/guest-register-request";
 
@@ -19,7 +21,10 @@ const ERR = {
   origin: "Forbidden origin",
   rate: "送信回数の上限に達しました。時間をおいてお試しください / Too many requests. Please try again later.",
   format: "リクエストの形式が不正です / Invalid request",
-  qr: "このQRコードは無効です。お部屋に掲示のQRコードを読み取ってください / This QR code is not valid. Please scan the code posted in your room.",
+  qr: "このQRコード・リンクは無効です。お部屋に掲示のQRコードを読み取ってください / This QR code or link is not valid. Please scan the code posted in your room.",
+  geoMissing: "位置情報の利用を許可してから、もう一度送信してください（お宿にいることの確認に使います）。許可できない場合は、お部屋に掲示のQRコードからお送りください / Please allow location access and send again (we use it to confirm you are at the property). If you cannot, use the QR code posted in your room.",
+  geoCoarse: "現在地を正確に取得できませんでした。窓際や屋外で、もう一度送信してください / We could not get an accurate location. Please move near a window or outside and send again.",
+  geoFar: "現在地がお宿から離れています。お部屋、またはお宿のすぐ近くで送信してください / You appear to be away from the property. Please send from your room or right outside the property.",
   booking: "予約番号、または姓と到着日を入力してください / Enter your booking number, or your last name and arrival date.",
   photos: "宿泊者全員の写真を撮影してください / Please take the photos for every guest.",
   name: "宿泊者の氏名を入力してください / Please enter each guest's name.",
@@ -61,14 +66,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status });
   }
 
-  // 秘密が未設定なら何も受け付けない（fail-closed）
-  const secret = (process.env.CHECKIN_QR_SECRET || "").trim();
-  if (!secret) {
-    console.error("[checkin-verify] CHECKIN_QR_SECRET not configured");
+  // 秘密が両方とも未設定なら何も受け付けない（fail-closed）。片方だけならその入口だけ readCheckinAccess が通す
+  const secrets = checkinSecretsFromEnv();
+  if (!secrets.room && !secrets.link) {
+    console.error("[checkin-verify] CHECKIN_QR_SECRET / CHECKIN_LINK_SECRET not configured");
     return NextResponse.json({ error: ERR.closed }, { status: 503 });
   }
-  if (!verifyCheckinCookie(req.cookies.get(CHECKIN_COOKIE)?.value, input.propertyId, secret)) {
-    return NextResponse.json({ error: ERR.qr }, { status: 403 });
+  const access = readCheckinAccess(req.cookies.get(CHECKIN_COOKIE)?.value, input.propertyId, secrets);
+  if (!access) return NextResponse.json({ error: ERR.qr }, { status: 403 });
+  if (access.via === "link") {
+    input.bookingRef = access.bookingId;
+    input.lastName = "";
+    input.arrivalDate = "";
   }
 
   let property;
@@ -79,6 +88,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: ERR.server }, { status: 500 });
   }
   if (!property) return NextResponse.json({ error: ERR.qr }, { status: 403 });
+
+  if (access.via === "link") {
+    // 物件の位置が物件マスタに無いと距離を判定できない（撮影ページも出していない）
+    if (property.lat === undefined || property.lng === undefined) return NextResponse.json({ error: ERR.qr }, { status: 403 });
+    const near = checkGeoNear(input.geo, property);
+    if (near !== "near") {
+      // 物件の位置がずれている（郊外）・ゲストが本当に離れている、の切り分け用に距離と誤差を残す
+      console.warn(`[checkin-verify] link geo rejected property=${property.id} booking=${access.bookingId} result=${near} distance=${geoDistance(input.geo, property) ?? "-"} accuracy=${input.geo.accuracy ?? "-"}`);
+      const message = near === "missing" ? ERR.geoMissing : near === "coarse" ? ERR.geoCoarse : ERR.geoFar;
+      return NextResponse.json({ error: message, geo: near }, { status: 422 });
+    }
+  }
 
   const receiptId = makeCheckinReceiptId();
   const receivedAt = nowJstString();
@@ -107,7 +128,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // RAW: ゲスト入力（姓）を含むので数式として解釈させない
-    await appendSheetRows(CHECKIN_SHEET_RANGE, buildCheckinRows(input, property, receiptId, photoLinks, receivedAt), "RAW");
+    await appendSheetRows(CHECKIN_SHEET_RANGE, buildCheckinRows(input, property, receiptId, photoLinks, receivedAt, access.via), "RAW");
   } catch (e) {
     console.error("[checkin-verify] sheets append failed:", e);
     return NextResponse.json({ error: ERR.record }, { status: 500 });
