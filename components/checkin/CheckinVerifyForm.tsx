@@ -461,6 +461,7 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
           website: "",
           payload: {
             propertyId: props.propertyId,
+            via: viaLink ? "link" : "qr",
             bookingRef: viaLink ? props.bookingId : useName ? "" : bookingRef.trim(),
             lastName: !viaLink && useName ? lastName.trim() : "",
             arrivalDate: !viaLink && useName ? arrivalDate : "",

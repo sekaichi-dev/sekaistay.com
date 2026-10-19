@@ -24,6 +24,7 @@ const ERR = {
   qr: "このQRコード・リンクは無効です。お部屋に掲示のQRコードを読み取ってください / This QR code or link is not valid. Please scan the code posted in your room.",
   geoMissing: "位置情報の利用を許可してから、もう一度送信してください（お宿にいることの確認に使います）。許可できない場合は、お部屋に掲示のQRコードからお送りください / Please allow location access and send again (we use it to confirm you are at the property). If you cannot, use the QR code posted in your room.",
   geoCoarse: "現在地を正確に取得できませんでした。窓際や屋外で、もう一度送信してください / We could not get an accurate location. Please move near a window or outside and send again.",
+  stale: "別の予約のリンクが開かれたため、この画面からは送信できません。ご案内したリンクを開き直してください / Another booking's link was opened in this browser. Please open the link we sent you again.",
   geoFar: "現在地がお宿から離れています。お部屋、またはお宿のすぐ近くで送信してください / You appear to be away from the property. Please send from your room or right outside the property.",
   booking: "予約番号、または姓と到着日を入力してください / Enter your booking number, or your last name and arrival date.",
   photos: "宿泊者全員の写真を撮影してください / Please take the photos for every guest.",
@@ -74,8 +75,13 @@ export async function POST(req: NextRequest) {
   }
   const access = readCheckinAccess(req.cookies.get(CHECKIN_COOKIE)?.value, input.propertyId, secrets);
   if (!access) return NextResponse.json({ error: ERR.qr }, { status: 403 });
+  // Cookie はブラウザで 1 つ。画面を開いた後に別の予約のリンク（や QR）を開くと入れ替わるので、
+  // 画面の入口と予約が今の Cookie と同じときだけ受ける（違う予約に写真を付けない・Codex P2）
+  const claimedVia = (body.payload as { via?: unknown } | undefined)?.via === "link" ? "link" : "qr";
+  if (claimedVia !== access.via || (access.via === "link" && input.bookingRef !== access.bookingId)) {
+    return NextResponse.json({ error: ERR.stale }, { status: 409 });
+  }
   if (access.via === "link") {
-    input.bookingRef = access.bookingId;
     input.lastName = "";
     input.arrivalDate = "";
   }
