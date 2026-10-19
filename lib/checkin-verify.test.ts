@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 
 const {
   roomKey, verifyRoomKey, checkinUrl, parseCheckinInput, parseCheckinGuest, parseGeo, buildCheckinRows, bookingCell,
-  listCheckinPhotos, photoNote, makeCheckinReceiptId, checkinPhotoBaseName, checkinCookieValue, verifyCheckinCookie,
+  listCheckinPhotos, photoNote, makeCheckinReceiptId, checkinPhotoBaseName, checkinCookieValue, bookingCookieValue, readCheckinAccess,
+  bookingKey, verifyBookingKey, bookingCheckinUrl, distanceM, geoDistance, checkGeoNear, GEO_NEAR_M,
   CHECKIN_SHEET_HEADER, MAX_CHECKIN_GUESTS,
 } = await import("./checkin-verify.ts");
 
@@ -42,14 +43,73 @@ test("checkinUrl: /c/<物件ID>?k=<鍵>（末尾スラッシュは重ねない�
   assert.equal(u, `https://sekaistay.com/c/351180?k=${roomKey("351180", SECRET)}`);
 });
 
-test("verifyCheckinCookie: 物件と鍵が揃ったときだけ通す", () => {
+const LINK = "link-secret";
+const SECRETS = { room: SECRET, link: LINK };
+
+test("readCheckinAccess: QR の印は物件と鍵が揃ったときだけ通す", () => {
   const v = checkinCookieValue("351180", roomKey("351180", SECRET));
-  assert.equal(verifyCheckinCookie(v, "351180", SECRET), true);
-  assert.equal(verifyCheckinCookie(v, "351183", SECRET), false);
-  assert.equal(verifyCheckinCookie(checkinCookieValue("351183", roomKey("351180", SECRET)), "351183", SECRET), false);
-  assert.equal(verifyCheckinCookie(undefined, "351180", SECRET), false);
-  assert.equal(verifyCheckinCookie("351180", "351180", SECRET), false);
-  assert.equal(verifyCheckinCookie(v, "351180", ""), false);
+  assert.deepEqual(readCheckinAccess(v, "351180", SECRETS), { via: "qr" });
+  assert.equal(readCheckinAccess(v, "351183", SECRETS), null);
+  assert.equal(readCheckinAccess(checkinCookieValue("351183", roomKey("351180", SECRET)), "351183", SECRETS), null);
+  assert.equal(readCheckinAccess(undefined, "351180", SECRETS), null);
+  assert.equal(readCheckinAccess("351180", "351180", SECRETS), null);
+  assert.equal(readCheckinAccess(v, "351180", { room: "", link: LINK }), null);
+});
+
+test("bookingKey: ops と同じ式（固定値で照合）・予約ごと物件ごとに違う", () => {
+  // ops（sekai-stay-ops の checkin-link）にも同じ値の検査がある。式を変えると両方落ちる
+  assert.equal(bookingKey("351180", "94204472", "test-secret"), "2df351dbc4419bbb");
+  assert.notEqual(bookingKey("351180", "94204472", LINK), bookingKey("351180", "94204473", LINK));
+  assert.notEqual(bookingKey("351180", "94204472", LINK), bookingKey("351183", "94204472", LINK));
+  // QR の鍵とは別物（QR の秘密と同じ値でも鍵は一致しない）
+  assert.notEqual(bookingKey("351180", "94204472", SECRET), roomKey("351180", SECRET));
+});
+
+test("verifyBookingKey: 予約 ID は数字だけ・鍵と秘密が揃ったときだけ通す", () => {
+  const k = bookingKey("351180", "94204472", LINK);
+  assert.equal(verifyBookingKey("351180", "94204472", k, LINK), true);
+  assert.equal(verifyBookingKey("351180", "94204473", k, LINK), false);
+  assert.equal(verifyBookingKey("351183", "94204472", k, LINK), false);
+  assert.equal(verifyBookingKey("351180", "94204472", k, ""), false);
+  assert.equal(verifyBookingKey("351180", "HMABC", bookingKey("351180", "HMABC", LINK), LINK), false);
+});
+
+test("bookingCheckinUrl: /c/<物件ID>?b=<予約ID>&k=<予約鍵>", () => {
+  assert.equal(bookingCheckinUrl("https://sekaistay.com/", "351180", "94204472", LINK), `https://sekaistay.com/c/351180?b=94204472&k=${bookingKey("351180", "94204472", LINK)}`);
+});
+
+test("readCheckinAccess: リンクの印は予約 ID を返す・QR の秘密では通らない・形が違えば null", () => {
+  const v = bookingCookieValue("351180", "94204472", bookingKey("351180", "94204472", LINK));
+  assert.deepEqual(readCheckinAccess(v, "351180", SECRETS), { via: "link", bookingId: "94204472" });
+  assert.equal(readCheckinAccess(v, "351183", SECRETS), null);
+  assert.equal(readCheckinAccess(v, "351180", { room: SECRET, link: "" }), null);
+  assert.equal(readCheckinAccess(bookingCookieValue("351180", "94204472", bookingKey("351180", "94204472", SECRET)), "351180", SECRETS), null);
+  assert.equal(readCheckinAccess(`${v}:x`, "351180", SECRETS), null);
+});
+
+const PLACE = { lat: 35.6833344, lng: 139.677536 };
+
+test("distanceM: 緯度 0.001 度はおよそ 111m", () => {
+  const d = distanceM(PLACE, { lat: PLACE.lat + 0.001, lng: PLACE.lng });
+  assert.ok(d > 110 && d < 112, String(d));
+});
+
+test("checkGeoNear: 500m 以内・誤差 500m 以内だけ near", () => {
+  const at = (dLat: number, accuracy?: number) => ({ status: "ok" as const, lat: PLACE.lat + dLat, lng: PLACE.lng, accuracy });
+  assert.equal(GEO_NEAR_M, 500);
+  assert.equal(checkGeoNear(at(0.001, 30), PLACE), "near");
+  assert.equal(checkGeoNear(at(0.0044, 30), PLACE), "near"); // 約 489m
+  assert.equal(checkGeoNear(at(0.0046, 30), PLACE), "far"); // 約 511m
+  assert.equal(checkGeoNear(at(0.001, 800), PLACE), "coarse");
+  assert.equal(checkGeoNear(at(0.001), PLACE), "coarse");
+  assert.equal(checkGeoNear({ status: "denied" }, PLACE), "missing");
+  assert.equal(checkGeoNear(at(0, 10), {}), "missing");
+});
+
+test("geoDistance: 位置情報か物件の位置が無ければ undefined", () => {
+  assert.equal(geoDistance({ status: "ok", lat: PLACE.lat, lng: PLACE.lng, accuracy: 5 }, PLACE), 0);
+  assert.equal(geoDistance({ status: "unavailable" }, PLACE), undefined);
+  assert.equal(geoDistance({ status: "ok", lat: 1, lng: 1 }, {}), undefined);
 });
 
 test("parseCheckinInput: 予約番号ありの正常系", () => {
@@ -121,10 +181,10 @@ test("buildCheckinRows: 1 枚 1 行・列順は見出しどおり・氏名は宿
     guests: [guest(), guest({ name: "Lee Jiwoo", jaResident: false, passportFileId: ID2 })],
     geo: { status: "ok", lat: 35.68, lng: 139.69, accuracy: 10 },
   }));
-  const rows = buildCheckinRows(input!, { id: "351180", name: "FIKA渋谷本町 101" }, "C20261012-AB12", ["https://drive/1", "https://drive/2", "https://drive/3"], "2026/10/12 16:05");
+  const rows = buildCheckinRows(input!, { id: "351180", name: "FIKA渋谷本町 101", lat: 35.681, lng: 139.69 }, "C20261012-AB12", ["https://drive/1", "https://drive/2", "https://drive/3"], "2026/10/12 16:05", "qr");
   assert.equal(rows.length, 3);
   assert.equal(rows[0].length, CHECKIN_SHEET_HEADER.length);
-  assert.deepEqual(rows[0], ["2026/10/12 16:05", "351180", "FIKA渋谷本町 101", "b:94204472", "Kim Minsu", "", "1/3", "取得", "35.68,139.69", "10", "https://drive/1", "", "", "宿泊者1/2 顔+身分証・画面内カメラ・国内住所あり", "C20261012-AB12"]);
+  assert.deepEqual(rows[0], ["2026/10/12 16:05", "351180", "FIKA渋谷本町 101", "b:94204472", "Kim Minsu", "", "1/3", "取得", "35.68,139.69", "10", "https://drive/1", "", "", "宿泊者1/2 顔+身分証・画面内カメラ・国内住所あり", "C20261012-AB12", "室内QR", "111"]);
   assert.equal(rows[1][4], "Lee Jiwoo");
   assert.equal(rows[2][6], "3/3");
   assert.equal(rows[2][10], "https://drive/3");
@@ -133,7 +193,7 @@ test("buildCheckinRows: 1 枚 1 行・列順は見出しどおり・氏名は宿
 
 test("buildCheckinRows: 位置情報を拒否したら「拒否」で座標は空・氏名の先頭の = は数式として解釈させない", () => {
   const { input } = parseCheckinInput(payload({ bookingRef: "", lastName: "Kim", arrivalDate: "2026-10-12", guests: [guest({ name: "=HYPERLINK(1)" })] }));
-  const [row] = buildCheckinRows(input!, { id: "351180", name: "x" }, "C1", ["l"], "t");
+  const [row] = buildCheckinRows(input!, { id: "351180", name: "x" }, "C1", ["l"], "t", "link");
   assert.equal(row[3], "");
   assert.equal(row[4], "'=HYPERLINK(1)");
   assert.equal(row[5], "2026-10-12");
@@ -141,6 +201,8 @@ test("buildCheckinRows: 位置情報を拒否したら「拒否」で座標は�
   assert.equal(row[8], "");
   assert.equal(row[9], "");
   assert.equal(row[13], "宿泊者1/1 顔+身分証・画面内カメラ・国内住所あり・予約の姓=Kim");
+  assert.equal(row[15], "予約リンク");
+  assert.equal(row[16], "");
 });
 
 test("makeCheckinReceiptId: 形式", () => {

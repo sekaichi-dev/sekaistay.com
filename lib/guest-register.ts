@@ -22,6 +22,9 @@ export interface Property {
   type: PropertyType;
   licenseNo: string;
   active: boolean;
+  /** 物件の位置（物件マスタ G・H 列・Beds24 の物件情報と同じ値）。予約ごとのリンクから来た本人確認の距離判定に使う */
+  lat?: number;
+  lng?: number;
 }
 
 export interface GuestInput {
@@ -566,10 +569,18 @@ export async function cleanupStagedPhotos(olderThanMs: number, now: number = Dat
 let propertyCache: { data: Property[]; fetchedAt: number } | null = null;
 const PROPERTY_CACHE_MS = 5 * 60 * 1000;
 
+function coords(latRaw: string | undefined, lngRaw: string | undefined): { lat?: number; lng?: number } {
+  const lat = Number((latRaw || "").trim());
+  const lng = Number((lngRaw || "").trim());
+  // 空欄・0（Beds24 の未設定値）・範囲外は「位置なし」
+  if (!latRaw?.trim() || !lngRaw?.trim() || !Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return {};
+  return { lat, lng };
+}
+
 export async function fetchProperties(): Promise<Property[]> {
   if (propertyCache && Date.now() - propertyCache.fetchedAt < PROPERTY_CACHE_MS) return propertyCache.data;
   const token = await getAccessToken();
-  const range = encodeURIComponent("物件マスタ!A2:F200");
+  const range = encodeURIComponent("物件マスタ!A2:H200");
   const resp = await fetchWithTimeout(
     `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}`,
     { headers: { Authorization: `Bearer ${token}` } },
@@ -588,6 +599,7 @@ export async function fetchProperties(): Promise<Property[]> {
       type: (r[3] || "").trim() as PropertyType,
       licenseNo: (r[4] || "").trim(),
       active: (r[5] || "").trim() === "有",
+      ...coords(r[6], r[7]),
     }))
     .filter((p) => p.id && p.name && (p.type === "民泊" || p.type === "旅館業"));
   propertyCache = { data: props, fetchedAt: Date.now() };
