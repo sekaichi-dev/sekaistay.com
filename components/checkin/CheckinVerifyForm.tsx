@@ -4,7 +4,7 @@
  * 入口は 2 つ: 室内 QR と、予約ごとのリンク（bookingId あり・2026-10-19）。リンクは予約が決まっているので予約の入力を省き、
  * 位置情報を必須にする（拒否・取得不可なら送らない。物件からの距離はサーバーが判定する）
  * 保健所要件（Yugo 2026-10-12）に合わせた 1 画面:
- *  - 到着後〜チェックアウトまでの間に室内 QR から送る（チェックイン前には強制しない・テンイチ 2026-10-13）
+ *  - 到着後なるべく早く（遅くともチェックアウトまでに）送ってもらう（チェックイン前には強制しない・テンイチ 2026-10-13 / 10-20）
  *  - 予約の特定（予約番号 or 姓＋到着日）
  *  - 宿泊者全員分: 1 人ずつ氏名・居住地（国内/国外）・顔の横に身分証を持った自撮り。国外居住は旅券の顔写真ページも別に撮る
  *  - 撮影は画面内カメラ（getUserMedia）でその場撮影のみ。カメラロールからの選択はできない。
@@ -39,8 +39,8 @@ const T: Record<Lang, {
 }> = {
   ja: {
     label: "日本語", title: "チェックイン時の本人確認", property: "ご宿泊施設",
-    lead: "法令に基づき、ご宿泊の方全員の本人確認をお願いしています。チェックアウトまでに、お部屋でお一人ずつ「顔の横に身分証を持った写真」をその場で撮影してください。",
-    leadLink: "法令に基づき、ご宿泊の方全員の本人確認をお願いしています。チェックアウトまでに、お部屋（またはお宿のすぐ近く）でお一人ずつ「顔の横に身分証を持った写真」をその場で撮影してください。",
+    lead: "法令に基づき、ご宿泊の方全員の本人確認をお願いしています。ご到着後なるべくお早めに（遅くともチェックアウトまでに）、お部屋でお一人ずつ「顔の横に身分証を持った写真」をその場で撮影してください。",
+    leadLink: "法令に基づき、ご宿泊の方全員の本人確認をお願いしています。ご到着後なるべくお早めに（遅くともチェックアウトまでに）、お部屋（またはお宿のすぐ近く）でお一人ずつ「顔の横に身分証を持った写真」をその場で撮影してください。",
     geoNote: "送信時に、お宿にいることの確認のため位置情報の利用を許可してください。",
     errGeo: "位置情報を取得できませんでした。ブラウザの設定で位置情報を許可して、お部屋またはお宿のすぐ近くでもう一度送信してください。許可できない場合は、お部屋に掲示のQRコードからお送りください。",
     step1: "ご予約の確認", bookingRef: "予約番号", bookingRefHint: "予約確認メールやアプリに記載の番号です（Airbnb は HM で始まる確認コード）", noBooking: "予約番号がわからない場合は、姓と到着日を入力してください",
@@ -71,8 +71,8 @@ const T: Record<Lang, {
   },
   en: {
     label: "EN", title: "ID check at check-in", property: "Property",
-    lead: "Japanese law requires us to verify every guest. Before check-out, each guest takes one photo in the room, on the spot, holding their ID next to their face.",
-    leadLink: "Japanese law requires us to verify every guest. Before check-out, each guest takes one photo on the spot, in the room or right outside the property, holding their ID next to their face.",
+    lead: "Japanese law requires us to verify every guest. As soon as possible after you arrive (at the latest before check-out), each guest takes one photo in the room, on the spot, holding their ID next to their face.",
+    leadLink: "Japanese law requires us to verify every guest. As soon as possible after you arrive (at the latest before check-out), each guest takes one photo on the spot, in the room or right outside the property, holding their ID next to their face.",
     geoNote: "When you send, please allow location access so we can confirm you are at the property.",
     errGeo: "We could not get your location. Please allow location access in your browser settings and send again from your room or right outside the property. If you cannot, use the QR code posted in your room.",
     step1: "Your booking", bookingRef: "Booking number", bookingRefHint: "The number in your confirmation email or app (Airbnb: the code starting with HM)", noBooking: "If you don't know it, enter your last name and arrival date instead",
@@ -103,8 +103,8 @@ const T: Record<Lang, {
   },
   ko: {
     label: "한국어", title: "체크인 본인 확인", property: "숙박 시설",
-    lead: "일본 법령에 따라 투숙객 전원의 본인 확인을 부탁드립니다. 체크아웃 전까지 객실에서 한 분씩 얼굴 옆에 신분증을 들고 그 자리에서 사진을 찍어 주세요.",
-    leadLink: "일본 법령에 따라 투숙객 전원의 본인 확인을 부탁드립니다. 체크아웃 전까지 객실(또는 숙소 바로 앞)에서 한 분씩 얼굴 옆에 신분증을 들고 그 자리에서 사진을 찍어 주세요.",
+    lead: "일본 법령에 따라 투숙객 전원의 본인 확인을 부탁드립니다. 도착 후 가능한 한 빨리(늦어도 체크아웃 전까지) 객실에서 한 분씩 얼굴 옆에 신분증을 들고 그 자리에서 사진을 찍어 주세요.",
+    leadLink: "일본 법령에 따라 투숙객 전원의 본인 확인을 부탁드립니다. 도착 후 가능한 한 빨리(늦어도 체크아웃 전까지) 객실(또는 숙소 바로 앞)에서 한 분씩 얼굴 옆에 신분증을 들고 그 자리에서 사진을 찍어 주세요.",
     geoNote: "전송할 때 숙소에 계신지 확인하기 위해 위치 정보 사용을 허용해 주세요.",
     errGeo: "위치 정보를 가져올 수 없습니다. 브라우저 설정에서 위치 정보를 허용한 후 객실 또는 숙소 바로 앞에서 다시 전송해 주세요. 허용할 수 없는 경우 객실에 게시된 QR 코드로 보내 주세요.",
     step1: "예약 확인", bookingRef: "예약번호", bookingRefHint: "예약 확인 메일이나 앱에 적힌 번호입니다(Airbnb는 HM으로 시작하는 확인 코드)", noBooking: "예약번호를 모르면 성과 도착일을 입력하세요",
@@ -135,8 +135,8 @@ const T: Record<Lang, {
   },
   zh: {
     label: "中文", title: "入住身份核验", property: "住宿设施",
-    lead: "根据日本法律，需对全部住客进行身份核验。请在退房前，于房间内由每位住客将证件举在脸旁当场拍一张照片。",
-    leadLink: "根据日本法律，需对全部住客进行身份核验。请在退房前，于房间内（或住宿设施门口）由每位住客将证件举在脸旁当场拍一张照片。",
+    lead: "根据日本法律，需对全部住客进行身份核验。请在抵达后尽早（最迟于退房前），于房间内由每位住客将证件举在脸旁当场拍一张照片。",
+    leadLink: "根据日本法律，需对全部住客进行身份核验。请在抵达后尽早（最迟于退房前），于房间内（或住宿设施门口）由每位住客将证件举在脸旁当场拍一张照片。",
     geoNote: "发送时，请允许使用位置信息，以确认您在住宿设施。",
     errGeo: "无法获取位置信息。请在浏览器设置中允许位置信息，并在房间内或住宿设施门口重新发送。如无法允许，请通过房间内张贴的二维码发送。",
     step1: "确认预订", bookingRef: "预订号", bookingRefHint: "预订确认邮件或App中的编号（Airbnb为以HM开头的确认码）", noBooking: "不知道预订号时，请输入姓氏和到达日期",
