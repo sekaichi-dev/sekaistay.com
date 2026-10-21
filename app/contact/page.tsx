@@ -79,7 +79,7 @@ export default function ContactPage() {
         }
         // Yahoo!広告 コンバージョン（送信完了時点＝完了ページ相当）
         fireYahooConversion()
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+        document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         return
       } else {
         const body = await res.json().catch(() => ({}))

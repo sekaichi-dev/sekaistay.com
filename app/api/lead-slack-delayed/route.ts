@@ -34,6 +34,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  // forwardLeadToSlack は未設定時に「スキップ」として ok:true を返すため、ここで止めないと
+  // 未送信のまま slack_notified_at が付いて設定復旧後に再試行されなくなる
+  const slackToken = (process.env.SLACK_BOT_TOKEN || "").trim();
+  const slackChannel = (process.env.SLACK_LEAD_CHANNEL_ID || "").trim();
+  if (!slackToken || !slackChannel) {
+    return NextResponse.json({ error: "SLACK_BOT_TOKEN / SLACK_LEAD_CHANNEL_ID not configured" }, { status: 500 });
+  }
+
   const supabase = getSupabaseAdmin();
   const cutoffIso = new Date(Date.now() - DELAY_MS).toISOString();
 
