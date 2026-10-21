@@ -30,7 +30,6 @@ const YEARS_STOPS: { value: string; label: string }[] = [
   { value: "5", label: "5年以上" },
 ];
 
-const MEETING_URL = "https://timerex.net/s/sekai-stay/d61b424d";
 const SEKAI_STAY_FEE = 8;
 const REVENUE_MIN_MAN = 10;
 const REVENUE_MAX_MAN = 300;
@@ -211,6 +210,7 @@ export function ReportRequestForm({ lpVariant, embed = false }: ReportRequestFor
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [deadline, setDeadline] = useState<Date | null>(null);
   const [annualLoss, setAnnualLoss] = useState<number | null>(null);
   const [attribution, setAttribution] = useState<AdAttribution>({});
@@ -412,25 +412,12 @@ export function ReportRequestForm({ lpVariant, embed = false }: ReportRequestFor
           );
         }
       } catch {}
-      // MTG予約フォームへリダイレクト（fbq/gtag が beacon を送り終えるよう短いディレイ）
-      await new Promise((r) => setTimeout(r, 150));
+      // 完了画面を同じ場所に表示（以前は TimeRex の日程調整ページへ遷移していたが 2026-10-21 に廃止）
+      setDone(true);
+      setSubmitting(false);
       try {
-        if (embed && typeof window !== "undefined" && window.parent !== window) {
-          try {
-            if (window.top) {
-              window.top.location.href = MEETING_URL;
-            } else {
-              window.location.href = MEETING_URL;
-            }
-          } catch {
-            window.parent.postMessage({ type: "japan-villas-redirect", url: MEETING_URL }, "*");
-          }
-        } else {
-          window.location.href = MEETING_URL;
-        }
-      } catch {
-        window.location.href = MEETING_URL;
-      }
+        if (!embed) rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch {}
     } catch {
       setError("送信できませんでした。少し時間をおいてもう一度お試しください。");
       trackFunnel("form_submit_error", {
@@ -442,11 +429,15 @@ export function ReportRequestForm({ lpVariant, embed = false }: ReportRequestFor
   }
 
   if (done) {
-    return <DoneScreen embed={embed} deadline={deadline} annualLoss={annualLoss} />;
+    return (
+      <div ref={rootRef} className="scroll-mt-24">
+        <DoneScreen embed={embed} deadline={deadline} annualLoss={annualLoss} />
+      </div>
+    );
   }
 
   return (
-    <div className={embed ? "" : "py-8"}>
+    <div ref={rootRef} className={embed ? "" : "py-8 scroll-mt-24"}>
       <div className="max-w-xl mx-auto px-5">
         <ProgressBar step={step} />
 
@@ -1024,19 +1015,11 @@ function DoneScreen({
 
         <div className="rounded-2xl p-6 mb-5 bg-white border border-rule shadow-sm">
           <p className="text-[13px] font-semibold mb-2 text-ink">
-            レポートを待たずに、直接話を聞きたい方へ
+            面談のご案内
           </p>
-          <p className="text-[13px] leading-relaxed mb-4 text-dark-gray">
-            申請内容を踏まえて、その場で収益改善の仮プランをご提示します。
+          <p className="text-[13px] leading-relaxed text-dark-gray">
+            申請内容を確認のうえ、担当よりメールまたはお電話でご連絡し、面談の日時をご相談します。
           </p>
-          <a
-            href={MEETING_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="block rounded-lg py-3 text-center text-[15px] font-semibold text-white bg-sekai-teal transition-all active:scale-[0.98]"
-          >
-            ミーティングを予約する →
-          </a>
         </div>
 
         <div className="rounded-lg p-4 text-[13px] leading-relaxed bg-white border border-rule text-dark-gray">

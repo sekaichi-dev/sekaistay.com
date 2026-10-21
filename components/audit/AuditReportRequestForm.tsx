@@ -7,7 +7,7 @@
  *   - Step 2: 試算 (LP /switch の SwitchSimulator と同等の 4 スライダー + 損失/節約表示)
  *   - Step 3: ご連絡先 (氏名・メール・電話・課題)
  *   - 同じ /api/report-requests/submit に POST (lpVariant="audit")
- *   - 同じ Meta Pixel/CAPI dedup・GA4 events・timerex redirect
+ *   - 同じ Meta Pixel/CAPI dedup・GA4 events・送信後は同じ場所に完了表示
  *
  * デザイン: HP editorial スタイル (ivory/paper/ink パレット)
  *   - chapter-marker + eyebrow ヘッダー
@@ -38,8 +38,6 @@ const OTHER_FEE_OPTIONS = [
   { value: "16-19", label: "16〜19%" },
   { value: "25plus", label: "25%以上" },
 ];
-
-const MEETING_URL = "https://timerex.net/s/sekai-stay/d61b424d";
 
 // 試算ロジック定数 (SwitchSimulator と同値)
 const SEKAI_FEE_PCT = 8;
@@ -145,6 +143,7 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
   const [form, setForm] = useState<FormState>(INITIAL);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
   const [attribution, setAttribution] = useState<AdAttribution>({});
 
   // attribution capture: 現 URL 優先 → 欠けた項目は 90 日クッキー (ss_attr) から復元
@@ -296,12 +295,12 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
         // Yahoo!広告 コンバージョン（送信完了時点＝完了ページ相当）
         fireYahooConversion();
       } catch {}
-      await new Promise((r) => setTimeout(r, 150));
+      // 完了画面を同じ場所に表示（以前は TimeRex の日程調整ページへ遷移していたが 2026-10-21 に廃止）
+      setDone(true);
+      setSubmitting(false);
       try {
-        window.location.href = MEETING_URL;
-      } catch {
-        window.location.href = MEETING_URL;
-      }
+        rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch {}
     } catch {
       setError("送信できませんでした。少し時間をおいてもう一度お試しください。");
       trackFunnel("form_submit_error", {
@@ -310,6 +309,25 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
       });
       setSubmitting(false);
     }
+  }
+
+  if (done) {
+    return (
+      <div ref={rootRef} className="scroll-mt-24">
+        <p className="font-grotesk text-[12px] font-bold tracking-[0.18em] text-sekai-teal">送信完了</p>
+        <h2 className="mt-3 text-[clamp(1.375rem,2.6vw,1.75rem)] font-bold leading-snug text-ink jp-keep">
+          診断レポートのお申し込みを受け付けました
+        </h2>
+        <div className="mt-8 space-y-4 text-[15px] leading-[1.95] text-ink/75">
+          <p>24時間以内に、物件専用の分析レポートをご入力のメールアドレスへお送りします。</p>
+          <p>あわせて担当よりメールまたはお電話でご連絡し、面談の日時をご相談します。</p>
+        </div>
+        <div className="mt-10 border border-rule bg-mist p-5 text-[13px] leading-relaxed text-ink/70">
+          <p className="mb-1 font-bold text-ink">お急ぎの場合</p>
+          <p>contact@sekaichi.org（担当：小川）までお問い合わせください。</p>
+        </div>
+      </div>
+    );
   }
 
   return (

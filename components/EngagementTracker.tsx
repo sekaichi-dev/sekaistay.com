@@ -76,7 +76,7 @@ export default function EngagementTracker({ lpVariant }: Props) {
 
       // 優先順位: data-cta が明示されている要素 → その他のCTA系要素
       const ctaEl = target.closest<HTMLElement>(
-        "[data-cta], a[href^='#contact-form'], a[href*='timerex.net'], a[href*='Calendly']"
+        "[data-cta], a[href^='#contact-form'], a[href*='Calendly']"
       );
       if (!ctaEl) return;
 

@@ -91,7 +91,7 @@ export default function SwitchFounderPage() {
           <LpVariantForm
             lpVariant="switch-founder"
             heading="まずはご相談だけでもどうぞ"
-            leadCopy="面談予約＋物件診断レポート無料作成"
+            leadCopy="面談申込＋物件診断レポート無料作成"
             subCopy={<>たったの<strong className="font-bold text-white">&quot;3項目&quot;</strong>で、1営業日以内にメールで専用レポートをお届けします。</>}
           />
         </div>

@@ -108,7 +108,7 @@ export default function SwitchHeroFounder() {
               data-cta-label="founder-primary"
               className="group inline-flex items-center justify-center bg-switch-accent text-white font-bold text-[15px] sm:text-base px-8 sm:px-10 py-4 rounded-md hover:bg-switch-accent-hover transition-colors duration-300 shadow-[0_0_40px_rgba(235,110,40,0.35)] hover:shadow-[0_0_56px_rgba(235,110,40,0.5)] tracking-wide"
             >
-              無料で面談を予約する
+              無料で面談を申し込む
               <svg className="ml-3 w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>

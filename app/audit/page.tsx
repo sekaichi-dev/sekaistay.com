@@ -15,7 +15,7 @@ import { AuditReportRequestForm } from '@/components/audit/AuditReportRequestFor
  *   - 3-step: 手数料 / 物件情報 / ご連絡先
  *   - lpVariant="audit" で /api/report-requests/submit に POST
  *   - 6系統 forward: Supabase / 吉蔵 / sales-portal / Meta CAPI / Sheets / Discord
- *   - 送信後は timerex MTG 予約ページへリダイレクト
+ *   - 送信後は同じ場所に完了表示（TimeRex への遷移は 2026-10-21 に廃止）
  *
  * デザイン: HP editorial スタイル (ivory/paper/ink パレット)
  *   - chapter-marker + eyebrow ヘッダー
