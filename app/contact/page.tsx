@@ -12,8 +12,6 @@ import { fireYahooConversion } from '@/lib/yahoo-ads'
 const inputCls =
   'w-full rounded-md border border-rule bg-paper px-4 py-3 text-[15px] text-ink outline-none transition placeholder:text-ink/40 focus:border-sekai-teal'
 
-const MEETING_URL = 'https://timerex.net/s/sekai-stay/d61b424d'
-
 /* 相談で話せること */
 const TALK_POINTS = [
   { no: '01', title: '乗り換えの段取り', body: '今の会社との契約が残っていても大丈夫です。引き継ぎの進め方や、予約を止めずに移行する手順をご案内します。' },
@@ -81,12 +79,7 @@ export default function ContactPage() {
         }
         // Yahoo!広告 コンバージョン（送信完了時点＝完了ページ相当）
         fireYahooConversion()
-        await new Promise((r) => setTimeout(r, 150))
-        try {
-          window.location.href = MEETING_URL
-        } catch {
-          window.location.href = MEETING_URL
-        }
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       } else {
         const body = await res.json().catch(() => ({}))
