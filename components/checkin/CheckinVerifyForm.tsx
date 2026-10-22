@@ -398,7 +398,7 @@ export default function CheckinVerifyForm(props: { invalid?: boolean; propertyId
         return;
       }
       try {
-        const fileId = await uploadPhoto(compressed);
+        const fileId = await uploadPhoto(compressed, ref);
         const shot: Shot = { fileId, previewUrl: URL.createObjectURL(compressed), method };
         setGuests((prev) => prev.map((g) => {
           if (g.id !== guestId) return g; // 保存中に削除された宿泊者なら捨てる（別人に付けない）

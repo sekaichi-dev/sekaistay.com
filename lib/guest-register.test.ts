@@ -352,3 +352,32 @@ test("retryTransientOnce: 無応答・5xx・429 は 1 回だけ再試行し、�
   await assert.rejects(retryTransientOnce(s.call, 0), RangeError);
   assert.equal(s.calls(), 1);
 });
+
+// --- 写真の自社サーバー経由アップロード（Google へ直接 PUT できない回線の迂回路・2026-10-22） ---
+const { buildMultipartUpload, clientFailureHint, MAX_PROXY_UPLOAD_BYTES } = await import("./guest-register.ts");
+
+test("buildMultipartUpload: Drive の multipart/related（メタデータ JSON + 画像バイト列）を組み立てる", () => {
+  const bytes = new Uint8Array([0xff, 0xd8, 0x00, 0x0d, 0x0a, 0x2d, 0x2d, 0xff, 0xd9]);
+  const meta = { name: "staging_1.jpg", parents: ["p1"], appProperties: { guestRegister: "staged" } };
+  const { body, contentType } = buildMultipartUpload(meta, "image/jpeg", bytes, "sekai-boundary");
+  assert.equal(contentType, "multipart/related; boundary=sekai-boundary");
+  const text = body.toString("latin1");
+  assert.ok(text.startsWith("--sekai-boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"), text.slice(0, 80));
+  assert.ok(text.includes(JSON.stringify(meta)));
+  assert.ok(text.includes("\r\n--sekai-boundary\r\nContent-Type: image/jpeg\r\n\r\n"));
+  assert.ok(text.endsWith("\r\n--sekai-boundary--\r\n"));
+  // 画像バイト列はそのまま（CRLF や "--" を含んでも壊れない）
+  const start = body.indexOf(Buffer.from("Content-Type: image/jpeg\r\n\r\n")) + "Content-Type: image/jpeg\r\n\r\n".length;
+  assert.deepEqual([...body.subarray(start, start + bytes.length)], [...bytes]);
+});
+
+test("MAX_PROXY_UPLOAD_BYTES: Vercel 関数の受信上限 4.5MB より小さい", () => {
+  assert.ok(MAX_PROXY_UPLOAD_BYTES < 4.5 * 1024 * 1024);
+  assert.ok(MAX_PROXY_UPLOAD_BYTES >= 2 * 1024 * 1024);
+});
+
+test("clientFailureHint: 迂回で成功した記録は対応不要・両経路とも失敗した記録は回線の説明", () => {
+  assert.match(clientFailureHint("upload-fallback"), /対応は不要/);
+  assert.match(clientFailureHint("upload-fallback"), /Google/);
+  assert.match(clientFailureHint("upload"), /自社サーバー経由|サーバー経由/);
+});
