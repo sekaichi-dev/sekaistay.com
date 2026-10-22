@@ -378,7 +378,7 @@ export default function GuestRegisterForm() {
       return;
     }
     try {
-      const fileId = await uploadPhoto(compressed);
+      const fileId = await uploadPhoto(compressed, bookingRef);
       updateGuest(index, kind === "passport"
         ? { photoFileId: fileId, photoName: file.name }
         : { facePhotoFileId: fileId, facePhotoName: file.name });

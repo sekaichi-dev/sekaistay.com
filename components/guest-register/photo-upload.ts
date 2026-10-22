@@ -79,19 +79,81 @@ export function reportFailure(stage: string, message: string, detail = "", booki
   } catch {}
 }
 
-// 1枚ぶんの直接アップロード: セッション URL を貰い、そこへ PUT。Drive がファイル ID を返す
-export async function uploadPhoto(file: File): Promise<string> {
-  const mime = guessMime(file);
+// アップロード 1 回ぶんの失敗と、その後どうするか。
+// retry = 回線起因（fetch が投げた TypeError/AbortError・Google の 5xx/429）でもう一度直接送る価値がある
+// fallback = 直接送信はこれ以上試さず当サーバー経由へ（セッション発行の回数上限 429。再試行で枠を 2 倍使うので上限に当たりやすい）
+// stop = やり直しても同じ（MIME・サイズなど当サーバーの 4xx）
+type NextStep = "retry" | "fallback" | "stop";
+class UploadHopError extends Error {
+  constructor(message: string, readonly next: NextStep) { super(message); }
+}
+
+function hopError(e: unknown): UploadHopError {
+  if (e instanceof UploadHopError) return e;
+  const name = (e as Error)?.name || "";
+  const message = String((e as Error)?.message || e);
+  // fetch がネットワーク層で失敗すると Chrome は "Failed to fetch"、Safari は "Load failed" の TypeError を投げる
+  return new UploadHopError(message, name === "TypeError" || name === "AbortError" ? "retry" : "stop");
+}
+
+function sleep(ms: number) { return new Promise((r) => setTimeout(r, ms)); }
+
+// 直接アップロード: セッション URL を貰い、そこへ PUT。Drive がファイル ID を返す
+async function uploadDirect(file: File, mime: string): Promise<string> {
   const sessionRes = await fetch("/api/guest-register/photo-session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ mime, size: file.size }),
   });
   const session = (await sessionRes.json().catch(() => ({}))) as { uploadUrl?: string; error?: string };
-  if (!sessionRes.ok || !session.uploadUrl) throw new Error(session.error || `session ${sessionRes.status}`);
+  if (!sessionRes.ok || !session.uploadUrl) {
+    const next: NextStep = sessionRes.status === 429 ? "fallback" : sessionRes.status >= 500 ? "retry" : "stop";
+    throw new UploadHopError(session.error || `session ${sessionRes.status}`, next);
+  }
   const put = await fetch(session.uploadUrl, { method: "PUT", headers: { "Content-Type": mime }, body: file });
-  if (!put.ok) throw new Error(`drive put ${put.status}`);
+  if (!put.ok) throw new UploadHopError(`drive put ${put.status}`, put.status >= 500 || put.status === 429 ? "retry" : "stop");
   const created = (await put.json().catch(() => ({}))) as { id?: string };
-  if (!created.id) throw new Error("drive put: no id");
+  if (!created.id) throw new UploadHopError("drive put: no id", "stop");
   return created.id;
+}
+
+// 迂回路: 当サーバーへ同一オリジンで POST し、サーバーが Drive へ置く（4MB まで）
+export const PROXY_MAX_BYTES = 4 * 1024 * 1024; // サーバー側 MAX_PROXY_UPLOAD_BYTES と同値
+async function uploadViaServer(file: File, mime: string): Promise<string> {
+  const res = await fetch("/api/guest-register/photo", { method: "POST", headers: { "Content-Type": mime }, body: file });
+  const data = (await res.json().catch(() => ({}))) as { id?: string; error?: string };
+  if (!res.ok || !data.id) throw new UploadHopError(data.error || `proxy ${res.status}`, "stop");
+  return data.id;
+}
+
+/**
+ * 1枚ぶんのアップロード。Google へ直接（2 回）→ だめなら当サーバー経由。
+ * 直接送信はゲストの回線によっては Google に届かず TypeError で終わる（2026-10-03〜10-21 に 11 件・iPhone/Android とも）。
+ * 迂回で成功したときは upload-fallback として記録し、どれだけの回線が直接送れないかを運営が数えられるようにする。
+ */
+export async function uploadPhoto(file: File, bookingRef = ""): Promise<string> {
+  const mime = guessMime(file);
+  const started = Date.now();
+  const hops: string[] = [];
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      return await uploadDirect(file, mime);
+    } catch (e) {
+      const err = hopError(e);
+      hops.push(`direct#${attempt}: ${err.message}`);
+      if (err.next === "stop") throw new Error(hops.join(" / "));
+      if (err.next === "fallback") break;
+      await sleep(attempt * 1000);
+    }
+  }
+  if (file.size > PROXY_MAX_BYTES) throw new Error(`${hops.join(" / ")} / proxy skipped: ${file.size}B > ${PROXY_MAX_BYTES}B`);
+  try {
+    const id = await uploadViaServer(file, mime);
+    const online = typeof navigator !== "undefined" && "onLine" in navigator ? String(navigator.onLine) : "?";
+    reportFailure("upload-fallback", "DIRECT_FAILED", `${hops.join(" / ")} | ${Date.now() - started}ms online=${online} ${mime} ${file.size}B`, bookingRef);
+    return id;
+  } catch (e) {
+    hops.push(`proxy: ${hopError(e).message}`);
+    throw new Error(`${hops.join(" / ")} | ${Date.now() - started}ms`);
+  }
 }

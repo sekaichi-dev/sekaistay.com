@@ -59,6 +59,9 @@ export interface RegisterInput {
 export const MAX_GUESTS = 8;
 /** 写真1枚の上限。ブラウザで縮小できない原本（HEIC・巨大 JPEG）もそのまま置けるよう Vercel の 4.5MB とは無関係に取る */
 export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+/** ブラウザから Google へ直接 PUT できなかったときの迂回路（/api/guest-register/photo）で受ける上限。
+ *  Vercel 関数の受信上限 4.5MB の内側に取る。縮小済みの写真（〜450KB）は必ず収まる */
+export const MAX_PROXY_UPLOAD_BYTES = 4 * 1024 * 1024;
 export const ALLOWED_PHOTO_MIME: ReadonlySet<string> = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
 /** 送信前の写真の置き場。送信時に claimStagedPhoto が名簿フォルダへ移す。残骸は cleanupStagedPhotos が消す */
 const STAGING_FOLDER_NAME = "受付中（未送信）";
@@ -463,13 +466,55 @@ export async function createPhotoUploadSession(mime: string, size: number, origi
   return uri;
 }
 
+/** Drive の multipart アップロード本文（メタデータ JSON + ファイル本体）。boundary は画像バイト列に出ない長さの乱数 */
+export function buildMultipartUpload(
+  metadata: Record<string, unknown>,
+  mime: string,
+  bytes: Uint8Array,
+  boundary = `sekai_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`,
+): { body: Buffer; contentType: string } {
+  const head = Buffer.from(
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: ${mime}\r\n\r\n`,
+    "utf8",
+  );
+  const tail = Buffer.from(`\r\n--${boundary}--\r\n`, "utf8");
+  return { body: Buffer.concat([head, Buffer.from(bytes), tail]), contentType: `multipart/related; boundary=${boundary}` };
+}
+
+/**
+ * ブラウザから Google へ直接 PUT できなかった写真を、当サーバー経由で受付中フォルダへ置く（直接 PUT と同じ名前・印）。
+ * 2026-10-03〜10-21 に 11 件、iPhone/Android の回線で「Failed to fetch / Load failed」のまま諦めていた分の迂回路。
+ */
+export async function uploadStagedPhoto(mime: string, bytes: Uint8Array): Promise<string> {
+  const token = await getAccessToken();
+  const parent = await ensureStagingFolder();
+  const { body, contentType } = buildMultipartUpload(
+    { name: stagingFileName(mime), parents: [parent], appProperties: { [MARK_KEY]: MARK_STAGED } },
+    mime,
+    bytes,
+  );
+  const resp = await retryTransientOnce(() => fetchWithTimeout(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id",
+    // Node の Buffer は fetch の body にそのまま渡せる（型定義だけが BodyInit と合わない）
+    { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": contentType }, body: body as unknown as BodyInit },
+  ));
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    throw new Error(`drive multipart upload ${resp.status}: ${text.slice(0, 300)}`);
+  }
+  const data = (await resp.json()) as { id?: string };
+  if (!data.id) throw new Error("drive multipart upload: no id");
+  return data.id;
+}
+
 /** ゲスト端末の失敗記録（telemetry）に添える運営向けの説明。通知を読む人が次に何をすべきか分かる文にする */
 export function clientFailureHint(stage: string): string {
   switch (stage) {
     case "read": return "ゲストの端末が選んだ写真を読めませんでした（撮影直後やクラウド上の写真で起きます）。画面には選び直しの案内が出ているので、対応は不要です。";
     case "compress-fallback": return "写真を縮小できず原本のまま送りました（HEIC など）。アップロード自体は続いているので、同じ予約で upload の失敗が続かなければ対応は不要です。";
     case "compress": return "写真が 20MB を超えていました。画面には小さい写真を選ぶ案内が出ています。";
-    case "upload": return "写真のアップロードが失敗しました。同じ予約で続くようなら、ゲストに別の写真で試すよう案内してください。";
+    case "upload-fallback": return "ゲストの回線から Google へ直接送れず、自社サーバー経由で写真を置きました。アップロードは成功しているので対応は不要です（直接送れない回線がどれだけあるかの記録）。";
+    case "upload": return "写真のアップロードが、Google への直接送信（2 回）も自社サーバー経由も失敗しました。ゲストの回線が切れているか写真が 4MB を超えています。同じ予約で続くようなら、ゲストに回線を変えるか別の写真で試すよう案内してください。";
     case "submit": return "名簿の送信が失敗しました。同じ予約で成功の記録が無ければ、ゲストに再送をお願いしてください。";
     default: return "";
   }
