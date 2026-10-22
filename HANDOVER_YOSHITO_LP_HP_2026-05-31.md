@@ -29,8 +29,8 @@
 5/20 🔗 自社ドメイン短縮URL /go/<slug> 実装
 5/22 🖼️ OG画像を「SEKAI STAY 8% hero banner」に差替（CDN cache bust v2）
 5/22 📝 switch FAQ に解約金記載追加 / 「業界もっともシンプル」→「シンプル」
-5/22 📣 Slack通知パイプライン: 10分遅延 + TimeRex予約済み抑制
-5/23 🔀 TimeRex予約あり→スレッド返信・なし→既存通知
+5/22 📣 Slack通知パイプライン: 10分遅延 + TimeRex予約済み抑制（廃止 2026-10-21）
+5/23 🔀 TimeRex予約あり→スレッド返信・なし→既存通知（廃止 2026-10-21）
 5/27 🔠 漢字↔かなで名前マッチ失敗 → 時間窓フォールバック追加
 ```
 
@@ -244,7 +244,7 @@ projects/sekaistay-com/
 | ファイル | エンドポイント | 役割 |
 |---|---|---|
 | `app/api/report-requests/submit/route.ts` | POST `/api/report-requests/submit` | フォーム送信本体（→ Supabase + 吉蔵CRM + Meta CAPI + Slack + Discord） |
-| `app/api/lead-slack-delayed/route.ts` | GET `/api/lead-slack-delayed` | 10分遅延 Slack 通知（cron 毎分・TimeRex照合） |
+| `app/api/lead-slack-delayed/route.ts` | GET `/api/lead-slack-delayed` | 1分遅延 Slack 通知（cron 毎分・全件通知・TimeRex照合は廃止 2026-10-21） |
 | `app/api/lead-forward-retry/route.ts` | POST `/api/lead-forward-retry` | 吉蔵CRM転送失敗時のリトライ |
 | `app/api/contact/route.ts` | POST `/api/contact` | お問い合わせフォーム送信 |
 | `app/api/property-search/route.ts` | GET `/api/property-search` | 物件検索（Brave Search 連携） |
@@ -590,10 +590,9 @@ POST /api/report-requests/submit （app/api/report-requests/submit/route.ts）
   ↓
 client → fbq('Lead', {eventID}) + gtag('generate_lead')
   ↓
-10分後（cron 毎分）/api/lead-slack-delayed
-  → TimeRex予約済みかチェック
-  → 予約あり: スレッド返信
-  → 予約なし: 既存通知に「⚠️ TimeRex予約なし」マーカー追加
+1分後（cron 毎分）/api/lead-slack-delayed
+  → 全件 Slack 通知（本文先頭に【物件の状況】【住所】）
+  ※ TimeRex照合・離脱リード判定は廃止 2026-10-21（PR#156）
 ```
 
 ### 6-2. 主要ファイル
@@ -753,11 +752,11 @@ CTA ボタン文言（`lp_button_language` / `lp_button_text_style`）:
               → switch LP: 「業界でもっともシンプルな料金体系」→「シンプルな料金体系」
               → /home/FinalCTA: モバイルで見出し・CTAが横にはみ出る問題を修正
               → Leads: Slack 通知を 6 系統目の forward 経路として追加
-              → Slack: フォーム送信通知を 10分遅延 + TimeRex予約済み抑制
-              → Slack: TimeRex予約なしリードに離脱マーカー追加
+              → Slack: フォーム送信通知を 10分遅延 + TimeRex予約済み抑制（廃止 2026-10-21）
+              → Slack: TimeRex予約なしリードに離脱マーカー追加（廃止 2026-10-21）
 
-2026-05-23 ── Slack: TimeRex投稿の判定を blocks/bot_profile まで拡張
-              → Slack: TimeRex予約あり→スレッド返信、なし→既存通知
+2026-05-23 ── Slack: TimeRex投稿の判定を blocks/bot_profile まで拡張（廃止 2026-10-21）
+              → Slack: TimeRex予約あり→スレッド返信、なし→既存通知（廃止 2026-10-21）
 
 2026-05-27 ── lead-slack-delayed: 漢字↔かなで名前マッチ失敗するケースに時間窓フォールバック
 

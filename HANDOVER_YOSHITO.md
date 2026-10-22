@@ -15,7 +15,7 @@
 | 2 | 🌐 **LP / HP** | [HANDOVER_YOSHITO_LP_HP_2026-05-31.md](HANDOVER_YOSHITO_LP_HP_2026-05-31.md) | sekaistay.com 全体（HP + LP 3 variants）の設計・ソースマップ |
 | 3 | 📱 **SNS / オーガニックコンテンツ** | [handover/SNS_2026-05-31.md](handover/SNS_2026-05-31.md) | X / note / LinkedIn / Facebook の自動投稿パイプライン |
 | 4 | 📰 **PR / メディア露出** | [handover/PR_MEDIA_2026-05-31.md](handover/PR_MEDIA_2026-05-31.md) | PR TIMES・JIRO 出演・ウェビナー・受賞バッジ |
-| 5 | 📥 **リード獲得パイプライン** | [handover/LEAD_PIPELINE_2026-05-31.md](handover/LEAD_PIPELINE_2026-05-31.md) | フォーム → 6系統転送 → TimeRex照合 → Discord/Slack通知 |
+| 5 | 📥 **リード獲得パイプライン** | [handover/LEAD_PIPELINE_2026-05-31.md](handover/LEAD_PIPELINE_2026-05-31.md) | フォーム → 6系統転送 → Discord/Slack通知（1分後全件） |
 | 6 | 📐 **ブランド・コピーガイドライン** | [handover/BRAND_GUIDELINES_2026-05-31.md](handover/BRAND_GUIDELINES_2026-05-31.md) | Creative Guide + コピー規約 + 媒体別トーン |
 | 7 | 📝 **6月コンテンツドラフト設計** | [handover/JUNE_CONTENT_DRAFTS_2026-06.md](handover/JUNE_CONTENT_DRAFTS_2026-06.md) | オーガニック5本柱 + 架空社員4本柱の月次配分・各軸 6本ストック・週次ローテ |
 
@@ -34,7 +34,7 @@
 ### 媒体・コピー・通知の地雷
 
 4. 🟡 **媒体別 AI 言及ポリシー**（ブランド/SNS/PR/HP 横断）— **X = OK**、**note / HP / PR TIMES = AI 言及禁止**。「AI化」→「仕組み化」、「AI自動」→「日次自動」へ言い換え。初日にコピー書くと必ず引っかかる地雷。ブランド §1 + SNS §3
-5. 🟡 **リード通知の見え方が経路で違う・数字は専用ダッシュボードで見る**（リード獲得）— 全リードは **Discord に即時全件**流れる。Slack `#402-sekaistay面談申込` は **フォーム送信から10分後** に **TimeRex で予約しなかった離脱リードのみ** 流れる dedup 設計（TimeRex 予約済みリードは Slack に流れない）。Slack だけ見ると離脱リードしか見えない。**リード総数・経路別の集計は [sekaichi-dashboard.vercel.app/marketing](https://sekaichi-dashboard.vercel.app/marketing)、LP 単位の CVR・Δ・Z-score 分析は [sekaichi-dashboard.vercel.app/lp-analytics](https://sekaichi-dashboard.vercel.app/lp-analytics)** で見れる。リード獲得 §3
+5. 🟡 **リード通知の経路と数字の見方**（リード獲得）— 全リードは **Discord に即時全件**流れる。Slack `#402-sekaistay面談申込` は **フォーム送信から1分後** に **全件**流れる（本文先頭に【物件の状況】【住所】あり）。旧仕様の TimeRex 照合・離脱リードのみ通知は **2026-10-21 廃止**。**リード総数・経路別の集計は [sekaichi-dashboard.vercel.app/marketing](https://sekaichi-dashboard.vercel.app/marketing)、LP 単位の CVR・Δ・Z-score 分析は [sekaichi-dashboard.vercel.app/lp-analytics](https://sekaichi-dashboard.vercel.app/lp-analytics)** で見れる。リード獲得 §3
 6. 🟡 **X (@tenichiliu) は公式バッジ・X Premium 課金中・継続運用は未稼働**（SNS）— 長文投稿 (280字超) が使え Bio 上部表示や SEO 効果がある資産。**リリース投稿（5/22）と数本のツイートは手動投稿済み**だが、**自動投稿 cron は未配置・継続コンテンツドラフトも未作成**（1ヶ月分ドラフトはテンイチが順次作成中）。手動スポット稼働状態で、「自動運用が回ってる」と勘違いしないように。SNS §2
 
 ---
@@ -117,7 +117,7 @@
 特に確認すべき事項:
 - [ ] Price 主導 LP の仮説検証状況（Trust/Portal 停止・Price 一本化の経緯と判定基準）
 - [ ] Meta Ads の停止理由・再開条件
-- [ ] リード通知 dedup ロジック（TimeRex 照合）の現状の挙動
+- [ ] リード通知パイプラインの現状の挙動（Slack 1分後全件・TimeRex 照合は 2026-10-21 廃止）
 - [ ] PR TIMES（5/22 配信済み）の反響分析状況
 - [ ] 吉蔵 CRM vs HubSpot 移行判断
 

@@ -1,7 +1,7 @@
 # リード獲得パイプライン 引き継ぎ — 本間ヨシト様
 
 > **作成日**: 2026-05-31 / **作成者**: テンイチ
-> **対象**: フォーム送信 → 6系統転送 → TimeRex照合 → Discord/Slack通知 → CRM
+> **対象**: フォーム送信 → 6系統転送 → Discord/Slack通知（1分後全件） → CRM
 > **戻る**: [HANDOVER_YOSHITO.md](../HANDOVER_YOSHITO.md)
 
 ---
@@ -26,16 +26,16 @@ POST /api/report-requests/submit
 10分後（cron 毎分）
   ↓
 GET /api/lead-slack-delayed
-  ↓ TimeRex照合
-  ├─ 予約あり → Slack #402 スレッド返信
-  └─ 予約なし → 「⚠️ TimeRex予約なし」マーカー付き通知
+  ↓
+  全件 Slack #402 通知（本文先頭に【物件の状況】【住所】）
+  ※ TimeRex照合・離脱リード判定は廃止 2026-10-21（PR#156）
 ```
 
 ### 即知っておいてほしい3点
 
 1. 🔴 **6系統並列転送** — 1つ落ちても他は転送される（fire-and-forget 設計）
 2. 🟡 **吉蔵 CRM がメイン**・HubSpot 移行検討中
-3. 🟡 **TimeRex 予約なしリードのみ Slack 通知** — ダブル通知を回避
+3. 🟡 **Slack は 1分後に全件通知**（本文先頭に【物件の状況】【住所】。旧 TimeRex 照合は廃止 2026-10-21）
 
 ---
 
@@ -142,7 +142,9 @@ GET /api/lead-slack-delayed
 
 ---
 
-## 3. TimeRex 照合・Slack 遅延通知
+## 3. Slack 遅延通知（現行仕様）
+
+> ⚠️ **旧 TimeRex 照合は 2026-10-21 廃止（PR#156）**。以下は現行仕様。
 
 ### 3-1. エンドポイント
 
@@ -164,24 +166,18 @@ cron 設定（`vercel.json`）:
 ```
 毎分実行
   ↓
-過去10分のリードを Supabase から取得
+過去1分のリードを Supabase から取得
   ↓
-各リードについて Slack #402-sekaistay面談申込 の TimeRex bot 投稿をチェック
-  ↓ 名前マッチング
-  ├─ 漢字↔かなフォールバック
-  ├─ 姓2文字フォールバック（2026-05-27 実装）
-  └─ 時間窓フォールバック
-  ↓
-予約あり → Slack スレッド返信「フォーム送信あり」
-予約なし → 既存通知に「⚠️ TimeRex予約なし」マーカー付与
+全件 Slack #402-sekaistay面談申込 に通知
+  本文先頭: 【物件の状況】【住所】行
 ```
 
-### 3-3. 通知設計の意図
+### 3-3. 通知設計の変更経緯
 
-> slack_notification_dedup: フォーム送信 + TimeRex予約のダブル通知を避けたい
-> 「TimeRex予約なし（離脱）のみ Slack 通知」を流す設計を好む
+旧仕様（〜2026-10-21）: フォーム送信から10分後・TimeRex予約済みリードを抑制・離脱リードのみ通知。
+現行仕様（2026-10-21〜）: フォーム送信から1分後・全件通知・面談申込は TimeRex から自社ページへ移行。
 
-→ 営業が「TimeRex で既に予約済み」の人に重複対応せず、フォーム送信したが TimeRex 予約していない離脱リードに集中できる。
+変更 PR: #156（TimeRex 遷移廃止・1分後全件）/ #159・#162・#163（本文フォーマット整備）。
 
 ---
 
@@ -271,7 +267,7 @@ LEAD_BACKUP_SHEET_ID
 |---|---|---|---|
 | フォーム送信フロー監視 | ✅ 日常 | — | — |
 | Discord 通知の確認 | ✅ | — | ✅ 担当アサイン |
-| TimeRex 連携の調整 | ✅ | コード変更 | — |
+| Slack 通知フォーマット調整 | ✅ | コード変更 | — |
 | 6系統転送の障害対応 | 初期切り分け | コード修正 | — |
 | Supabase スキーマ変更 | — | ✅ | — |
 | CRM 移行判断 | 提案 | 実装 | フィードバック |
@@ -288,7 +284,7 @@ LEAD_BACKUP_SHEET_ID
 | 3 | SS-Brand CV ゼロ問題（指名検索 27 click / 0 CV） | 🟠 中 |
 | 4 | HubSpot 移行判断 | 🟡 中 |
 | 5 | Outbound DM / アフィリエイト（6月開始予定）の実装未確定 | 🟡 中 |
-| 6 | Slack 通知の TimeRex 名前マッチ失敗事例の継続観測 | 🟢 低 |
+| 6 | TimeRex 照合廃止後の Slack 通知品質（全件送信の受け取られ方）の観測 | 🟢 低 |
 
 ---
 
@@ -321,7 +317,7 @@ LEAD_BACKUP_SHEET_ID
 | ファイル | 内容 |
 |---|---|
 | `app/api/report-requests/submit/route.ts` | フォーム送信本体 |
-| `app/api/lead-slack-delayed/route.ts` | 10分遅延 Slack 通知 + TimeRex 照合 |
+| `app/api/lead-slack-delayed/route.ts` | 1分後全件 Slack 通知（TimeRex 照合は廃止 2026-10-21） |
 | `app/api/lead-forward-retry/route.ts` | 吉蔵 CRM 転送失敗時のリトライ |
 | `app/api/contact/route.ts` | /contact お問い合わせ送信 |
 | `lib/lead-submissions.ts` | Supabase 書き込み |
