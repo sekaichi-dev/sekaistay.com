@@ -26,6 +26,7 @@ export function RevenueRangeSlider({ min, max, step, low, high, onChange, format
   const viaKeyboard = useRef(false);
   const startPointer = () => { driving.current = null; viaKeyboard.current = false; };
   const startKey = () => { driving.current = null; viaKeyboard.current = true; };
+  const endPointer = () => { driving.current = null; };
   const handleLow = (v: number) => {
     if (viaKeyboard.current) return onChange(Math.min(v, high), high);
     if (driving.current === "high") return onChange(low, Math.max(v, low));
@@ -69,6 +70,9 @@ export function RevenueRangeSlider({ min, max, step, low, high, onChange, format
           aria-label={lowLabel}
           aria-valuetext={format(low)}
           onPointerDown={startPointer}
+          onPointerUp={endPointer}
+          onPointerCancel={endPointer}
+          onBlur={endPointer}
           onKeyDown={startKey}
           onChange={(e) => handleLow(parseInt(e.target.value, 10))}
           className="dual-range"
@@ -83,6 +87,9 @@ export function RevenueRangeSlider({ min, max, step, low, high, onChange, format
           aria-label={highLabel}
           aria-valuetext={format(high)}
           onPointerDown={startPointer}
+          onPointerUp={endPointer}
+          onPointerCancel={endPointer}
+          onBlur={endPointer}
           onKeyDown={startKey}
           onChange={(e) => handleHigh(parseInt(e.target.value, 10))}
           className="dual-range"
