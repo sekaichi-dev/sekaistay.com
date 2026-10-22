@@ -49,6 +49,16 @@ const SEKAI_FIXED_ANNUAL_MAN = 12; // ¥10,000/月 × 12 = 12万円/年
 
 // ─────── Types ───────
 
+type PropertyDetails = {
+  address: string;
+  layout: string;
+  area: string;
+  capacity: string;
+  facilities: string;
+  tenure: "" | "owned" | "rented";
+  rent: string;
+};
+
 type FormState = {
   commissionRate: string;
   startingNew: boolean;
@@ -61,6 +71,7 @@ type FormState = {
   email: string;
   phone: string;
   complaints: string;
+  details: PropertyDetails; // /contact・LP と同じ物件項目（2026-10-22 追加）
 };
 
 const INITIAL: FormState = {
@@ -75,6 +86,7 @@ const INITIAL: FormState = {
   email: "",
   phone: "",
   complaints: "",
+  details: { address: "", layout: "", area: "", capacity: "", facilities: "", tenure: "", rent: "" },
 };
 
 type Step = 1 | 2 | 3;
@@ -175,7 +187,17 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
     }));
   }
   // Step 2 はスライダ駆動なので常に valid
-  const canNextFromStep2 = true;
+  const canNextFromStep2 = useMemo(() => {
+    const d = form.details;
+    const area = Number(d.area);
+    const capacity = Number(d.capacity);
+    return Boolean(
+      d.address.trim() && d.layout.trim() && d.facilities.trim() &&
+      Number.isFinite(area) && area > 0 &&
+      Number.isInteger(capacity) && capacity > 0 &&
+      d.tenure && (d.tenure !== "rented" || d.rent.trim()),
+    );
+  }, [form.details]);
   const canSubmit = useMemo(
     () => form.name.trim() && form.email.trim() && form.phone.trim(),
     [form.name, form.email, form.phone],
@@ -237,7 +259,19 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
       const estimateMarker = skipEstimate
         ? "[これから民泊を始める方]"
         : `[試算] 月売上 オフピーク${form.offpeakRev}〜ピーク${form.peakRev}万円・現手数料${form.feePct}%・運用${form.pastYears}年・予定${form.futureYears}年`;
-      const complaintsOut = `${estimateMarker}${form.complaints ? "\n" + form.complaints : ""}`;
+      // 物件の項目は /contact・LP と同じ【…】形式で（通知経路・DB 列は変えない）
+      const d = form.details;
+      const detailLines = skipEstimate
+        ? []
+        : [
+            `【住所】${d.address.trim()}`,
+            `【間取り】${d.layout.trim()}`,
+            `【広さ】${d.area.trim()}㎡`,
+            `【想定宿泊人数】${d.capacity.trim()}名`,
+            `【特殊な設備】${d.facilities.trim()}`,
+            `【賃貸/持ち家】${d.tenure === "rented" ? `賃貸（家賃 ${d.rent.trim()}）` : "持ち家"}`,
+          ];
+      const complaintsOut = [estimateMarker, ...detailLines, form.complaints].filter(Boolean).join("\n");
 
       const payload = {
         name: form.name,
@@ -372,6 +406,8 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
             onRevenue={(lo, hi) => setForm((f) => ({ ...f, offpeakRev: lo, peakRev: hi }))}
             onPastYears={(v) => update("pastYears", v)}
             onFutureYears={(v) => update("futureYears", v)}
+            details={form.details}
+            onDetail={(k, v) => setForm((f) => ({ ...f, details: { ...f.details, [k]: v } }))}
           />
         )}
         {step === 3 && (
@@ -603,6 +639,8 @@ function Step2Estimate({
   onRevenue,
   onPastYears,
   onFutureYears,
+  details,
+  onDetail,
 }: {
   feePct: number;
   offpeakRev: number;
@@ -612,6 +650,8 @@ function Step2Estimate({
   onRevenue: (low: number, high: number) => void;
   onPastYears: (v: number) => void;
   onFutureYears: (v: number) => void;
+  details: PropertyDetails;
+  onDetail: <K extends keyof PropertyDetails>(k: K, v: PropertyDetails[K]) => void;
 }) {
   const [touched, setTouched] = useState(false);
   const markTouched = () => {
@@ -677,6 +717,43 @@ function Step2Estimate({
           <span>1年</span><span>20年</span>
         </div>
         </>
+        )}
+      </Field>
+
+      <Field number="05" label="物件の住所" required>
+        {(id) => (
+          <input id={id} type="text" value={details.address} onChange={(e) => onDetail("address", e.target.value)} maxLength={200} placeholder="例: 北海道虻田郡倶知安町〇〇" className={editorialInput} />
+        )}
+      </Field>
+      <Field number="06" label="間取り・広さ（㎡）・想定宿泊人数" required>
+        {(id) => (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <input id={id} type="text" aria-label="間取り" value={details.layout} onChange={(e) => onDetail("layout", e.target.value)} maxLength={60} placeholder="間取り 例: 2LDK" className={editorialInput} />
+            <input type="number" aria-label="広さ（㎡）" value={details.area} onChange={(e) => onDetail("area", e.target.value)} min={1} step="any" inputMode="decimal" placeholder="広さ 例: 80" className={editorialInput} />
+            <input type="number" aria-label="想定宿泊人数" value={details.capacity} onChange={(e) => onDetail("capacity", e.target.value)} min={1} inputMode="numeric" placeholder="宿泊人数 例: 6" className={editorialInput} />
+          </div>
+        )}
+      </Field>
+      <Field number="07" label="特殊な設備" required>
+        {(id) => (
+          <input id={id} type="text" value={details.facilities} onChange={(e) => onDetail("facilities", e.target.value)} maxLength={120} placeholder="例: サウナあり／なし" className={editorialInput} />
+        )}
+      </Field>
+      <Field number="08" label="賃貸か持ち家か" required>
+        {() => (
+          <div className="space-y-4">
+            <div className="flex gap-8">
+              {([["owned", "持ち家"], ["rented", "賃貸"]] as const).map(([val, label]) => (
+                <label key={val} className="flex cursor-pointer items-center gap-2 text-[15px] text-ink">
+                  <input type="radio" name="audit-tenure" value={val} checked={details.tenure === val} onChange={() => onDetail("tenure", val)} className="h-4 w-4 accent-sekai-teal" />
+                  {label}
+                </label>
+              ))}
+            </div>
+            {details.tenure === "rented" && (
+              <input type="text" aria-label="家賃（月額）" value={details.rent} onChange={(e) => onDetail("rent", e.target.value)} maxLength={60} placeholder="家賃（月額） 例: 15万円" className={editorialInput} />
+            )}
+          </div>
         )}
       </Field>
 
@@ -753,7 +830,7 @@ function Step3Contact({
 }) {
   return (
     <div className="space-y-8">
-      <Field number="07" label="お名前" required>
+      <Field number="09" label="お名前" required>
         {(id) => (
         <input
           id={id}
@@ -767,7 +844,7 @@ function Step3Contact({
         />
         )}
       </Field>
-      <Field number="08" label="メールアドレス" required>
+      <Field number="10" label="メールアドレス" required>
         {(id) => (
         <input
           id={id}
@@ -782,7 +859,7 @@ function Step3Contact({
         />
         )}
       </Field>
-      <Field number="09" label="電話番号" required>
+      <Field number="11" label="電話番号" required>
         {(id) => (
         <input
           id={id}
@@ -797,14 +874,14 @@ function Step3Contact({
         />
         )}
       </Field>
-      <Field number="10" label="現状の課題（任意）">
+      <Field number="12" label="現状の課題（任意）">
         {(id) => (
         <textarea
           id={id}
           value={complaints}
           onChange={(e) => onChange("complaints", e.target.value)}
           rows={5}
-          maxLength={2000}
+          maxLength={1400}
           placeholder="現代行や運営面でのご不満・ご要望があればお書きください"
           className={editorialInput + " resize-none"}
         />
