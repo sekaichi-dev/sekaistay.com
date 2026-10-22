@@ -79,9 +79,13 @@ export function reportFailure(stage: string, message: string, detail = "", booki
   } catch {}
 }
 
-// アップロード 1 回ぶんの失敗。retryable = 回線起因（fetch が投げた TypeError/AbortError・Google の 5xx/429）で、やり直す価値がある
+// アップロード 1 回ぶんの失敗と、その後どうするか。
+// retry = 回線起因（fetch が投げた TypeError/AbortError・Google の 5xx/429）でもう一度直接送る価値がある
+// fallback = 直接送信はこれ以上試さず当サーバー経由へ（セッション発行の回数上限 429。再試行で枠を 2 倍使うので上限に当たりやすい）
+// stop = やり直しても同じ（MIME・サイズなど当サーバーの 4xx）
+type NextStep = "retry" | "fallback" | "stop";
 class UploadHopError extends Error {
-  constructor(message: string, readonly retryable: boolean) { super(message); }
+  constructor(message: string, readonly next: NextStep) { super(message); }
 }
 
 function hopError(e: unknown): UploadHopError {
@@ -89,7 +93,7 @@ function hopError(e: unknown): UploadHopError {
   const name = (e as Error)?.name || "";
   const message = String((e as Error)?.message || e);
   // fetch がネットワーク層で失敗すると Chrome は "Failed to fetch"、Safari は "Load failed" の TypeError を投げる
-  return new UploadHopError(message, name === "TypeError" || name === "AbortError");
+  return new UploadHopError(message, name === "TypeError" || name === "AbortError" ? "retry" : "stop");
 }
 
 function sleep(ms: number) { return new Promise((r) => setTimeout(r, ms)); }
@@ -102,11 +106,14 @@ async function uploadDirect(file: File, mime: string): Promise<string> {
     body: JSON.stringify({ mime, size: file.size }),
   });
   const session = (await sessionRes.json().catch(() => ({}))) as { uploadUrl?: string; error?: string };
-  if (!sessionRes.ok || !session.uploadUrl) throw new UploadHopError(session.error || `session ${sessionRes.status}`, sessionRes.status >= 500);
+  if (!sessionRes.ok || !session.uploadUrl) {
+    const next: NextStep = sessionRes.status === 429 ? "fallback" : sessionRes.status >= 500 ? "retry" : "stop";
+    throw new UploadHopError(session.error || `session ${sessionRes.status}`, next);
+  }
   const put = await fetch(session.uploadUrl, { method: "PUT", headers: { "Content-Type": mime }, body: file });
-  if (!put.ok) throw new UploadHopError(`drive put ${put.status}`, put.status >= 500 || put.status === 429);
+  if (!put.ok) throw new UploadHopError(`drive put ${put.status}`, put.status >= 500 || put.status === 429 ? "retry" : "stop");
   const created = (await put.json().catch(() => ({}))) as { id?: string };
-  if (!created.id) throw new UploadHopError("drive put: no id", false);
+  if (!created.id) throw new UploadHopError("drive put: no id", "stop");
   return created.id;
 }
 
@@ -115,7 +122,7 @@ export const PROXY_MAX_BYTES = 4 * 1024 * 1024; // サーバー側 MAX_PROXY_UPL
 async function uploadViaServer(file: File, mime: string): Promise<string> {
   const res = await fetch("/api/guest-register/photo", { method: "POST", headers: { "Content-Type": mime }, body: file });
   const data = (await res.json().catch(() => ({}))) as { id?: string; error?: string };
-  if (!res.ok || !data.id) throw new UploadHopError(data.error || `proxy ${res.status}`, res.status >= 500);
+  if (!res.ok || !data.id) throw new UploadHopError(data.error || `proxy ${res.status}`, "stop");
   return data.id;
 }
 
@@ -134,7 +141,8 @@ export async function uploadPhoto(file: File, bookingRef = ""): Promise<string> 
     } catch (e) {
       const err = hopError(e);
       hops.push(`direct#${attempt}: ${err.message}`);
-      if (!err.retryable) throw new Error(hops.join(" / "));
+      if (err.next === "stop") throw new Error(hops.join(" / "));
+      if (err.next === "fallback") break;
       await sleep(attempt * 1000);
     }
   }
