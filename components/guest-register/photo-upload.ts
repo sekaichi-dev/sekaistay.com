@@ -85,7 +85,8 @@ export function reportFailure(stage: string, message: string, detail = "", booki
 // stop = やり直しても同じ（MIME・サイズなど当サーバーの 4xx）
 type NextStep = "retry" | "fallback" | "stop";
 class UploadHopError extends Error {
-  constructor(message: string, readonly next: NextStep) { super(message); }
+  readonly next: NextStep;
+  constructor(message: string, next: NextStep) { super(message); this.next = next; }
 }
 
 function hopError(e: unknown): UploadHopError {
@@ -97,6 +98,26 @@ function hopError(e: unknown): UploadHopError {
 }
 
 function sleep(ms: number) { return new Promise((r) => setTimeout(r, ms)); }
+
+// PUT 応答の受信前に回線が切れたとき（TypeError/AbortError）、本体は Drive に届いている場合がある。
+// bytes */<size> クエリで状態照会し、200/201 で id が返ればそれを使う（再送しない）。
+// 2026-10-22 の失敗 2 件（iPhone「Load failed」・Android「Failed to fetch」）が契機:
+// どちらも受付中フォルダに同バイト数のファイルが作成されていた＝本体は届き、応答受信だけ失敗。
+export async function queryDriveUploadStatus(sessionUrl: string, size: number): Promise<string | null> {
+  try {
+    const res = await fetch(sessionUrl, {
+      method: "PUT",
+      headers: { "Content-Range": `bytes */${size}` },
+    });
+    if (res.status === 200 || res.status === 201) {
+      const data = (await res.json().catch(() => ({}))) as { id?: string };
+      return data.id ?? null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 // 直接アップロード: セッション URL を貰い、そこへ PUT。Drive がファイル ID を返す
 async function uploadDirect(file: File, mime: string): Promise<string> {
@@ -110,7 +131,17 @@ async function uploadDirect(file: File, mime: string): Promise<string> {
     const next: NextStep = sessionRes.status === 429 ? "fallback" : sessionRes.status >= 500 ? "retry" : "stop";
     throw new UploadHopError(session.error || `session ${sessionRes.status}`, next);
   }
-  const put = await fetch(session.uploadUrl, { method: "PUT", headers: { "Content-Type": mime }, body: file });
+  let put: Response;
+  try {
+    put = await fetch(session.uploadUrl, { method: "PUT", headers: { "Content-Type": mime }, body: file });
+  } catch (e) {
+    // PUT 本体は Drive に届いたが応答受信に失敗した可能性がある。再送前に状態を照会する
+    if ((e as Error)?.name === "TypeError" || (e as Error)?.name === "AbortError") {
+      const recoveredId = await queryDriveUploadStatus(session.uploadUrl, file.size);
+      if (recoveredId) return recoveredId;
+    }
+    throw e;
+  }
   if (!put.ok) throw new UploadHopError(`drive put ${put.status}`, put.status >= 500 || put.status === 429 ? "retry" : "stop");
   const created = (await put.json().catch(() => ({}))) as { id?: string };
   if (!created.id) throw new UploadHopError("drive put: no id", "stop");
