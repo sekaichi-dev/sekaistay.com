@@ -275,8 +275,12 @@ export function ReportRequestForm({ lpVariant, embed = false }: ReportRequestFor
   }
   const canNextFromStep2 = useMemo(() => {
     const d = form.details;
+    const area = Number(d.area);
+    const capacity = Number(d.capacity);
     const detailsOk =
-      d.address.trim() && d.layout.trim() && d.area.trim() && d.capacity.trim() && d.facilities.trim() &&
+      d.address.trim() && d.layout.trim() && d.facilities.trim() &&
+      Number.isFinite(area) && area > 0 &&
+      Number.isInteger(capacity) && capacity > 0 &&
       d.tenure && (d.tenure !== "rented" || d.rent.trim());
     return (form.noPropertyYet || form.airbnbUrl.trim() !== "") && Boolean(detailsOk);
   }, [form.airbnbUrl, form.noPropertyYet, form.details]);
