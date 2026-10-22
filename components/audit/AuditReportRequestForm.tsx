@@ -692,6 +692,8 @@ function Step2Estimate({
         )}
       </Field>
 
+      {/* 03・04 は PC で横並び 1 行 */}
+      <div className="grid gap-10 sm:grid-cols-2 sm:gap-8">
       <Field number="03" label="これまでの運用期間">
         {(id) => (
         <>
@@ -719,6 +721,7 @@ function Step2Estimate({
         </>
         )}
       </Field>
+      </div>
 
       <Field number="05" label="物件の住所" required>
         {(id) => (
