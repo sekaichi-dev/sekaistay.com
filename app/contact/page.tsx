@@ -244,7 +244,7 @@ export default function ContactPage() {
                           <input type="text" name="layout" required className={inputCls} placeholder="例: 2LDK" />
                         </Field>
                         <Field label="広さ（㎡）" required>
-                          <input type="number" name="area" required min={1} inputMode="decimal" className={inputCls} placeholder="例: 80" />
+                          <input type="number" name="area" required min={1} step="any" inputMode="decimal" className={inputCls} placeholder="例: 80" />
                         </Field>
                         <Field label="想定宿泊人数" required>
                           <input type="number" name="capacity" required min={1} inputMode="numeric" className={inputCls} placeholder="例: 6" />
