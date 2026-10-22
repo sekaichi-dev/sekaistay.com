@@ -25,6 +25,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { resolveAttribution } from "@/lib/attribution";
 import { fireYahooConversion } from "@/lib/yahoo-ads";
+import { RevenueRangeSlider } from "@/components/RevenueRangeSlider";
 
 // ─────── Constants ───────
 
@@ -41,6 +42,9 @@ const OTHER_FEE_OPTIONS = [
 
 // 試算ロジック定数 (SwitchSimulator と同値)
 const SEKAI_FEE_PCT = 8;
+const REVENUE_MIN_MAN = 10;
+const REVENUE_MAX_MAN = 300;
+const formatMan = (man: number) => (man >= REVENUE_MAX_MAN ? `${REVENUE_MAX_MAN}万円以上` : `約${man}万円`);
 const SEKAI_FIXED_ANNUAL_MAN = 12; // ¥10,000/月 × 12 = 12万円/年
 
 // ─────── Types ───────
@@ -49,7 +53,8 @@ type FormState = {
   commissionRate: string;
   startingNew: boolean;
   feePct: number;
-  monthlyRev: number; // 万円
+  offpeakRev: number; // 万円（オフピーク月）
+  peakRev: number; // 万円（ピーク月）
   pastYears: number;
   futureYears: number;
   name: string;
@@ -62,7 +67,8 @@ const INITIAL: FormState = {
   commissionRate: "",
   startingNew: false,
   feePct: 20,
-  monthlyRev: 60,
+  offpeakRev: 30,
+  peakRev: 80,
   pastYears: 3,
   futureYears: 5,
   name: "",
@@ -197,7 +203,9 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
         next_step: nextStep,
         lp_variant: LP_VARIANT,
         fee_pct: form.feePct,
-        monthly_revenue_man: form.monthlyRev,
+        monthly_revenue_man: Math.round((form.offpeakRev + form.peakRev) / 2),
+        offpeak_revenue_man: form.offpeakRev,
+        peak_revenue_man: form.peakRev,
         past_years: form.pastYears,
         future_years: form.futureYears,
       });
@@ -228,7 +236,7 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
       // 試算結果（推定年間損失）を complaints に埋め込んで CRM 側で参照可能にする
       const estimateMarker = skipEstimate
         ? "[これから民泊を始める方]"
-        : `[試算] 月売上${form.monthlyRev}万円・現手数料${form.feePct}%・運用${form.pastYears}年・予定${form.futureYears}年`;
+        : `[試算] 月売上 オフピーク${form.offpeakRev}〜ピーク${form.peakRev}万円・現手数料${form.feePct}%・運用${form.pastYears}年・予定${form.futureYears}年`;
       const complaintsOut = `${estimateMarker}${form.complaints ? "\n" + form.complaints : ""}`;
 
       const payload = {
@@ -236,8 +244,8 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
         email: form.email,
         phone: form.phone,
         airbnbUrl: "",
-        peakRevenue: skipEstimate ? "" : manToRange(form.monthlyRev),
-        offpeakRevenue: skipEstimate ? "" : manToRange(form.monthlyRev),
+        peakRevenue: skipEstimate ? "" : manToRange(form.peakRev),
+        offpeakRevenue: skipEstimate ? "" : manToRange(form.offpeakRev),
         commissionRate: form.commissionRate,
         operatingYears: skipEstimate ? "" : String(form.pastYears),
         complaints: complaintsOut,
@@ -246,7 +254,7 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
         ctaSource: ctaSource || "audit-page",
         // 新フィールド (API schema 未対応・将来拡張用)
         feePct: skipEstimate ? undefined : form.feePct,
-        monthlyRevenueMan: skipEstimate ? undefined : form.monthlyRev,
+        monthlyRevenueMan: skipEstimate ? undefined : Math.round((form.offpeakRev + form.peakRev) / 2),
         pastYears: skipEstimate ? undefined : form.pastYears,
         futureYears: skipEstimate ? undefined : form.futureYears,
         ...attribution,
@@ -357,10 +365,11 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
         {step === 2 && (
           <Step2Estimate
             feePct={form.feePct}
-            monthlyRev={form.monthlyRev}
+            offpeakRev={form.offpeakRev}
+            peakRev={form.peakRev}
             pastYears={form.pastYears}
             futureYears={form.futureYears}
-            onMonthlyRev={(v) => update("monthlyRev", v)}
+            onRevenue={(lo, hi) => setForm((f) => ({ ...f, offpeakRev: lo, peakRev: hi }))}
             onPastYears={(v) => update("pastYears", v)}
             onFutureYears={(v) => update("futureYears", v)}
           />
@@ -587,18 +596,20 @@ function Step1Fee({
 
 function Step2Estimate({
   feePct,
-  monthlyRev,
+  offpeakRev,
+  peakRev,
   pastYears,
   futureYears,
-  onMonthlyRev,
+  onRevenue,
   onPastYears,
   onFutureYears,
 }: {
   feePct: number;
-  monthlyRev: number;
+  offpeakRev: number;
+  peakRev: number;
   pastYears: number;
   futureYears: number;
-  onMonthlyRev: (v: number) => void;
+  onRevenue: (low: number, high: number) => void;
   onPastYears: (v: number) => void;
   onFutureYears: (v: number) => void;
 }) {
@@ -608,7 +619,8 @@ function Step2Estimate({
   };
 
   const result = useMemo(() => {
-    const annualRevMan = monthlyRev * 12;
+    // 年商はオフピーク〜ピークの中央値 × 12 で試算
+    const annualRevMan = ((offpeakRev + peakRev) / 2) * 12;
     const otherFee = annualRevMan * (feePct / 100);
     const sekaiCost = annualRevMan * (SEKAI_FEE_PCT / 100) + SEKAI_FIXED_ANNUAL_MAN;
     const annualSaving = Math.max(0, Math.round(otherFee - sekaiCost));
@@ -622,21 +634,21 @@ function Step2Estimate({
       otherPct: Math.round((otherFee / max) * 100),
       sekaiPct: Math.round((sekaiCost / max) * 100),
     };
-  }, [feePct, monthlyRev, futureYears]);
+  }, [feePct, offpeakRev, peakRev, futureYears]);
 
   return (
     <div className="space-y-10">
-      <Field number="02" label="物件の月間総売上">
-        {(id) => (
-        <>
-        <div className="text-[26px] font-bold text-sekai-teal mb-3 font-sans tabular-nums">{monthlyRev}万円</div>
-        <input id={id} type="range" min={10} max={500} step={5} value={monthlyRev} aria-valuetext={`${monthlyRev}万円`}
-          onChange={(e) => { onMonthlyRev(parseInt(e.target.value, 10)); markTouched(); }}
-          className="w-full accent-sekai-teal" />
-        <div className="flex justify-between text-[11px] text-mid-gray mt-2 font-sans">
-          <span>10万円</span><span>500万円</span>
-        </div>
-        </>
+      <Field number="02" label="物件の月間総売上（オフピーク〜ピーク）">
+        {() => (
+          <RevenueRangeSlider
+            min={REVENUE_MIN_MAN}
+            max={REVENUE_MAX_MAN}
+            step={10}
+            low={offpeakRev}
+            high={peakRev}
+            onChange={(lo, hi) => { onRevenue(lo, hi); markTouched(); }}
+            format={formatMan}
+          />
         )}
       </Field>
 
