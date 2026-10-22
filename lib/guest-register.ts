@@ -507,6 +507,16 @@ export async function uploadStagedPhoto(mime: string, bytes: Uint8Array): Promis
   return data.id;
 }
 
+/** ゲスト端末の記録のうち #409 に出すもの＝人が動くべき失敗だけ。画面の案内で済む記録（読めず選び直し・縮小できず原本送信・
+ *  サイズ超過・迂回で成功・位置情報）は Vercel ログだけに残す。未知の stage は見落とさないよう通知する（2026-10-22 テンイチ承認） */
+export function clientFailureNeedsAction(stage: string): boolean {
+  switch (stage) {
+    case "upload": case "submit": return true;
+    case "read": case "compress": case "compress-fallback": case "upload-fallback": case "geo": return false;
+    default: return true;
+  }
+}
+
 /** ゲスト端末の失敗記録（telemetry）に添える運営向けの説明。通知を読む人が次に何をすべきか分かる文にする */
 export function clientFailureHint(stage: string): string {
   switch (stage) {
