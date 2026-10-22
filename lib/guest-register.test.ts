@@ -381,3 +381,13 @@ test("clientFailureHint: 迂回で成功した記録は対応不要・両経路�
   assert.match(clientFailureHint("upload-fallback"), /Google/);
   assert.match(clientFailureHint("upload"), /自社サーバー経由|サーバー経由/);
 });
+
+// --- #409 に出すのは人が動くべき失敗だけ（対応不要の記録は Vercel ログだけ・2026-10-22 テンイチ承認） ---
+const { clientFailureNeedsAction } = await import("./guest-register.ts");
+
+test("clientFailureNeedsAction: 両経路とも失敗・送信失敗は通知、対応不要の記録は通知しない、未知の stage は通知（fail-open）", () => {
+  for (const s of ["upload", "submit"]) assert.equal(clientFailureNeedsAction(s), true, s);
+  for (const s of ["read", "compress", "compress-fallback", "upload-fallback", "geo"]) assert.equal(clientFailureNeedsAction(s), false, s);
+  assert.equal(clientFailureNeedsAction("something-new"), true);
+  assert.equal(clientFailureNeedsAction(""), true);
+});

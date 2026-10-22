@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { allowedOrigin, getClientIp, makeRateLimiter } from "@/lib/guest-register-request";
 import { postToSlack } from "@/lib/slack-notify";
-import { clientFailureHint } from "@/lib/guest-register";
+import { clientFailureHint, clientFailureNeedsAction } from "@/lib/guest-register";
 
 export const runtime = "nodejs";
 
@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
   ].join(" | ");
   console.error("[guest-register] client failure:", line);
   const channel = (process.env.SLACK_GUEST_REGISTER_ALERT_CHANNEL_ID || "").trim();
-  if (channel) {
+  // 対応不要の記録（原本送信・迂回で成功など）は Vercel ログだけ。Slack は人が動くべき失敗だけ（2026-10-22）
+  if (channel && clientFailureNeedsAction(clip(body.stage, 40))) {
     const hint = clientFailureHint(clip(body.stage, 40));
     const r = await postToSlack(channel, { text: `宿泊者名簿フォームでゲスト側の失敗\n${line}${hint ? `\n${hint}` : ""}` }).catch((e) => ({ ok: false, error: String(e) }));
     if (!r.ok) console.error("[guest-register] telemetry slack failed:", r.error);
