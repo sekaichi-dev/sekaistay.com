@@ -25,6 +25,8 @@ const PURCHASE_TIMING = ['3ヶ月以内', '半年以内', '1年以内', '未定'
 const REVENUE_MIN_MAN = 10
 const REVENUE_MAX_MAN = 300
 const formatMan = (man: number) => (man >= REVENUE_MAX_MAN ? `${REVENUE_MAX_MAN}万円以上` : `約${man}万円`)
+const OPERATING_YEARS = ['1年未満', '1〜2年', '3〜5年', '5年以上']
+const PLANNED_YEARS = ['1〜2年', '3〜5年', '5〜10年', '10年以上']
 const TEXT_MAX = 600
 
 /* 相談で話せること */
@@ -74,6 +76,8 @@ export default function ContactPage() {
         `【賃貸/持ち家】${tenure === 'rented' ? `賃貸（家賃 ${v('rent')}）` : '持ち家'}`,
       )
       if (status === 'operating') lines.push(`【月の売上】オフピーク ${formatMan(revenue.low)} 〜 ピーク ${formatMan(revenue.high)}`)
+      if (v('operatingYears')) lines.push(`【これまでの運用期間】${v('operatingYears')}`)
+      if (v('plannedYears')) lines.push(`【運用予定年数】${v('plannedYears')}`)
       if (v('note')) lines.push(`【備考】${v('note')}`)
     }
     const message = lines.join('\n')
@@ -154,7 +158,7 @@ export default function ContactPage() {
 
         {/* フォーム */}
         <section id="contact-form" className="w-full bg-mist py-24 sm:py-32">
-          <div className="mx-auto max-w-2xl px-6 sm:px-8">
+          <div className="mx-auto max-w-3xl px-6 sm:px-8">
             {done ? (
               <div className="rounded-lg border border-rule bg-paper p-8 text-center sm:p-12">
                 <h2 className="text-[clamp(1.5rem,3vw,2rem)] font-bold text-ink">送信が完了しました</h2>
@@ -217,7 +221,7 @@ export default function ContactPage() {
                             onChange={() => setStatus(o.value)}
                             className="sr-only"
                           />
-                          <span className="block whitespace-nowrap text-[13px] font-bold text-ink sm:text-[13.5px]">{o.label}</span>
+                          <span className="block whitespace-nowrap text-[14px] font-bold text-ink">{o.label}</span>
                           <span className="mt-1 block text-[12px] leading-[1.6] text-ink/60">{o.note}</span>
                         </label>
                       ))}
@@ -233,7 +237,7 @@ export default function ContactPage() {
                         </select>
                       </Field>
                       <Field label="予算" required>
-                        <input type="text" name="budget" required className={inputCls} placeholder="例: 3,000万円" />
+                        <input type="text" name="budget" required maxLength={60} className={inputCls} placeholder="例: 3,000万円" />
                       </Field>
                       <Field label="これからの計画" required>
                         <textarea name="plan" required rows={5} maxLength={TEXT_MAX} className={inputCls + ' resize-none'} placeholder="検討中のエリア・物件の種類・始めたい時期など" />
@@ -244,11 +248,11 @@ export default function ContactPage() {
                   {(status === 'purchased' || status === 'operating') && (
                     <>
                       <Field label="物件の住所" required>
-                        <input type="text" name="address" required className={inputCls} placeholder="例: 北海道虻田郡倶知安町〇〇" />
+                        <input type="text" name="address" required maxLength={200} className={inputCls} placeholder="例: 北海道虻田郡倶知安町〇〇" />
                       </Field>
                       <div className="grid gap-6 sm:grid-cols-3">
                         <Field label="間取り" required>
-                          <input type="text" name="layout" required className={inputCls} placeholder="例: 2LDK" />
+                          <input type="text" name="layout" required maxLength={60} className={inputCls} placeholder="例: 2LDK" />
                         </Field>
                         <Field label="広さ（㎡）" required>
                           <input type="number" name="area" required min={1} step="any" inputMode="decimal" className={inputCls} placeholder="例: 80" />
@@ -258,7 +262,7 @@ export default function ContactPage() {
                         </Field>
                       </div>
                       <Field label="特殊な設備" required>
-                        <input type="text" name="facilities" required className={inputCls} placeholder="例: サウナあり／なし" />
+                        <input type="text" name="facilities" required maxLength={120} className={inputCls} placeholder="例: サウナあり／なし" />
                       </Field>
                       <Field label="賃貸か持ち家か" required>
                         <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
@@ -272,7 +276,7 @@ export default function ContactPage() {
                       </Field>
                       {tenure === 'rented' && (
                         <Field label="家賃（月額）" required>
-                          <input type="text" name="rent" required className={inputCls} placeholder="例: 15万円" />
+                          <input type="text" name="rent" required maxLength={60} className={inputCls} placeholder="例: 15万円" />
                         </Field>
                       )}
                       {status === 'operating' && (
@@ -288,6 +292,22 @@ export default function ContactPage() {
                           />
                         </Field>
                       )}
+                      <div className="grid gap-6 sm:grid-cols-2">
+                        {status === 'operating' && (
+                          <Field label="これまでの運用期間（任意）">
+                            <select name="operatingYears" defaultValue="" className={inputCls}>
+                              <option value="">選択してください</option>
+                              {OPERATING_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                          </Field>
+                        )}
+                        <Field label="運用予定年数（任意）">
+                          <select name="plannedYears" defaultValue="" className={inputCls}>
+                            <option value="">選択してください</option>
+                            {PLANNED_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                          </select>
+                        </Field>
+                      </div>
                       <Field label="備考（任意）">
                         <textarea name="note" rows={4} maxLength={TEXT_MAX} className={inputCls + ' resize-none'} placeholder="ご相談したいこと・現在の運用で困っていることなど" />
                       </Field>

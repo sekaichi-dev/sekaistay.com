@@ -35,8 +35,20 @@ const SEKAI_STAY_FEE = 8;
 const REVENUE_MIN_MAN = 10;
 const REVENUE_MAX_MAN = 300;
 const PROPERTIES_MAX = 30;
+// 受信側 (submit API) の complaints 上限 2,000 字に、先頭へ足す物件項目（最大 ~520 字）を加えても収まる上限
+const COMPLAINTS_MAX = 1400;
 
 // ─────── Types ───────
+
+type PropertyDetails = {
+  address: string;
+  layout: string;
+  area: string;
+  capacity: string;
+  facilities: string;
+  tenure: "" | "owned" | "rented";
+  rent: string;
+};
 
 type FormState = {
   commissionRate: string;
@@ -47,6 +59,7 @@ type FormState = {
   peakRevenueMan: number;
   offpeakRevenueMan: number;
   yearsIdx: number; // 0..3 → YEARS_STOPS index
+  details: PropertyDetails; // /contact と同じ物件項目（2026-10-22 追加）
   name: string;
   email: string;
   phone: string;
@@ -62,6 +75,7 @@ const INITIAL: FormState = {
   peakRevenueMan: 80,
   offpeakRevenueMan: 30,
   yearsIdx: 1,
+  details: { address: "", layout: "", area: "", capacity: "", facilities: "", tenure: "", rent: "" },
   name: "",
   email: "",
   phone: "",
@@ -259,10 +273,17 @@ export function ReportRequestForm({ lpVariant, embed = false }: ReportRequestFor
       ...(v ? { commissionRate: "", noPropertyYet: true } : {}),
     }));
   }
-  const canNextFromStep2 = useMemo(
-    () => form.noPropertyYet || form.airbnbUrl.trim() !== "",
-    [form.airbnbUrl, form.noPropertyYet],
-  );
+  const canNextFromStep2 = useMemo(() => {
+    const d = form.details;
+    const area = Number(d.area);
+    const capacity = Number(d.capacity);
+    const detailsOk =
+      d.address.trim() && d.layout.trim() && d.facilities.trim() &&
+      Number.isFinite(area) && area > 0 &&
+      Number.isInteger(capacity) && capacity > 0 &&
+      d.tenure && (d.tenure !== "rented" || d.rent.trim());
+    return (form.noPropertyYet || form.airbnbUrl.trim() !== "") && Boolean(detailsOk);
+  }, [form.airbnbUrl, form.noPropertyYet, form.details]);
   const canSubmit = useMemo(
     () => form.name.trim() && form.email.trim() && form.phone.trim(),
     [form.name, form.email, form.phone],
@@ -319,11 +340,24 @@ export function ReportRequestForm({ lpVariant, embed = false }: ReportRequestFor
       const markers: string[] = [];
       if (form.startingNew) markers.push("[これから民泊を始める方]");
       if (form.noPropertyYet && !form.startingNew) markers.push("[物件未掲載]");
-      const complaintsOut = markers.length > 0
-        ? `${markers.join(" ")}${form.complaints ? "\n" + form.complaints : ""}`
-        : form.complaints;
       const yearsValue = YEARS_STOPS[form.yearsIdx]?.value ?? "";
       const skipPropertyDetails = form.startingNew;
+      // 物件の項目は /contact と同じ【…】形式で complaints の先頭に（通知経路・DB 列は変えない）
+      const d = form.details;
+      const detailLines = skipPropertyDetails
+        ? []
+        : [
+            `【住所】${d.address.trim()}`,
+            `【間取り】${d.layout.trim()}`,
+            `【広さ】${d.area.trim()}㎡`,
+            `【想定宿泊人数】${d.capacity.trim()}名`,
+            `【特殊な設備】${d.facilities.trim()}`,
+            `【賃貸/持ち家】${d.tenure === "rented" ? `賃貸（家賃 ${d.rent.trim()}）` : "持ち家"}`,
+          ];
+      const head = [markers.join(" "), ...detailLines].filter(Boolean).join("\n");
+      const complaintsOut = head
+        ? `${head}${form.complaints ? "\n" + form.complaints : ""}`
+        : form.complaints;
       const payload = {
         name: form.name,
         email: form.email,
@@ -470,6 +504,8 @@ export function ReportRequestForm({ lpVariant, embed = false }: ReportRequestFor
               onTotalProperties={(v) => update("totalProperties", v)}
               onPeakMan={(v) => update("peakRevenueMan", v)}
               onOffpeakMan={(v) => update("offpeakRevenueMan", v)}
+              details={form.details}
+              onDetail={(k, v) => setForm((f) => ({ ...f, details: { ...f.details, [k]: v } }))}
               onYearsIdx={(v) => update("yearsIdx", v)}
             />
           )}
@@ -668,6 +704,8 @@ function Step2Property({
   onPeakMan,
   onOffpeakMan,
   onYearsIdx,
+  details,
+  onDetail,
 }: {
   airbnbUrl: string;
   noPropertyYet: boolean;
@@ -681,6 +719,8 @@ function Step2Property({
   onPeakMan: (v: number) => void;
   onOffpeakMan: (v: number) => void;
   onYearsIdx: (v: number) => void;
+  details: PropertyDetails;
+  onDetail: <K extends keyof PropertyDetails>(k: K, v: PropertyDetails[K]) => void;
 }) {
   const [searchResults, setSearchResults] = useState<PropertySearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -835,6 +875,31 @@ function Step2Property({
         )}
       </div>
 
+      {/* 物件の詳細（/contact と同じ項目） */}
+      <DetailInput label="物件の住所" value={details.address} onChange={(v) => onDetail("address", v)} placeholder="例: 北海道虻田郡倶知安町〇〇" maxLength={200} />
+      <div className="grid gap-4 sm:grid-cols-3 sm:gap-3">
+        <DetailInput label="間取り" value={details.layout} onChange={(v) => onDetail("layout", v)} placeholder="例: 2LDK" />
+        <DetailInput label="広さ（㎡）" value={details.area} onChange={(v) => onDetail("area", v)} placeholder="例: 80" type="number" />
+        <DetailInput label="想定宿泊人数" value={details.capacity} onChange={(v) => onDetail("capacity", v)} placeholder="例: 6" type="number" />
+      </div>
+      <DetailInput label="特殊な設備" value={details.facilities} onChange={(v) => onDetail("facilities", v)} placeholder="例: サウナあり／なし" />
+      <div>
+        <label className="block text-[14px] font-semibold mb-2 text-ink">
+          賃貸か持ち家か <span className="text-red-600">*</span>
+        </label>
+        <div className="flex gap-6">
+          {([["owned", "持ち家"], ["rented", "賃貸"]] as const).map(([val, label]) => (
+            <label key={val} className="flex cursor-pointer items-center gap-2 text-[15px] text-ink">
+              <input type="radio" name="lp-tenure" value={val} checked={details.tenure === val} onChange={() => onDetail("tenure", val)} className="h-4 w-4 accent-sekai-teal" />
+              {label}
+            </label>
+          ))}
+        </div>
+      </div>
+      {details.tenure === "rented" && (
+        <DetailInput label="家賃（月額）" value={details.rent} onChange={(v) => onDetail("rent", v)} placeholder="例: 15万円" />
+      )}
+
       {/* Total properties */}
       <div>
         <label className="block text-[14px] font-semibold mb-1 text-ink">他にも物件を管理されてますか？</label>
@@ -853,6 +918,41 @@ function Step2Property({
           <span>30棟以上</span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function DetailInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  maxLength = 60,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: "text" | "number";
+  maxLength?: number;
+}) {
+  return (
+    <div className="min-w-0">
+      <label className="block text-[14px] font-semibold mb-2 text-ink">
+        {label} <span className="text-red-600">*</span>
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        min={type === "number" ? 1 : undefined}
+        step={type === "number" ? "any" : undefined}
+        inputMode={type === "number" ? "decimal" : undefined}
+        className="w-full px-4 py-3 rounded-lg border border-rule bg-white text-[15px] placeholder:text-mid-gray focus:outline-none focus:ring-2 focus:ring-sekai-teal/20"
+      />
     </div>
   );
 }
@@ -923,7 +1023,7 @@ function Step3Contact({
           value={complaints}
           onChange={(e) => onChange("complaints", e.target.value)}
           rows={4}
-          maxLength={2000}
+          maxLength={COMPLAINTS_MAX}
           placeholder="現代行や運営面でのご不満・ご要望があればお書きください"
           className="w-full px-4 py-3 rounded-lg border border-rule bg-white text-[14px] placeholder:text-mid-gray focus:outline-none focus:ring-2 focus:ring-sekai-teal/20"
         />
