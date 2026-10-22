@@ -12,6 +12,16 @@ import { fireYahooConversion } from '@/lib/yahoo-ads'
 const inputCls =
   'w-full rounded-md border border-rule bg-paper px-4 py-3 text-[15px] text-ink outline-none transition placeholder:text-ink/40 focus:border-sekai-teal'
 
+/* 物件の状況（営業の対応分岐: 購入前=メール / 購入済・運用前=メール / 運用中=面談。2026-10-22 小川・テンイチ合意） */
+type PropertyStatus = 'none' | 'purchased' | 'operating'
+const PROPERTY_STATUS: { value: PropertyStatus; label: string; note: string }[] = [
+  { value: 'none', label: 'まだ購入していない', note: 'これから物件を探す・購入を検討中' },
+  { value: 'purchased', label: '購入済み・運用はこれから', note: '物件はあるが民泊はまだ始めていない' },
+  { value: 'operating', label: 'すでに運用中', note: '自己運用または他社に委託して稼働中' },
+]
+const PURCHASE_TIMING = ['3ヶ月以内', '半年以内', '1年以内', '未定']
+const TEXT_MAX = 600
+
 /* 相談で話せること */
 const TALK_POINTS = [
   { no: '01', title: '乗り換えの段取り', body: '今の会社との契約が残っていても大丈夫です。引き継ぎの進め方や、予約を止めずに移行する手順をご案内します。' },
@@ -30,6 +40,8 @@ export default function ContactPage() {
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
+  const [status, setStatus] = useState<PropertyStatus | ''>('')
+  const [tenure, setTenure] = useState<'owned' | 'rented' | ''>('')
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -40,7 +52,24 @@ export default function ContactPage() {
     const name = String(data.get('name') || '').trim()
     const email = String(data.get('email') || '').trim()
     const phone = String(data.get('phone') || '').trim()
-    const message = String(data.get('message') || '').trim()
+    const v = (k: string) => String(data.get(k) || '').trim()
+    // 分岐ごとの回答は「課題・要望」欄 1 本にまとめて送る（Supabase / Slack / Discord / Sheets の経路を変えないため）
+    const statusLabel = PROPERTY_STATUS.find((o) => o.value === status)?.label || ''
+    const lines = [`【物件の状況】${statusLabel}`]
+    if (status === 'none') {
+      lines.push(`【購入予定時期】${v('purchaseTiming')}`, `【予算】${v('budget')}`, `【これからの計画】${v('plan')}`)
+    } else {
+      lines.push(
+        `【住所】${v('address')}`,
+        `【間取り】${v('layout')}`,
+        `【広さ】${v('area')}㎡`,
+        `【想定宿泊人数】${v('capacity')}名`,
+        `【特殊な設備】${v('facilities')}`,
+        `【賃貸/持ち家】${tenure === 'rented' ? `賃貸（家賃 ${v('rent')}）` : '持ち家'}`,
+      )
+      if (v('note')) lines.push(`【備考】${v('note')}`)
+    }
+    const message = lines.join('\n')
     // 紹介者コードとお名前は1項目に統合。コード形式(SS-XXXXXX)なら code、
     // それ以外はお名前として送信し、バックエンドの突合ロジックをそのまま維持する。
     const referrerInfo = String(data.get('referrerInfo') || '').trim()
@@ -124,7 +153,9 @@ export default function ContactPage() {
                 <h2 className="text-[clamp(1.5rem,3vw,2rem)] font-bold text-ink">送信が完了しました</h2>
                 <p className="mt-5 text-[14px] leading-[1.95] text-ink/70">
                   お問い合わせいただきありがとうございます。<br />
-                  2営業日以内に担当よりご返信いたします。
+                  {status === 'operating'
+                    ? '担当よりご連絡のうえ、面談の日時をご相談します。'
+                    : '2営業日以内に担当よりメールでご返信いたします。'}
                 </p>
                 <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
                   <AuditLink
@@ -162,9 +193,86 @@ export default function ContactPage() {
                   <Field label="電話番号">
                     <input type="tel" name="phone" className={inputCls} placeholder="090-1234-5678" />
                   </Field>
-                  <Field label="お問い合わせ内容" required>
-                    <textarea name="message" required rows={6} className={inputCls + ' resize-none'} placeholder="お気軽にご記入ください" />
+
+                  <Field label="すでに購入済み・運用中の物件はありますか？" required>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      {PROPERTY_STATUS.map((o) => (
+                        <label
+                          key={o.value}
+                          className={`cursor-pointer rounded-md border px-4 py-3 transition ${status === o.value ? 'border-sekai-teal bg-teal-tint' : 'border-rule bg-paper hover:border-ink/40'}`}
+                        >
+                          <input
+                            type="radio"
+                            name="propertyStatus"
+                            value={o.value}
+                            required
+                            checked={status === o.value}
+                            onChange={() => setStatus(o.value)}
+                            className="sr-only"
+                          />
+                          <span className="block text-[14px] font-bold text-ink">{o.label}</span>
+                          <span className="mt-1 block text-[12px] leading-[1.6] text-ink/60">{o.note}</span>
+                        </label>
+                      ))}
+                    </div>
                   </Field>
+
+                  {status === 'none' && (
+                    <>
+                      <Field label="購入予定時期" required>
+                        <select name="purchaseTiming" required defaultValue="" className={inputCls}>
+                          <option value="" disabled>選択してください</option>
+                          {PURCHASE_TIMING.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </Field>
+                      <Field label="予算" required>
+                        <input type="text" name="budget" required className={inputCls} placeholder="例: 3,000万円" />
+                      </Field>
+                      <Field label="これからの計画" required>
+                        <textarea name="plan" required rows={5} maxLength={TEXT_MAX} className={inputCls + ' resize-none'} placeholder="検討中のエリア・物件の種類・始めたい時期など" />
+                      </Field>
+                    </>
+                  )}
+
+                  {(status === 'purchased' || status === 'operating') && (
+                    <>
+                      <Field label="物件の住所" required>
+                        <input type="text" name="address" required className={inputCls} placeholder="例: 北海道虻田郡倶知安町〇〇" />
+                      </Field>
+                      <div className="grid gap-6 sm:grid-cols-3">
+                        <Field label="間取り" required>
+                          <input type="text" name="layout" required className={inputCls} placeholder="例: 2LDK" />
+                        </Field>
+                        <Field label="広さ（㎡）" required>
+                          <input type="number" name="area" required min={1} inputMode="decimal" className={inputCls} placeholder="例: 80" />
+                        </Field>
+                        <Field label="想定宿泊人数" required>
+                          <input type="number" name="capacity" required min={1} inputMode="numeric" className={inputCls} placeholder="例: 6" />
+                        </Field>
+                      </div>
+                      <Field label="特殊な設備" required>
+                        <input type="text" name="facilities" required className={inputCls} placeholder="例: サウナあり／なし" />
+                      </Field>
+                      <Field label="賃貸か持ち家か" required>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
+                          {([['owned', '持ち家'], ['rented', '賃貸']] as const).map(([val, label]) => (
+                            <label key={val} className="flex cursor-pointer items-center gap-2 text-[15px] text-ink">
+                              <input type="radio" name="tenure" value={val} required checked={tenure === val} onChange={() => setTenure(val)} className="h-4 w-4 accent-sekai-teal" />
+                              {label}
+                            </label>
+                          ))}
+                        </div>
+                      </Field>
+                      {tenure === 'rented' && (
+                        <Field label="家賃（月額）" required>
+                          <input type="text" name="rent" required className={inputCls} placeholder="例: 15万円" />
+                        </Field>
+                      )}
+                      <Field label="備考（任意）">
+                        <textarea name="note" rows={4} maxLength={TEXT_MAX} className={inputCls + ' resize-none'} placeholder="ご相談したいこと・現在の運用で困っていることなど" />
+                      </Field>
+                    </>
+                  )}
                   <p className="font-sans text-caption text-mid-gray -mb-2">
                     SEKAI STAY の紹介者から紹介された方は、以下にご記入ください。
                   </p>
