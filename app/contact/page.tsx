@@ -8,6 +8,7 @@ import AuditLink from '@/components/audit/AuditLink'
 import { resolveAttribution } from '@/lib/attribution'
 import { isValidReferralCodeFormat, normalizeReferralCode } from '@/lib/referral-code'
 import { fireYahooConversion } from '@/lib/yahoo-ads'
+import { RevenueRangeSlider } from '@/components/RevenueRangeSlider'
 
 const inputCls =
   'w-full rounded-md border border-rule bg-paper px-4 py-3 text-[15px] text-ink outline-none transition placeholder:text-ink/40 focus:border-sekai-teal'
@@ -20,6 +21,10 @@ const PROPERTY_STATUS: { value: PropertyStatus; label: string; note: string }[] 
   { value: 'operating', label: 'すでに運用中', note: '自己運用または他社に委託して稼働中' },
 ]
 const PURCHASE_TIMING = ['3ヶ月以内', '半年以内', '1年以内', '未定']
+/* 運用中の月の売上（オフピーク〜ピーク）— LP のフォームと同じ刻み */
+const REVENUE_MIN_MAN = 10
+const REVENUE_MAX_MAN = 300
+const formatMan = (man: number) => (man >= REVENUE_MAX_MAN ? `${REVENUE_MAX_MAN}万円以上` : `約${man}万円`)
 const TEXT_MAX = 600
 
 /* 相談で話せること */
@@ -42,6 +47,7 @@ export default function ContactPage() {
   const [error, setError] = useState('')
   const [status, setStatus] = useState<PropertyStatus | ''>('')
   const [tenure, setTenure] = useState<'owned' | 'rented' | ''>('')
+  const [revenue, setRevenue] = useState<{ low: number; high: number }>({ low: 30, high: 80 })
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -67,6 +73,7 @@ export default function ContactPage() {
         `【特殊な設備】${v('facilities')}`,
         `【賃貸/持ち家】${tenure === 'rented' ? `賃貸（家賃 ${v('rent')}）` : '持ち家'}`,
       )
+      if (status === 'operating') lines.push(`【月の売上】オフピーク ${formatMan(revenue.low)} 〜 ピーク ${formatMan(revenue.high)}`)
       if (v('note')) lines.push(`【備考】${v('note')}`)
     }
     const message = lines.join('\n')
@@ -199,7 +206,7 @@ export default function ContactPage() {
                       {PROPERTY_STATUS.map((o) => (
                         <label
                           key={o.value}
-                          className={`cursor-pointer rounded-md border px-4 py-3 transition ${status === o.value ? 'border-sekai-teal bg-teal-tint' : 'border-rule bg-paper hover:border-ink/40'}`}
+                          className={`cursor-pointer rounded-md border px-3 py-3 transition ${status === o.value ? 'border-sekai-teal bg-teal-tint' : 'border-rule bg-paper hover:border-ink/40'}`}
                         >
                           <input
                             type="radio"
@@ -210,7 +217,7 @@ export default function ContactPage() {
                             onChange={() => setStatus(o.value)}
                             className="sr-only"
                           />
-                          <span className="block text-[14px] font-bold text-ink">{o.label}</span>
+                          <span className="block whitespace-nowrap text-[13px] font-bold text-ink sm:text-[13.5px]">{o.label}</span>
                           <span className="mt-1 block text-[12px] leading-[1.6] text-ink/60">{o.note}</span>
                         </label>
                       ))}
@@ -266,6 +273,19 @@ export default function ContactPage() {
                       {tenure === 'rented' && (
                         <Field label="家賃（月額）" required>
                           <input type="text" name="rent" required className={inputCls} placeholder="例: 15万円" />
+                        </Field>
+                      )}
+                      {status === 'operating' && (
+                        <Field label="月の売上の幅（オフピーク〜ピーク）" required>
+                          <RevenueRangeSlider
+                            min={REVENUE_MIN_MAN}
+                            max={REVENUE_MAX_MAN}
+                            step={10}
+                            low={revenue.low}
+                            high={revenue.high}
+                            onChange={(low, high) => setRevenue({ low, high })}
+                            format={formatMan}
+                          />
                         </Field>
                       )}
                       <Field label="備考（任意）">

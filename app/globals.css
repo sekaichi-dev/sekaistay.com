@@ -1011,3 +1011,41 @@
 .st-magazine .splide__arrow:disabled { opacity: 0.35; }
 .st-magazine .splide__pagination { margin-top: 1.5rem; position: static; }
 .st-magazine .splide__pagination__page.is-active { background: #003C87; }
+
+/* 2 つまみスライダー（RevenueRangeSlider）: トラックは下の div が描き、input はつまみだけ受ける */
+.dual-range {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+}
+.dual-range::-webkit-slider-runnable-track { background: transparent; height: 100%; }
+.dual-range::-moz-range-track { background: transparent; }
+.dual-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: auto;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 9999px;
+  background: #167B81;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+.dual-range::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #167B81;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+.dual-range:focus-visible::-webkit-slider-thumb { outline: 2px solid #167B81; outline-offset: 2px; }
