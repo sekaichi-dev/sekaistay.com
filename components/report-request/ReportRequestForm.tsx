@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fireYahooConversion } from "@/lib/yahoo-ads";
 import { resolveAttribution } from "@/lib/attribution";
+import { RevenueRangeSlider } from "@/components/RevenueRangeSlider";
 
 type PropertySearchResult = {
   source: "airbnb" | "other";
@@ -761,42 +762,18 @@ function Step2Property({
         </div>
       </div>
 
-      {/* Peak revenue */}
+      {/* 月の売上: オフピーク〜ピークを 1 本のスライダーで */}
       <div>
-        <label className="block text-[14px] font-semibold mb-1 text-ink">ピーク月の売上（1物件あたり）</label>
-        <div className="text-[24px] font-bold text-sekai-teal mb-2">{formatMan(peakMan)}</div>
-        <input
-          type="range"
+        <label className="block text-[14px] font-semibold mb-1 text-ink">月の売上の幅（1物件あたり・オフピーク〜ピーク）</label>
+        <RevenueRangeSlider
           min={REVENUE_MIN_MAN}
           max={REVENUE_MAX_MAN}
           step={10}
-          value={peakMan}
-          onChange={(e) => onPeakMan(parseInt(e.target.value, 10))}
-          className="w-full accent-sekai-teal"
+          low={offpeakMan}
+          high={peakMan}
+          onChange={(lo, hi) => { onOffpeakMan(lo); onPeakMan(hi); }}
+          format={formatMan}
         />
-        <div className="flex justify-between text-[11px] text-mid-gray mt-1">
-          <span>10万円</span>
-          <span>300万円以上</span>
-        </div>
-      </div>
-
-      {/* Off-peak revenue */}
-      <div>
-        <label className="block text-[14px] font-semibold mb-1 text-ink">オフピーク月の売上（1物件あたり）</label>
-        <div className="text-[24px] font-bold text-sekai-teal mb-2">{formatMan(offpeakMan)}</div>
-        <input
-          type="range"
-          min={REVENUE_MIN_MAN}
-          max={REVENUE_MAX_MAN}
-          step={10}
-          value={offpeakMan}
-          onChange={(e) => onOffpeakMan(parseInt(e.target.value, 10))}
-          className="w-full accent-sekai-teal"
-        />
-        <div className="flex justify-between text-[11px] text-mid-gray mt-1">
-          <span>10万円</span>
-          <span>300万円以上</span>
-        </div>
       </div>
 
       {/* Property name search */}

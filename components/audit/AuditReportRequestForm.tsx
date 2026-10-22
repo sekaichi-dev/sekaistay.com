@@ -360,7 +360,6 @@ export function AuditReportRequestForm({ ctaSource }: { ctaSource?: string } = {
             monthlyRev={form.monthlyRev}
             pastYears={form.pastYears}
             futureYears={form.futureYears}
-            onFeePct={(v) => update("feePct", v)}
             onMonthlyRev={(v) => update("monthlyRev", v)}
             onPastYears={(v) => update("pastYears", v)}
             onFutureYears={(v) => update("futureYears", v)}
@@ -591,7 +590,6 @@ function Step2Estimate({
   monthlyRev,
   pastYears,
   futureYears,
-  onFeePct,
   onMonthlyRev,
   onPastYears,
   onFutureYears,
@@ -600,7 +598,6 @@ function Step2Estimate({
   monthlyRev: number;
   pastYears: number;
   futureYears: number;
-  onFeePct: (v: number) => void;
   onMonthlyRev: (v: number) => void;
   onPastYears: (v: number) => void;
   onFutureYears: (v: number) => void;
@@ -629,21 +626,7 @@ function Step2Estimate({
 
   return (
     <div className="space-y-10">
-      <Field number="02" label="今の代行会社の手数料率">
-        {(id) => (
-        <>
-        <div className="text-[26px] font-bold text-sekai-teal mb-3 font-sans tabular-nums">{feePct}%</div>
-        <input id={id} type="range" min={8} max={35} step={1} value={feePct} aria-valuetext={`${feePct}%`}
-          onChange={(e) => { onFeePct(parseInt(e.target.value, 10)); markTouched(); }}
-          className="w-full accent-sekai-teal" />
-        <div className="flex justify-between text-[11px] text-mid-gray mt-2 font-sans">
-          <span>8%</span><span>35%</span>
-        </div>
-        </>
-        )}
-      </Field>
-
-      <Field number="03" label="物件の月間総売上">
+      <Field number="02" label="物件の月間総売上">
         {(id) => (
         <>
         <div className="text-[26px] font-bold text-sekai-teal mb-3 font-sans tabular-nums">{monthlyRev}万円</div>
@@ -657,7 +640,7 @@ function Step2Estimate({
         )}
       </Field>
 
-      <Field number="04" label="これまでの運用期間">
+      <Field number="03" label="これまでの運用期間">
         {(id) => (
         <>
         <div className="text-[26px] font-bold text-sekai-teal mb-3 font-sans tabular-nums">{pastYears}年</div>
@@ -671,7 +654,7 @@ function Step2Estimate({
         )}
       </Field>
 
-      <Field number="05" label="今後あと何年運用する予定">
+      <Field number="04" label="今後あと何年運用する予定">
         {(id) => (
         <>
         <div className="text-[26px] font-bold text-sekai-teal mb-3 font-sans tabular-nums">{futureYears}年</div>
