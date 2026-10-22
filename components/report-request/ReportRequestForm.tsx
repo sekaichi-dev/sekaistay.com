@@ -35,6 +35,8 @@ const SEKAI_STAY_FEE = 8;
 const REVENUE_MIN_MAN = 10;
 const REVENUE_MAX_MAN = 300;
 const PROPERTIES_MAX = 30;
+// 受信側 (submit API) の complaints 上限 2,000 字に、先頭へ足す物件項目（最大 ~520 字）を加えても収まる上限
+const COMPLAINTS_MAX = 1400;
 
 // ─────── Types ───────
 
@@ -870,7 +872,7 @@ function Step2Property({
       </div>
 
       {/* 物件の詳細（/contact と同じ項目） */}
-      <DetailInput label="物件の住所" value={details.address} onChange={(v) => onDetail("address", v)} placeholder="例: 北海道虻田郡倶知安町〇〇" />
+      <DetailInput label="物件の住所" value={details.address} onChange={(v) => onDetail("address", v)} placeholder="例: 北海道虻田郡倶知安町〇〇" maxLength={200} />
       <div className="grid gap-4 sm:grid-cols-3 sm:gap-3">
         <DetailInput label="間取り" value={details.layout} onChange={(v) => onDetail("layout", v)} placeholder="例: 2LDK" />
         <DetailInput label="広さ（㎡）" value={details.area} onChange={(v) => onDetail("area", v)} placeholder="例: 80" type="number" />
@@ -922,12 +924,14 @@ function DetailInput({
   onChange,
   placeholder,
   type = "text",
+  maxLength = 60,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: "text" | "number";
+  maxLength?: number;
 }) {
   return (
     <div className="min-w-0">
@@ -939,6 +943,7 @@ function DetailInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        maxLength={maxLength}
         min={type === "number" ? 1 : undefined}
         step={type === "number" ? "any" : undefined}
         inputMode={type === "number" ? "decimal" : undefined}
@@ -1014,7 +1019,7 @@ function Step3Contact({
           value={complaints}
           onChange={(e) => onChange("complaints", e.target.value)}
           rows={4}
-          maxLength={2000}
+          maxLength={COMPLAINTS_MAX}
           placeholder="現代行や運営面でのご不満・ご要望があればお書きください"
           className="w-full px-4 py-3 rounded-lg border border-rule bg-white text-[14px] placeholder:text-mid-gray focus:outline-none focus:ring-2 focus:ring-sekai-teal/20"
         />

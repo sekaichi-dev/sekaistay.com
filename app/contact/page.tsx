@@ -237,7 +237,7 @@ export default function ContactPage() {
                         </select>
                       </Field>
                       <Field label="予算" required>
-                        <input type="text" name="budget" required className={inputCls} placeholder="例: 3,000万円" />
+                        <input type="text" name="budget" required maxLength={60} className={inputCls} placeholder="例: 3,000万円" />
                       </Field>
                       <Field label="これからの計画" required>
                         <textarea name="plan" required rows={5} maxLength={TEXT_MAX} className={inputCls + ' resize-none'} placeholder="検討中のエリア・物件の種類・始めたい時期など" />
@@ -248,11 +248,11 @@ export default function ContactPage() {
                   {(status === 'purchased' || status === 'operating') && (
                     <>
                       <Field label="物件の住所" required>
-                        <input type="text" name="address" required className={inputCls} placeholder="例: 北海道虻田郡倶知安町〇〇" />
+                        <input type="text" name="address" required maxLength={200} className={inputCls} placeholder="例: 北海道虻田郡倶知安町〇〇" />
                       </Field>
                       <div className="grid gap-6 sm:grid-cols-3">
                         <Field label="間取り" required>
-                          <input type="text" name="layout" required className={inputCls} placeholder="例: 2LDK" />
+                          <input type="text" name="layout" required maxLength={60} className={inputCls} placeholder="例: 2LDK" />
                         </Field>
                         <Field label="広さ（㎡）" required>
                           <input type="number" name="area" required min={1} step="any" inputMode="decimal" className={inputCls} placeholder="例: 80" />
@@ -262,7 +262,7 @@ export default function ContactPage() {
                         </Field>
                       </div>
                       <Field label="特殊な設備" required>
-                        <input type="text" name="facilities" required className={inputCls} placeholder="例: サウナあり／なし" />
+                        <input type="text" name="facilities" required maxLength={120} className={inputCls} placeholder="例: サウナあり／なし" />
                       </Field>
                       <Field label="賃貸か持ち家か" required>
                         <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
@@ -276,7 +276,7 @@ export default function ContactPage() {
                       </Field>
                       {tenure === 'rented' && (
                         <Field label="家賃（月額）" required>
-                          <input type="text" name="rent" required className={inputCls} placeholder="例: 15万円" />
+                          <input type="text" name="rent" required maxLength={60} className={inputCls} placeholder="例: 15万円" />
                         </Field>
                       )}
                       {status === 'operating' && (
