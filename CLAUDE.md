@@ -53,10 +53,10 @@
 ```
 npm run dev       # ローカル開発（localhost:3000）
 npm run build     # 本番ビルド検証
-npm run lint      # ESLintチェック
+npm test          # lib/**/*.test.ts（node --test）
 ```
 
 ## 関連
-- `sekai-stay-ai/` — Sekai StayのAIアシスタント（別プロジェクト）
+- `sekai-stay-ai/` — Sekai StayのAIアシスタント（別プロジェクト・2026-10-28 に Vercel プロジェクト削除済み）
 - `sekaistay-sales-portal` — 営業ポータル (lead 並行転送先・別 Vercel project)
 - Sekai Stay事業全般のメモリは `~/.claude/projects/-Users-sekaichi-Desktop-claude-code/memory/project_sekai_stay.md`
