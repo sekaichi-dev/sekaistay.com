@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { resolveLpVariant } from '@/lib/lp-variant'
 import { captureAttribution } from '@/lib/attribution'
+import { isAnalyticsExcludedPath } from '@/lib/analytics-scope'
 
 // Next.js の App Router はクライアント遷移で layout が再マウントされないため、
 // Meta Pixel と GA4 の PageView は明示的に再発火する必要がある。
@@ -27,6 +28,8 @@ export default function AnalyticsRouteTracker() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    // /lease 配下（契約同意フォーム）は解析タグを載せないので、計測も参照元の保存もしない
+    if (isAnalyticsExcludedPath(pathname)) return
     const w = window as unknown as {
       fbq?: (...a: unknown[]) => void
       gtag?: (...a: unknown[]) => void
