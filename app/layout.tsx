@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Noto_Sans_JP, Archivo, Space_Mono, Yuji_Boku } from 'next/font/google'
-import Script from 'next/script'
 import { Suspense } from 'react'
 import AnalyticsRouteTracker from '@/components/AnalyticsRouteTracker'
+import { AnalyticsHeadTags, MetaPixelNoscript } from '@/components/AnalyticsTags'
 import AuditModalProvider from '@/components/audit/AuditModalProvider'
 import './globals.css'
 import { OG_IMAGE, OG_IMAGE_URL } from '@/lib/og-image'
@@ -148,14 +148,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja" className={`${notoSansJP.variable} ${grotesk.variable} ${spaceMono.variable} ${yujiBoku.variable}`}>
       <head>
-        {/* Yahoo!広告 サイトジェネラルタグ — 全ページ共通・<head> 最上部に配置（Yahoo指定） */}
-        <script async src="https://s.yimg.jp/images/listing/tool/cv/ytag.js" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.yjDataLayer = window.yjDataLayer || [];
-function ytag() { yjDataLayer.push(arguments); }
-ytag({"type":"ycl_cookie", "config":{"ycl_use_non_cookie_storage":true}});`,
-          }}
+        <AnalyticsHeadTags
+          gaId={GA_MEASUREMENT_ID}
+          googleAdsId={GOOGLE_ADS_ID}
+          clarityId={CLARITY_PROJECT_ID}
+          metaPixelId={META_PIXEL_ID}
+          xPixelId={X_PIXEL_ID}
+          xSiteVisitEventId={X_SITE_VISIT_EVENT_ID}
         />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
@@ -193,46 +192,10 @@ ytag({"type":"ycl_cookie", "config":{"ycl_use_non_cookie_storage":true}});`,
         />
         {/* UTM の永続化は lib/attribution.ts (90日クッキー ss_attr) に移行 (2026-07-08)。
             旧 sessionStorage 方式はタブを閉じると消える + 読み手が contact のみだったため削除。 */}
-        {/* Google tag (gtag.js) — GA4 + Google Ads コンバージョン */}
-        <Script
-          id="ga4-loader"
-          strategy="afterInteractive"
-          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-        />
-        {/* 初回 page_view は config 時に lp_variant を付与して自動発火させる(config 直後・gtag 定義済みで
-            確実に発火する=レースなし)。sekaiLpVariant() の分岐は lib/lp-variant.ts と一致させること。
-            SPA 遷移分は AnalyticsRouteTracker が lp_variant 付きで再発火する。 */}
-        <Script id="ga4-init" strategy="afterInteractive">
-          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;function sekaiLpVariant(){var p=location.pathname;if(p.length>1&&p.charAt(p.length-1)==='/')p=p.slice(0,-1);if(p==='/switch/founder')return'switch-founder';if(p==='/switch/portal')return'switch-portal';if(p==='/switch')return'switch';if(p==='/audit')return'audit';if(p==='/contact')return'contact';return'direct';}gtag('js',new Date());gtag('config','${GA_MEASUREMENT_ID}',{lp_variant:sekaiLpVariant()});${GOOGLE_ADS_ID ? `gtag('config','${GOOGLE_ADS_ID}');` : ''}`}
-        </Script>
-        {CLARITY_PROJECT_ID && (
-          <Script id="microsoft-clarity" strategy="afterInteractive">
-            {`(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${CLARITY_PROJECT_ID}");`}
-          </Script>
-        )}
-        {/* Meta Pixel — Facebook/Instagram 広告コンバージョン */}
-        <Script id="meta-pixel-init" strategy="afterInteractive">
-          {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL_ID}');fbq('track','PageView');`}
-        </Script>
-        {/* X (Twitter) Universal Website Tag — X Ads コンバージョン。
-            config 直後に SiteVisit イベントを発火（全ページの初回ロードで計測）。 */}
-        {X_PIXEL_ID && (
-          <Script id="x-pixel-init" strategy="afterInteractive">
-            {`!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);},s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');twq('config','${X_PIXEL_ID}');twq('event','${X_SITE_VISIT_EVENT_ID}',{});`}
-          </Script>
-        )}
+        {/* 解析・広告タグ本体は AnalyticsHeadTags（/lease 配下では描画しない） */}
       </head>
       <body>
-        {/* Meta Pixel noscript フォールバック (JS 無効ユーザー向け)。
-            <noscript> 内の <img> を JSX で書くと Next.js/React の自動 resource hints が
-            <link rel="preload" as="image"> を生成し、JS 有効ユーザーでも実際に preload で
-            HTTP リクエストが飛び、Meta 側で PageView が二重カウントされる。
-            dangerouslySetInnerHTML で raw HTML として渡すことで React の解析対象から外す。 */}
-        <noscript
-          dangerouslySetInnerHTML={{
-            __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1" alt="" />`,
-          }}
-        />
+        <MetaPixelNoscript metaPixelId={META_PIXEL_ID} />
         <Suspense fallback={null}>
           <AnalyticsRouteTracker />
         </Suspense>
