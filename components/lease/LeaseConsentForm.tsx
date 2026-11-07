@@ -4,6 +4,7 @@
  * 予約・契約本文・受付状態は ops の公開 API（GET /api/public/lease）から読み、送信も同じ API へ POST する。
  * このサイトは何も保存しない（鍵の検証・保存・取り込みはすべて ops）。
  * 見た目は宿泊者名簿（components/guest-register/GuestRegisterForm.tsx）の作りを写している（名簿のコードは触らない）。
+ * 鍵は入口 /lease/<予約番号>?k= が httpOnly Cookie に移し、consent ページが prop で渡す（URL・解析タグには出ない）。
  * 身分証の写真は名簿と同じ compressImage で 1600px/450KB 目安に縮め、data URL にして本文に入れる。
  */
 
@@ -11,7 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { compressImage, readIntoMemory } from "@/components/guest-register/photo-upload";
 import {
   LEASE_FIELD_MAX, LEASE_ID_IMAGE_MAX_BYTES, classifySubmitResponse, dataUrlBytes, fieldLabel, formatJst, formatYen, formatYmd,
-  isImageDataUrl, isLeaseBookingId, leaseApiUrl, opsLeaseApiBase, parseLeaseView, pendingItems, pickLabel, purposeTextRule,
+  isImageDataUrl, isLeaseBookingId, isLeaseLinkKey, leaseApiUrl, opsLeaseApiBase, parseLeaseView, pendingItems, pickLabel, purposeTextRule,
   type LeaseFormValues, type LeaseLang, type LeaseSubmitOutcome, type LeaseView,
 } from "@/lib/lease-consent";
 
@@ -209,12 +210,9 @@ export default function LeaseConsentForm({ bookingId, linkKey }: { bookingId: st
 
   useEffect(() => {
     if (!navigator.language.startsWith("ja")) setLang("en");
-    let k = linkKey;
-    if (!k) {
-      try { k = sessionStorage.getItem(`lease-k:${window.location.pathname}`) || ""; } catch {}
-    }
+    const k = linkKey;
     keyRef.current = k;
-    if (!isLeaseBookingId(bookingId) || !k) {
+    if (!isLeaseBookingId(bookingId) || !isLeaseLinkKey(k)) {
       setLoad({ kind: "unavailable" });
       return;
     }
@@ -376,7 +374,7 @@ export default function LeaseConsentForm({ bookingId, linkKey }: { bookingId: st
     : [];
 
   return (
-    <div className="min-h-screen bg-switch-cloud">
+    <div className="min-h-screen bg-switch-cloud" data-clarity-mask="true">
       <header className="bg-switch-charcoal">
         <div className="max-w-2xl mx-auto px-5 py-5 flex items-center justify-between gap-4">
           <img src="/images/switch/logo-lockup.png" alt="SEKAI STAY" className="h-[22px] w-auto invert shrink-0" />

@@ -145,3 +145,46 @@ test("classifySubmitResponse: ops の応答の分岐", () => {
   assert.deepEqual(classifySubmitResponse(500, {}), { kind: "error" });
   assert.deepEqual(classifySubmitResponse(200, { ok: false }), { kind: "error" });
 });
+
+const { isLeaseLinkKey, leaseEntryDecision, LEASE_KEY_COOKIE, LEASE_KEY_COOKIE_MAX_AGE } = await import("./lease-consent.ts");
+const KEY = "0a".repeat(16); // 形だけの鍵（本物の鍵ではない）
+
+test("isLeaseLinkKey: 小文字 16 進 32 桁だけ", () => {
+  assert.equal(isLeaseLinkKey(KEY), true);
+  assert.equal(isLeaseLinkKey(KEY.toUpperCase()), false);
+  assert.equal(isLeaseLinkKey(KEY.slice(1)), false);
+  assert.equal(isLeaseLinkKey(KEY + "0"), false);
+  assert.equal(isLeaseLinkKey("g".repeat(32)), false);
+  assert.equal(isLeaseLinkKey(""), false);
+  assert.equal(isLeaseLinkKey(null), false);
+});
+
+test("leaseEntryDecision: 正しい形の鍵は予約のパスだけの httpOnly Cookie に入れ、鍵の無い consent へ", () => {
+  const d = leaseEntryDecision({ bookingId: "84123456", key: KEY, secure: true });
+  assert.equal(d.location, "/lease/84123456/consent");
+  assert.deepEqual(d.set, {
+    name: LEASE_KEY_COOKIE, value: KEY,
+    options: { httpOnly: true, secure: true, sameSite: "lax", path: "/lease/84123456", maxAge: LEASE_KEY_COOKIE_MAX_AGE },
+  });
+  assert.equal(LEASE_KEY_COOKIE_MAX_AGE, 7 * 24 * 3600);
+  assert.equal(d.clear, null);
+  assert.ok(!d.location.includes(KEY));
+  assert.equal(leaseEntryDecision({ bookingId: "84123456", key: ` ${KEY} `, secure: false }).set?.options.secure, false);
+});
+
+test("leaseEntryDecision: 形の違う鍵は Cookie を消して同じ転送先（正誤は区別しない）", () => {
+  for (const key of ["abc", KEY.toUpperCase(), KEY + "00", "", "<script>"]) {
+    const d = leaseEntryDecision({ bookingId: "84123456", key, secure: true });
+    assert.equal(d.location, "/lease/84123456/consent");
+    assert.equal(d.set, null);
+    assert.deepEqual(d.clear, { name: LEASE_KEY_COOKIE, path: "/lease/84123456" });
+  }
+});
+
+test("leaseEntryDecision: 鍵が無ければ Cookie は触らない・予約番号の形が違えば何も入れない", () => {
+  assert.deepEqual(leaseEntryDecision({ bookingId: "84123456", key: null, secure: true }), { location: "/lease/84123456/consent", set: null, clear: null });
+  const bad = leaseEntryDecision({ bookingId: "../x", key: KEY, secure: true });
+  assert.equal(bad.set, null);
+  assert.equal(bad.clear, null);
+  assert.equal(bad.location, "/lease/..%2Fx/consent");
+});

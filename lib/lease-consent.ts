@@ -70,6 +70,46 @@ export function isLeaseBookingId(s: string): boolean {
   return /^\d{1,12}$/.test(s);
 }
 
+/** 鍵（ops の leaseLinkKey＝HMAC の先頭 32 桁の小文字 16 進）の形 */
+export function isLeaseLinkKey(s: string | null | undefined): s is string {
+  return typeof s === "string" && /^[0-9a-f]{32}$/.test(s);
+}
+
+/** 鍵を入れる Cookie（httpOnly・その予約のパスだけ）。URL に鍵を残さないため入口で移す */
+export const LEASE_KEY_COOKIE = "lease_k";
+export const LEASE_KEY_COOKIE_MAX_AGE = 7 * 24 * 3600;
+
+export interface LeaseEntryCookie {
+  name: string;
+  value: string;
+  options: { httpOnly: true; secure: boolean; sameSite: "lax"; path: string; maxAge: number };
+}
+
+/**
+ * 入口 /lease/<予約番号>?k=<鍵> の振る舞い。転送先はいつも鍵の無い /lease/<予約番号>/consent。
+ * 鍵の形が正しければ Cookie に入れ、形が違えば同じパスの Cookie を消す（鍵が無ければ Cookie は触らない＝再訪で使える）。
+ * 鍵の正誤は ops が判断する（ここでは区別しない）。
+ */
+export function leaseEntryDecision(args: { bookingId: string; key: string | null | undefined; secure: boolean }): {
+  location: string;
+  set: LeaseEntryCookie | null;
+  clear: { name: string; path: string } | null;
+} {
+  const id = args.bookingId || "";
+  const location = `/lease/${encodeURIComponent(id)}/consent`;
+  if (!isLeaseBookingId(id)) return { location, set: null, clear: null };
+  const path = `/lease/${id}`;
+  const key = (args.key ?? "").trim();
+  if (isLeaseLinkKey(key)) {
+    return {
+      location,
+      set: { name: LEASE_KEY_COOKIE, value: key, options: { httpOnly: true, secure: args.secure, sameSite: "lax", path, maxAge: LEASE_KEY_COOKIE_MAX_AGE } },
+      clear: null,
+    };
+  }
+  return { location, set: null, clear: args.key == null ? null : { name: LEASE_KEY_COOKIE, path } };
+}
+
 export function leaseApiUrl(base: string, bookingId: string, key: string): string {
   return `${base}/api/public/lease?b=${encodeURIComponent(bookingId)}&k=${encodeURIComponent(key)}`;
 }
