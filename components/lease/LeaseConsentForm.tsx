@@ -5,6 +5,7 @@
  * このサイトは何も保存しない（鍵の検証・保存・取り込みはすべて ops）。
  * 見た目は宿泊者名簿（components/guest-register/GuestRegisterForm.tsx）の作りを写している（名簿のコードは触らない）。
  * 鍵は入口 /lease/<予約番号>?k= が httpOnly Cookie に移し、consent ページが prop で渡す（URL・解析タグには出ない）。
+ * ?t=<運営トークン> で開いたとき（運営プレビュー）は ops GET に t を渡し、帯を出して同意チェックと送信を止める（POST はしない）。
  * 身分証の写真は名簿と同じ compressImage で 1600px/450KB 目安に縮め、data URL にして本文に入れる。
  */
 
@@ -12,7 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { compressImage, readIntoMemory } from "@/components/guest-register/photo-upload";
 import {
   LEASE_FIELD_MAX, LEASE_ID_IMAGE_MAX_BYTES, classifySubmitResponse, dataUrlBytes, fieldLabel, formatJst, formatYen, formatYmd,
-  isImageDataUrl, isLeaseBookingId, isLeaseLinkKey, leaseApiUrl, opsLeaseApiBase, parseLeaseView, pendingItems, pickLabel, purposeTextRule,
+  isImageDataUrl, leaseApiQuery, opsLeaseApiBase, parseLeaseView, pendingItems, pickLabel, purposeTextRule,
   type LeaseFormValues, type LeaseLang, type LeaseSubmitOutcome, type LeaseView,
 } from "@/lib/lease-consent";
 
@@ -90,6 +91,9 @@ const T = {
     errNotFound: "このリンクは現在ご利用いただけません。Airbnb のメッセージでご連絡ください。",
     errGeneric: "送信できませんでした。時間をおいてもう一度お試しください。",
     errNetwork: "通信できませんでした。電波の良い場所でもう一度お試しください。",
+    previewBanner: "運営プレビュー — ゲストに見える画面です。送信はできません。",
+    previewStatus: "記録の状態",
+    previewNoSubmit: "運営プレビューのため送信できません",
   },
   en: {
     eyebrow: "MONTHLY STAY AGREEMENT",
@@ -164,6 +168,9 @@ const T = {
     errNotFound: "This link is currently unavailable. Please contact us via Airbnb messages.",
     errGeneric: "We couldn't submit the form. Please try again in a little while.",
     errNetwork: "We couldn't connect. Please try again where you have a better signal.",
+    previewBanner: "Staff preview — this is the page the guest sees. Submitting is disabled.",
+    previewStatus: "Record status",
+    previewNoSubmit: "Submitting is disabled in the staff preview.",
   },
 };
 
@@ -190,7 +197,7 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-export default function LeaseConsentForm({ bookingId, linkKey }: { bookingId: string; linkKey: string }) {
+export default function LeaseConsentForm({ bookingId, linkKey, previewToken = "" }: { bookingId: string; linkKey: string; previewToken?: string }) {
   const [lang, setLang] = useState<LeaseLang>("ja");
   const [load, setLoad] = useState<Load>({ kind: "loading" });
   const [form, setForm] = useState<LeaseFormValues>(emptyForm);
@@ -202,7 +209,7 @@ export default function LeaseConsentForm({ bookingId, linkKey }: { bookingId: st
   const [outcome, setOutcome] = useState<LeaseSubmitOutcome | null>(null);
   const [done, setDone] = useState<Done | null>(null);
   const [networkError, setNetworkError] = useState(false);
-  const keyRef = useRef("");
+  const queryRef = useRef("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const t = T[lang];
@@ -210,19 +217,20 @@ export default function LeaseConsentForm({ bookingId, linkKey }: { bookingId: st
 
   useEffect(() => {
     if (!navigator.language.startsWith("ja")) setLang("en");
-    const k = linkKey;
-    keyRef.current = k;
-    if (!isLeaseBookingId(bookingId) || !isLeaseLinkKey(k)) {
+    const q = leaseApiQuery({ bookingId, key: linkKey, previewToken });
+    queryRef.current = q ?? "";
+    if (!q) {
       setLoad({ kind: "unavailable" });
       return;
     }
     let cancelled = false;
-    fetch(leaseApiUrl(base, bookingId, k), { cache: "no-store", credentials: "omit" })
+    fetch(`${base}/api/public/lease?${q}`, { cache: "no-store", credentials: "omit" })
       .then((r) => (r.ok ? r.json() : null))
       .then((json) => {
         if (cancelled) return;
         const view = parseLeaseView(json);
-        if (!view) {
+        // 運営トークンで開いたのにプレビューと返らない応答は使わない（送信できる画面を出さない）
+        if (!view || (previewToken !== "" && !view.preview)) {
           setLoad({ kind: "unavailable" });
           return;
         }
@@ -236,14 +244,15 @@ export default function LeaseConsentForm({ bookingId, linkKey }: { bookingId: st
       })
       .catch(() => { if (!cancelled) setLoad({ kind: "unavailable" }); });
     return () => { cancelled = true; };
-  }, [base, bookingId, linkKey]);
+  }, [base, bookingId, linkKey, previewToken]);
 
   const view = load.kind === "ready" ? load.view : null;
   const purposes = useMemo(() => view?.purposes ?? [], [view]);
   const purposeOpt = purposes.find((p) => p.value === form.purposeCategory);
   const textRule = purposeTextRule(form.purposeCategory, form.purposeText, purposeOpt?.textRequired);
   const pending = pendingItems(form, lang, purposes);
-  const canSubmit = pending.length === 0 && !submitting && !photoBusy;
+  const preview = previewToken !== "" || view?.preview === true;
+  const canSubmit = !preview && pending.length === 0 && !submitting && !photoBusy;
 
   const set = <K extends keyof LeaseFormValues>(key: K, value: LeaseFormValues[K]) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -275,12 +284,12 @@ export default function LeaseConsentForm({ bookingId, linkKey }: { bookingId: st
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!view || !canSubmit) return;
+    if (!view || !canSubmit || preview || !queryRef.current) return;
     setSubmitting(true);
     setOutcome(null);
     setNetworkError(false);
     try {
-      const res = await fetch(leaseApiUrl(base, bookingId, keyRef.current), {
+      const res = await fetch(`${base}/api/public/lease?${queryRef.current}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "omit",
@@ -386,6 +395,17 @@ export default function LeaseConsentForm({ bookingId, linkKey }: { bookingId: st
           <p className="text-[14px] sm:text-[15px] leading-[1.9] text-white/70 max-w-xl">{t.lede}</p>
         </div>
       </header>
+
+      {view?.preview && (
+        <div className="bg-amber-100 border-b border-amber-300" role="status">
+          <div className="max-w-2xl mx-auto px-5 py-3 text-[13px] leading-[1.7] text-amber-900">
+            <p className="font-bold">{t.previewBanner}</p>
+            <p>
+              {t.previewStatus}: <span className="font-mono">{view.previewStatus || "—"}</span>
+            </p>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-2xl mx-auto px-5 py-10 pb-20">
         {load.kind === "loading" ? (
@@ -550,17 +570,17 @@ export default function LeaseConsentForm({ bookingId, linkKey }: { bookingId: st
             {/* 04 同意と送信 */}
             <section className={cardCls}>
               {sectionHead("04", t.sec4)}
-              <label className={`flex items-start gap-3 ${form.fullTextViewedAt ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}>
+              <label className={`flex items-start gap-3 ${form.fullTextViewedAt && !preview ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}>
                 <input
                   type="checkbox"
-                  checked={form.agree}
-                  disabled={!form.fullTextViewedAt}
+                  checked={form.agree && !preview}
+                  disabled={!form.fullTextViewedAt || preview}
                   onChange={(e) => set("agree", e.target.checked)}
                   className="mt-1 h-5 w-5 shrink-0 accent-switch-teal"
                 />
                 <span className="text-[14px] leading-[1.8] text-switch-charcoal">{t.agree}</span>
               </label>
-              {!form.fullTextViewedAt && <p className={hintCls}>{t.agreeHint}</p>}
+              {!form.fullTextViewedAt && !preview && <p className={hintCls}>{t.agreeHint}</p>}
 
               {outcome && (
                 <div className="mt-5 rounded-switch-md border border-danger-border bg-danger-bg px-4 py-3 text-[13px] leading-[1.8] text-danger" role="alert">
@@ -581,7 +601,9 @@ export default function LeaseConsentForm({ bookingId, linkKey }: { bookingId: st
               >
                 {submitting ? t.submitting : t.submit}
               </button>
-              {pending.length > 0 && (
+              {preview ? (
+                <p className="mt-3 text-[12px] leading-[1.8] text-switch-gray-mid" aria-live="polite">{t.previewNoSubmit}</p>
+              ) : pending.length > 0 && (
                 <div className="mt-3 text-[12px] leading-[1.8] text-switch-gray-mid" aria-live="polite">
                   <p>{t.pendingHead}</p>
                   <ul className="list-disc pl-5">{pending.map((p) => <li key={p}>{p}</li>)}</ul>
