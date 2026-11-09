@@ -22,6 +22,11 @@ export interface LeaseBooking {
   nights?: number;
   rentTotalJpy?: number;
   reservationId?: string;
+  /** 英語表示用（ops が取れたときだけ）。英語モードで日本語の値の代わりに出す */
+  propertyNameEn?: string;
+  propertyAddressEn?: string;
+  /** 見本（sample）の英語名だけ。実予約では来ない */
+  guestNameEn?: string;
 }
 
 export interface LeaseView {
@@ -172,6 +177,19 @@ export function pickLabel(opt: { value?: string; ja?: string; en?: string } | nu
   return (lang === "en" ? opt.en || opt.ja : opt.ja || opt.en) || opt.value || "";
 }
 
+/** 英語モードでは英語の欄（propertyNameEn 等）を優先し、無ければ日本語の値。日本語モードは日本語の値だけ */
+export function pickBookingField(
+  booking: LeaseBooking | null | undefined,
+  field: "propertyName" | "propertyAddress" | "guestName",
+  lang: LeaseLang,
+): string {
+  if (!booking) return "";
+  const ja = (booking[field] || "").trim();
+  if (lang !== "en") return ja;
+  const en = (booking[`${field}En` as const] || "").trim();
+  return en || ja;
+}
+
 export function formatYen(n: unknown): string {
   if (typeof n !== "number" || !Number.isFinite(n) || n <= 0) return "";
   return `¥${Math.round(n).toLocaleString("en-US")}`;
@@ -268,6 +286,9 @@ export function parseLeaseView(json: unknown): LeaseView | null {
     nights: typeof b.nights === "number" && b.nights > 0 ? b.nights : undefined,
     rentTotalJpy: typeof b.rentTotalJpy === "number" && b.rentTotalJpy > 0 ? b.rentTotalJpy : undefined,
     reservationId: asStr(b.reservationId) || undefined,
+    propertyNameEn: asStr(b.propertyNameEn) || undefined,
+    propertyAddressEn: asStr(b.propertyAddressEn) || undefined,
+    guestNameEn: asStr(b.guestNameEn) || undefined,
   };
   const c = (j.contract && typeof j.contract === "object" ? j.contract : null) as Record<string, unknown> | null;
   const contract = c && asStr(c.ja) ? { ja: asStr(c.ja), en: asStr(c.en) } : null;

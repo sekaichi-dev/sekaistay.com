@@ -11,9 +11,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { compressImage, readIntoMemory } from "@/components/guest-register/photo-upload";
+import StaffPreviewBanner from "@/components/StaffPreviewBanner";
 import {
   LEASE_FIELD_MAX, LEASE_ID_IMAGE_MAX_BYTES, classifySubmitResponse, dataUrlBytes, fieldLabel, formatJst, formatYen, formatYmd,
-  isImageDataUrl, leaseApiQuery, opsLeaseApiBase, parseLeaseView, pendingItems, pickLabel, purposeTextRule,
+  isImageDataUrl, leaseApiQuery, opsLeaseApiBase, parseLeaseView, pendingItems, pickBookingField, pickLabel, purposeTextRule,
   type LeaseFormValues, type LeaseLang, type LeaseSubmitOutcome, type LeaseView,
 } from "@/lib/lease-consent";
 
@@ -97,8 +98,8 @@ const T = {
   },
   en: {
     eyebrow: "MONTHLY STAY AGREEMENT",
-    title: "Fixed-term Building Lease Agreement",
-    lede: "Bookings of 30 nights or more are not accommodation but require a fixed-term (temporary use) building lease agreement under Article 40 of the Act on Land and Building Leases. Please review the agreement and submit your purpose of use, your details and a photo of your ID.",
+    title: "Temporary-Use Building Lease Agreement",
+    lede: "Bookings of 30 nights or more are not accommodation but require a temporary-use building lease agreement under Article 40 of the Act on Land and Building Leases. Please review the agreement and submit your purpose of use, your details and a photo of your ID.",
     loading: "Loading…",
     sec1: "Your booking and key terms",
     sec2: "Purpose of use",
@@ -142,7 +143,7 @@ const T = {
     idPhotoNote: "Your ID photo is used only to conclude the agreement and verify your identity, and is deleted 90 days after you move out.",
     idPhotoUnreadable: "We couldn't read this photo. Please choose a JPEG or PNG photo (on iPhone, taking it with the camera works best).",
     idPhotoTooLarge: "This photo is too large. Please retake it or choose another photo.",
-    agree: "I have read the full agreement, agree to its terms and conclude the fixed-term building lease agreement.",
+    agree: "I have read the full agreement, agree to its terms and conclude the temporary-use building lease agreement.",
     agreeHint: "Please open the full agreement in section 01 first.",
     submit: "Agree and submit",
     submitting: "Submitting…",
@@ -236,7 +237,8 @@ export default function LeaseConsentForm({ bookingId, linkKey, previewToken = ""
         }
         setLang(view.lang);
         setFullTab(view.lang);
-        if (view.booking.guestName) setForm((f) => (f.fullName ? f : { ...f, fullName: view.booking.guestName || "" }));
+        const initialName = pickBookingField(view.booking, "guestName", view.lang);
+        if (initialName) setForm((f) => (f.fullName ? f : { ...f, fullName: initialName }));
         if (view.state === "submitted" || view.state === "agreed") {
           setDone({ receiptHtml: view.receiptHtml, submittedAt: "", submittedAtJst: "", agreed: view.state === "agreed" });
         }
@@ -373,10 +375,10 @@ export default function LeaseConsentForm({ bookingId, linkKey, previewToken = ""
   const b = view?.booking;
   const bookingRows: [string, string][] = b
     ? ([
-        [t.property, b.propertyName || ""],
-        [t.address, b.propertyAddress || ""],
+        [t.property, pickBookingField(b, "propertyName", lang)],
+        [t.address, pickBookingField(b, "propertyAddress", lang)],
         [t.period, b.arrival && b.departure ? `${formatYmd(b.arrival, lang)} 〜 ${formatYmd(b.departure, lang)}${b.nights ? `（${t.nights(b.nights)}）` : ""}` : ""],
-        [t.guestName, b.guestName || ""],
+        [t.guestName, pickBookingField(b, "guestName", lang)],
         [t.reservationId, b.reservationId || ""],
         [t.rent, formatYen(b.rentTotalJpy)],
       ] as [string, string][]).filter(([, v]) => v)
@@ -397,14 +399,10 @@ export default function LeaseConsentForm({ bookingId, linkKey, previewToken = ""
       </header>
 
       {view?.preview && (
-        <div className="bg-amber-100 border-b border-amber-300" role="status">
-          <div className="max-w-2xl mx-auto px-5 py-3 text-[13px] leading-[1.7] text-amber-900">
-            <p className="font-bold">{t.previewBanner}</p>
-            <p>
-              {t.previewStatus}: <span className="font-mono">{view.previewStatus || "—"}</span>
-            </p>
-          </div>
-        </div>
+        <StaffPreviewBanner
+          title={t.previewBanner}
+          detail={<>{t.previewStatus}: <span className="font-mono">{view.previewStatus || "—"}</span></>}
+        />
       )}
 
       <main className="max-w-2xl mx-auto px-5 py-10 pb-20">
