@@ -35,6 +35,10 @@ export interface LeaseView {
   purposes: LeaseOption[];
   idTypes: LeaseOption[];
   receiptHtml: string;
+  /** 運営プレビュー（運営トークン t で開いた）。送信はできない */
+  preview: boolean;
+  /** 運営プレビューのときの記録の状態（例 dry_planned）。表示だけに使う */
+  previewStatus: string;
 }
 
 export interface LeaseFormValues {
@@ -108,6 +112,32 @@ export function leaseEntryDecision(args: { bookingId: string; key: string | null
     };
   }
   return { location, set: null, clear: args.key == null ? null : { name: LEASE_KEY_COOKIE, path } };
+}
+
+/** 運営プレビューの見本（記録の無い画面確認用）の予約番号の代わり。運営トークンのときだけ受ける */
+export const LEASE_PREVIEW_SAMPLE_ID = "sample";
+
+/** 運営トークン（ops が A 権限で発行・p.<失効 UNIX 秒>.<予約番号|sample>.<HMAC 先頭 32 hex>）の形。正誤・失効は ops が見る */
+export function isLeasePreviewToken(s: string | null | undefined): s is string {
+  return typeof s === "string" && /^p\.\d{1,12}\.(\d{1,12}|sample)\.[0-9a-f]{32}$/.test(s);
+}
+
+/**
+ * ops の GET/POST に付ける問い合わせ文字列。運営トークンがあれば b と t（k は付けない）、無ければ b と k。
+ * 運営トークンは対象（予約番号か sample）が画面の予約番号と一致するときだけ。sample は運営トークンのときだけ。
+ * どちらも形が合わなければ null（画面は「利用できません」）。
+ */
+export function leaseApiQuery(args: { bookingId: string; key?: string | null; previewToken?: string | null }): string | null {
+  const id = args.bookingId || "";
+  if (args.previewToken != null && args.previewToken !== "") {
+    const t = args.previewToken;
+    if (!isLeasePreviewToken(t)) return null;
+    if (!(isLeaseBookingId(id) || id === LEASE_PREVIEW_SAMPLE_ID)) return null;
+    if (t.split(".")[2] !== id) return null;
+    return `b=${encodeURIComponent(id)}&t=${encodeURIComponent(t)}`;
+  }
+  if (!isLeaseBookingId(id) || !isLeaseLinkKey(args.key)) return null;
+  return `b=${encodeURIComponent(id)}&k=${encodeURIComponent(args.key)}`;
 }
 
 export function leaseApiUrl(base: string, bookingId: string, key: string): string {
@@ -254,6 +284,8 @@ export function parseLeaseView(json: unknown): LeaseView | null {
     purposes: asOptions(j.purposes),
     idTypes: asOptions(j.idTypes),
     receiptHtml: asStr(j.receiptHtml),
+    preview: j.preview === true,
+    previewStatus: j.preview === true ? asStr(j.previewStatus).slice(0, 40) : "",
   };
   // 受付中なのに送信に要るもの（指紋・版・本文・選択肢）が欠けていたら受け付けない（fail-closed）
   if (state === "open" && (!/^[0-9a-f]{64}$/.test(view.fingerprint) || !view.version || !contract || !view.purposes.length || !view.idTypes.length)) {

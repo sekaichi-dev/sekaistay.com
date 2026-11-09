@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 const {
   opsLeaseApiBase, purposeTextRule, isImageDataUrl, dataUrlBytes, pickLabel, formatYen, formatJst, formatYmd,
   pendingKeys, pendingItems, parseLeaseView, classifySubmitResponse, leaseApiUrl, isLeaseBookingId, DEFAULT_OPS_PUBLIC_API_BASE,
+  isLeasePreviewToken, leaseApiQuery,
 } = await import("./lease-consent.ts");
 
 const IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
@@ -187,4 +188,57 @@ test("leaseEntryDecision: 鍵が無ければ Cookie は触らない・予約番�
   assert.equal(bad.set, null);
   assert.equal(bad.clear, null);
   assert.equal(bad.location, "/lease/..%2Fx/consent");
+});
+
+const SIG = "1c".repeat(16); // 形だけの署名
+const LINK_KEY = "2d".repeat(16); // 形だけの鍵
+
+test("isLeasePreviewToken: p.<失効>.<予約番号|sample>.<32 hex> だけ", () => {
+  assert.equal(isLeasePreviewToken(`p.1762700000.123.${SIG}`), true);
+  assert.equal(isLeasePreviewToken(`p.1762700000.sample.${SIG}`), true);
+  assert.equal(isLeasePreviewToken(`p.1762700000.Sample.${SIG}`), false);
+  assert.equal(isLeasePreviewToken(`p.1762700000.12a.${SIG}`), false);
+  assert.equal(isLeasePreviewToken(`p.x.123.${SIG}`), false);
+  assert.equal(isLeasePreviewToken(`p.1762700000.123.${SIG.toUpperCase()}`), false);
+  assert.equal(isLeasePreviewToken(`p.1762700000.123.${SIG}0`), false);
+  assert.equal(isLeasePreviewToken(`q.1762700000.123.${SIG}`), false);
+  assert.equal(isLeasePreviewToken(SIG), false);
+  assert.equal(isLeasePreviewToken(null), false);
+  assert.equal(isLeasePreviewToken(undefined), false);
+});
+
+test("leaseApiQuery: 運営トークンがあれば b と t（k は付けない）", () => {
+  const t = `p.1762700000.123.${SIG}`;
+  assert.equal(leaseApiQuery({ bookingId: "123", previewToken: t }), `b=123&t=${t}`);
+  assert.equal(leaseApiQuery({ bookingId: "123", key: LINK_KEY, previewToken: t }), `b=123&t=${t}`);
+  const s = `p.1762700000.sample.${SIG}`;
+  assert.equal(leaseApiQuery({ bookingId: "sample", previewToken: s }), `b=sample&t=${s}`);
+});
+
+test("leaseApiQuery: 運営トークンの形違い・対象違いは null（鍵へは落とさない）", () => {
+  assert.equal(leaseApiQuery({ bookingId: "123", key: LINK_KEY, previewToken: "bad" }), null);
+  assert.equal(leaseApiQuery({ bookingId: "124", previewToken: `p.1762700000.123.${SIG}` }), null);
+  assert.equal(leaseApiQuery({ bookingId: "sample", previewToken: `p.1762700000.123.${SIG}` }), null);
+  assert.equal(leaseApiQuery({ bookingId: "abc", previewToken: `p.1762700000.sample.${SIG}` }), null);
+});
+
+test("leaseApiQuery: 運営トークンが無ければ従来どおり b と k（sample は不可）", () => {
+  assert.equal(leaseApiQuery({ bookingId: "123", key: LINK_KEY }), `b=123&k=${LINK_KEY}`);
+  assert.equal(leaseApiQuery({ bookingId: "123", key: LINK_KEY, previewToken: "" }), `b=123&k=${LINK_KEY}`);
+  assert.equal(leaseApiQuery({ bookingId: "sample", key: LINK_KEY }), null);
+  assert.equal(leaseApiQuery({ bookingId: "123", key: "" }), null);
+  assert.equal(leaseApiQuery({ bookingId: "123" }), null);
+});
+
+test("parseLeaseView: preview / previewStatus は preview: true のときだけ", () => {
+  const p = parseLeaseView(view({ preview: true, previewStatus: "dry_planned" }));
+  assert.ok(p);
+  assert.equal(p.preview, true);
+  assert.equal(p.previewStatus, "dry_planned");
+  const n = parseLeaseView(view({ previewStatus: "dry_planned" }));
+  assert.ok(n);
+  assert.equal(n.preview, false);
+  assert.equal(n.previewStatus, "");
+  assert.equal(parseLeaseView(view({ preview: "true" }))?.preview, false);
+  assert.equal(parseLeaseView(view({ preview: true, previewStatus: "x".repeat(100) }))?.previewStatus.length, 40);
 });
