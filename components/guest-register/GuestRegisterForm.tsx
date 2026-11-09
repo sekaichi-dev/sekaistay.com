@@ -18,6 +18,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FREQUENT_NATIONALITIES, OTHER_NATIONALITIES, FALLBACK_NATIONALITIES } from "@/lib/nationalities";
 import { compressImage, readIntoMemory, reportFailure, uploadPhoto } from "./photo-upload";
+import StaffPreviewBanner from "@/components/StaffPreviewBanner";
+import { isStaffPreview } from "@/lib/staff-preview";
 
 const MAX_GUESTS = 8;
 
@@ -131,6 +133,9 @@ const T = {
     privacy: "プライバシーポリシー",
     submit: "登録する",
     submitting: "送信中…",
+    previewBanner: "運営プレビュー — ゲストに見える画面です。送信はできません。",
+    previewNoSubmit: "運営プレビューのため送信できません",
+    previewNoPhoto: "運営プレビューのため写真は選べません",
     successTitle: "ご登録ありがとうございました",
     successBody: "宿泊者名簿への登録が完了しました。当日のチェックインをお待ちしております。",
     receiptId: "受付ID",
@@ -221,6 +226,9 @@ const T = {
     privacy: "Privacy Policy",
     submit: "Register",
     submitting: "Submitting…",
+    previewBanner: "Staff preview — this is the page the guest sees. Submitting is disabled.",
+    previewNoSubmit: "Submitting is disabled in the staff preview.",
+    previewNoPhoto: "Photos cannot be selected in the staff preview.",
     successTitle: "Thank you!",
     successBody: "Your registration is complete. We look forward to welcoming you.",
     receiptId: "Receipt ID",
@@ -268,11 +276,14 @@ export default function GuestRegisterForm() {
   const [photoBusy, setPhotoBusy] = useState<string | null>(null);
   // 写真欄ごとの失敗理由。ページ末尾のエラー欄はスマホだと写真ボタンから遠く、ゲストが気づけない（2026-10-08 に 5 回やり直し）
   const [photoErrors, setPhotoErrors] = useState<Record<string, string>>({});
+  // 運営プレビュー（?preview=1 のときだけ）。送信と写真の受付（Drive の受付中フォルダへ書く）を止める
+  const [preview, setPreview] = useState(false);
 
   const t = T[lang];
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    if (isStaffPreview(params)) setPreview(true);
     const q = params.get("lang");
     if (q === "en" || (q !== "ja" && !navigator.language.startsWith("ja"))) setLang("en");
     const p = params.get("p");
@@ -348,6 +359,7 @@ export default function GuestRegisterForm() {
   // 旅券写しは判読性重視の 1600px/450KB・顔写真は本人確認できれば足りるので 1200px/300KB。
   // 縮小したらその場で Drive へ置き、フォームにはファイル ID だけ持つ。
   async function onPhotoChange(kind: "passport" | "face", index: number, file: File | null) {
+    if (preview) return;
     if (!file) return;
     setError("");
     const slot = `${kind === "passport" ? "p" : "f"}${index}`;
@@ -415,6 +427,7 @@ export default function GuestRegisterForm() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (preview) return;
     setError("");
     const validationError = validate();
     if (validationError) {
@@ -514,6 +527,8 @@ export default function GuestRegisterForm() {
           <p className="text-[14px] sm:text-[15px] leading-[1.9] text-white/70 max-w-xl">{t.lede}</p>
         </div>
       </header>
+
+      {preview && <StaffPreviewBanner title={t.previewBanner} />}
 
       <main className="max-w-2xl mx-auto px-5 py-10 pb-20">
         {receiptId ? (
@@ -712,11 +727,12 @@ export default function GuestRegisterForm() {
                       <div>
                         <label className={labelCls}>{t.facePhotoLabel}{requiredMark}</label>
                         <p className="text-[11.5px] text-switch-gray-mid leading-relaxed mb-2">{t.facePhotoWhy}</p>
-                        <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.facePhotoFileId ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}`}>
+                        <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.facePhotoFileId ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}${preview ? " pointer-events-none opacity-60" : ""}`}>
                           <input
                             type="file"
                             accept="image/*"
                             className="hidden"
+                            disabled={preview}
                             onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
                             onChange={(e) => onPhotoChange("face", i, e.target.files?.[0] || null)}
                           />
@@ -736,6 +752,7 @@ export default function GuestRegisterForm() {
                           </span>
                         )}
                         <p className="mt-1.5 text-[12px] text-switch-gray-mid">{t.facePhotoHint}</p>
+                        {preview && <p className="mt-1 text-[12px] text-amber-900">{t.previewNoPhoto}</p>}
                       </div>
 
                       {/* パスポート欄は国外居住を選んだ時だけ表示（国内住所ありは法定不要）。表示時は国籍を問わず必須 */}
@@ -751,11 +768,12 @@ export default function GuestRegisterForm() {
                           </div>
                           <div>
                             <label className={labelCls}>{t.passportPhoto}{requiredMark}</label>
-                            <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.photoFileId ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}`}>
+                            <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.photoFileId ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}${preview ? " pointer-events-none opacity-60" : ""}`}>
                               <input
                                 type="file"
                                 accept="image/*"
                                 className="hidden"
+                                disabled={preview}
                                 onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
                                 onChange={(e) => onPhotoChange("passport", i, e.target.files?.[0] || null)}
                               />
@@ -775,6 +793,7 @@ export default function GuestRegisterForm() {
                               </span>
                             )}
                             <p className="mt-1.5 text-[12px] text-switch-gray-mid">{t.photoHint}</p>
+                            {preview && <p className="mt-1 text-[12px] text-amber-900">{t.previewNoPhoto}</p>}
                           </div>
                         </div>
                       </div>
@@ -847,11 +866,12 @@ export default function GuestRegisterForm() {
 
                 <button
                   type="submit"
-                  disabled={submitting || photoBusy !== null}
+                  disabled={preview || submitting || photoBusy !== null}
                   className="w-full rounded-switch-md bg-switch-teal hover:bg-switch-teal-deep disabled:bg-switch-stone-03 disabled:cursor-not-allowed py-4 text-[16px] font-bold text-white tracking-wide transition-colors active:scale-[0.99]"
                 >
                   {submitting ? t.submitting : t.submit}
                 </button>
+                {preview && <p className="text-[12px] leading-[1.8] text-amber-900" aria-live="polite">{t.previewNoSubmit}</p>}
                 <p className="text-[13px] text-switch-gray-mid leading-[1.8]">{t.legalFoot}</p>
               </div>
             </section>

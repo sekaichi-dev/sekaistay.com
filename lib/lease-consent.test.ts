@@ -242,3 +242,37 @@ test("parseLeaseView: preview / previewStatus は preview: true のときだけ"
   assert.equal(parseLeaseView(view({ preview: "true" }))?.preview, false);
   assert.equal(parseLeaseView(view({ preview: true, previewStatus: "x".repeat(100) }))?.previewStatus.length, 40);
 });
+
+test("pickBookingField: 英語モードは英語の欄を優先し、無ければ日本語の値", async () => {
+  const { pickBookingField } = await import("./lease-consent.ts");
+  const b = {
+    bookingId: 0, guestName: "山田 太郎", propertyName: "オグラビル四谷 203（マンスリー）", propertyAddress: "東京都新宿区四谷三栄町15-6 203",
+    guestNameEn: "Taro Yamada", propertyNameEn: "Ogura Bldg Yotsuya 203 (Monthly)",
+    propertyAddressEn: "Ogura Bldg 203, 15-6 Yotsuya Saneicho, Shinjuku-ku, Tokyo 160-0008",
+  };
+  assert.equal(pickBookingField(b, "propertyName", "en"), "Ogura Bldg Yotsuya 203 (Monthly)");
+  assert.equal(pickBookingField(b, "propertyAddress", "en"), "Ogura Bldg 203, 15-6 Yotsuya Saneicho, Shinjuku-ku, Tokyo 160-0008");
+  assert.equal(pickBookingField(b, "guestName", "en"), "Taro Yamada");
+  assert.equal(pickBookingField(b, "propertyName", "ja"), "オグラビル四谷 203（マンスリー）");
+  assert.equal(pickBookingField(b, "guestName", "ja"), "山田 太郎");
+  const noEn = { bookingId: 1, guestName: "John Smith", propertyName: "203 マンスリー", propertyAddress: "東京都" , propertyNameEn: "  " };
+  assert.equal(pickBookingField(noEn, "propertyName", "en"), "203 マンスリー");
+  assert.equal(pickBookingField(noEn, "propertyAddress", "en"), "東京都");
+  assert.equal(pickBookingField(noEn, "guestName", "en"), "John Smith");
+  assert.equal(pickBookingField({ bookingId: 2 }, "propertyName", "en"), "");
+  assert.equal(pickBookingField(null, "guestName", "ja"), "");
+});
+
+test("parseLeaseView: 英語の欄を読み、無い・文字列でないものは省く", () => {
+  const v = parseLeaseView(view({
+    booking: { bookingId: 123, guestName: "山田 太郎", propertyName: "203", propertyNameEn: "Ogura 203 (Monthly)", propertyAddressEn: "15-6 Yotsuya", guestNameEn: "Taro Yamada" },
+  }));
+  assert.ok(v);
+  assert.equal(v.booking.propertyNameEn, "Ogura 203 (Monthly)");
+  assert.equal(v.booking.propertyAddressEn, "15-6 Yotsuya");
+  assert.equal(v.booking.guestNameEn, "Taro Yamada");
+  const w = parseLeaseView(view({ booking: { bookingId: 123, propertyName: "203", propertyNameEn: 5 } }));
+  assert.ok(w);
+  assert.equal(w.booking.propertyNameEn, undefined);
+  assert.equal(w.booking.guestNameEn, undefined);
+});
