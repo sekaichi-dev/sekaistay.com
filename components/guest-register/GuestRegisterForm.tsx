@@ -728,23 +728,23 @@ export default function GuestRegisterForm() {
                     <input id="gr-checkin" type="date" value={checkin} onChange={(e) => setCheckin(e.target.value)} className={dateTimeCls} />
                   </div>
                   <div>
-                    <label htmlFor="gr-checkout" className={labelCls}>{t.checkout}{requiredMark}</label>
-                    <input id="gr-checkout" type="date" value={checkout} min={checkin || undefined} onChange={(e) => setCheckout(e.target.value)} className={dateTimeCls} />
-                  </div>
-                </div>
-                {nights > 0 && (
-                  <p className="text-[12px] text-switch-teal-deep font-semibold">{t.nights(nights)}</p>
-                )}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 items-end [&>*]:min-w-0">
-                  <div>
                     <label htmlFor="gr-checkin-time" className={labelCls}>{t.checkinTime}{kiosk ? requiredMark : <span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span>}</label>
                     <input id="gr-checkin-time" type="time" value={checkinTime} onChange={(e) => setCheckinTime(e.target.value)} className={dateTimeCls} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 items-end [&>*]:min-w-0">
+                  <div>
+                    <label htmlFor="gr-checkout" className={labelCls}>{t.checkout}{requiredMark}</label>
+                    <input id="gr-checkout" type="date" value={checkout} min={checkin || undefined} onChange={(e) => setCheckout(e.target.value)} className={dateTimeCls} />
                   </div>
                   <div>
                     <label htmlFor="gr-checkout-time" className={labelCls}>{t.checkoutTime}{kiosk ? requiredMark : <span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span>}</label>
                     <input id="gr-checkout-time" type="time" value={checkoutTime} onChange={(e) => setCheckoutTime(e.target.value)} className={dateTimeCls} />
                   </div>
                 </div>
+                {nights > 0 && (
+                  <p className="text-[12px] text-switch-teal-deep font-semibold">{t.nights(nights)}</p>
+                )}
               </div>
             </section>
 
