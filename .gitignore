@@ -19,3 +19,4 @@ tsconfig.tsbuildinfo
 
 # 本人確認 QR シートの出力先（scripts/checkin-qr.mjs）
 /tmp/checkin-qr/
+/tmp/guest-register-purge/

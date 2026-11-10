@@ -261,10 +261,10 @@ test("bookingRef: 数字の予約番号だけ受け取り、両タブの U 列�
     assert.equal(parseRegisterInput({ ...input(), bookingRef: bad }).input!.bookingRef, "", String(bad));
   }
   const m = buildMinpakuRows(ok.input! as never, property() as never, "G-1", [null], [null], "2026/09/20 10:00");
-  assert.equal(m[0].length, 21);
+  assert.equal(m[0].length, 23); // A〜U は従来どおり・V 撮影方法・W 入力端末を末尾に足した（2026-11-10）
   assert.equal(m[0][20], "93363867");
   const r = buildRyokanRows(ok.input! as never, property({ type: "旅館業" }) as never, "G-1", [null], [null], "2026/09/20 10:00");
-  assert.equal(r[0].length, 21);
+  assert.equal(r[0].length, 23);
   assert.equal(r[0][20], "93363867");
   assert.equal(r[0][18], "2026/09/20 10:00"); // S=受付日時 は動かさない（ops が列固定で読む）
 });
@@ -390,4 +390,58 @@ test("clientFailureNeedsAction: 両経路とも失敗・送信失敗は通知、
   for (const s of ["read", "compress", "compress-fallback", "upload-fallback", "geo"]) assert.equal(clientFailureNeedsAction(s), false, s);
   assert.equal(clientFailureNeedsAction("something-new"), true);
   assert.equal(clientFailureNeedsAction(""), true);
+});
+
+// ───────── 2026-11-10 共有端末: V 撮影方法・W 入力端末（画面の申告の記録・証明ではない）─────────
+const { captureCell, entryCell } = await import("./guest-register.ts");
+
+test("V・W 列: 既存の A〜U 列の並びは変えず、末尾に撮影方法と入力端末を足す", () => {
+  const raw = input({
+    propertyId: "T422", checkinTime: "15:00", checkoutTime: "10:00", bookingRef: "93363867", entry: "fixed-url",
+    guests: [guest({ photoFileId: "1xvIXWnVDmtT7PrPBXnxb5DUqIFvWa6jr", facePhotoFileId: "abc_DEF-123456",
+      photoMethod: "camera", photoAgeSec: 12, facePhotoMethod: "camera", facePhotoAgeSec: 5 })],
+  });
+  const parsed = parseRegisterInput({ ...raw, bookingRef: "93363867" }).input!;
+  const prop = property({ id: "T422", type: "旅館業" });
+  const r = buildRyokanRows(parsed as never, prop as never, "G-9", ["https://p"], ["https://f"], "2026/11/10 20:00");
+  // 旧来の列（ops は A6:U を列位置で読む）
+  assert.equal(r[0][0], "=ROW()-5");
+  assert.equal(r[0][1], "2026/07/15");
+  assert.equal(r[0][2], "John Smith");
+  assert.equal(r[0][15], "受付ID: G-9");
+  assert.equal(r[0][16], "テスト物件");
+  assert.equal(r[0][17], "https://p");
+  assert.equal(r[0][18], "2026/11/10 20:00");
+  assert.equal(r[0][19], "https://f");
+  assert.equal(r[0][20], "93363867");
+  assert.equal(r[0][21], "顔:カメラ起動(撮影から5秒) / 旅券:カメラ起動(撮影から12秒)");
+  assert.equal(r[0][22], "施設固定URL(p=T422)・共有端末モード");
+  const m = buildMinpakuRows(parsed as never, property({ id: "T422" }) as never, "G-9", [null], ["https://f"], "2026/11/10 20:00");
+  assert.equal(m[0][1], "G-9");
+  assert.equal(m[0][18], "2026/11/10 20:00");
+  assert.equal(m[0][19], "https://f");
+  assert.equal(m[0][20], "93363867");
+  assert.equal(m[0][21], "顔:カメラ起動(撮影から5秒)"); // 旅券の写しが無ければ顔だけ
+});
+
+test("V・W 列: 旧画面（申告なし）は空欄・不正値は申告なし扱い", () => {
+  const old = parseRegisterInput(input()).input!;
+  assert.equal(old.entry, "");
+  assert.equal(old.guests[0].photoMethod, "");
+  assert.equal(old.guests[0].facePhotoAgeSec, -1);
+  const rows = buildMinpakuRows(old as never, property() as never, "G-1", [null], [null], "x");
+  assert.equal(rows[0][21], "");
+  assert.equal(rows[0][22], "");
+  const bad = parseRegisterInput(input({ entry: "=HYPERLINK(1)", guests: [guest({ facePhotoMethod: "=1", facePhotoAgeSec: 1.5, photoMethod: "file", photoAgeSec: -3 })] })).input!;
+  assert.equal(bad.entry, "");
+  assert.equal(bad.guests[0].facePhotoMethod, "");
+  assert.equal(bad.guests[0].facePhotoAgeSec, -1);
+  assert.equal(captureCell(bad.guests[0], true), "顔:申告なし / 旅券:ファイル選択");
+});
+
+test("entryCell: 一覧から選んだ場合と共有端末モード以外の物件", () => {
+  assert.equal(entryCell("list", "351180"), "一覧から選択");
+  assert.equal(entryCell("list", "T422"), "一覧から選択・共有端末モード");
+  assert.equal(entryCell("fixed-url", "351180"), "施設固定URL(p=351180)");
+  assert.equal(entryCell("", "T422"), "");
 });
