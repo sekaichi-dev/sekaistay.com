@@ -39,7 +39,8 @@ const T = {
   ja: {
     eyebrow: "GUEST REGISTRATION",
     title: "宿泊者名簿のご登録",
-    lede: "日本の法令（旅館業法・住宅宿泊事業法）により、ご宿泊者全員の名簿登録が義務付けられています。チェックイン前のご登録にご協力ください。",
+    // 狭い画面で「義務付けられてい／ます」のように語の途中で折り返さないよう文節ごとに区切る（各文節は 1 行に収まる長さ）
+    lede: ["日本の法令", "（旅館業法・", "住宅宿泊事業法）", "により、", "ご宿泊者全員の", "名簿登録が", "義務付けられています。", "チェックイン前の", "ご登録に", "ご協力ください。"],
     sec1: "ご宿泊情報",
     property: "ご宿泊施設",
     propertyPlaceholder: "施設を選択してください",
@@ -145,7 +146,7 @@ const T = {
   en: {
     eyebrow: "GUEST REGISTRATION",
     title: "Guest Registration",
-    lede: "Japanese law (Hotel Business Act / Private Lodging Business Act) requires all guests to be registered before check-in. Please complete this form for every member of your party.",
+    lede: ["Japanese law (Hotel Business Act / Private Lodging Business Act) requires all guests to be registered before check-in. Please complete this form for every member of your party."],
     sec1: "Your Stay",
     property: "Property",
     propertyPlaceholder: "Select your property",
@@ -251,6 +252,8 @@ const T = {
 } as const;
 
 const inputCls = "w-full rounded-switch-md border border-switch-stone-border bg-white px-3.5 py-2.5 text-[15px] text-switch-charcoal placeholder:text-switch-stone-text-disabled focus:outline-none focus:border-switch-teal focus:ring-2 focus:ring-switch-teal/20 transition-colors";
+// 日付・時刻: iOS WebKit の date/time 入力は固有の最小幅を持ち列からはみ出すので min-w-0 で列幅に従わせ、空欄で高さが潰れないよう最低高を持たせる
+const dateTimeCls = `${inputCls} block min-w-0 max-w-full min-h-[3rem]`;
 const labelCls = "block text-[13px] font-semibold text-switch-charcoal mb-1.5";
 // クリエイティブガイド準拠: アクセントはティール（オレンジ不使用・2026-07-24）
 const requiredMark = <span className="ml-1 text-[10px] font-bold text-switch-teal align-middle">*</span>;
@@ -626,7 +629,7 @@ export default function GuestRegisterForm() {
           key={l}
           type="button"
           onClick={() => setLang(l)}
-          className={`w-16 py-1.5 text-center transition-colors ${lang === l ? "bg-white text-switch-charcoal" : "text-white/70 hover:text-white"}`}
+          className={`w-16 min-h-[44px] text-center transition-colors ${lang === l ? "bg-white text-switch-charcoal" : "text-white/70 hover:text-white"}`}
         >
           {l === "ja" ? "日本語" : "EN"}
         </button>
@@ -654,7 +657,7 @@ export default function GuestRegisterForm() {
         <div className="max-w-2xl mx-auto px-5 pb-10 pt-2">
           <p className="font-mono-editorial text-[10px] tracking-ticker text-switch-teal-bright mb-3">{t.eyebrow}</p>
           <h1 className="text-[26px] sm:text-[32px] font-bold text-white tracking-tight leading-snug mb-3">{t.title}</h1>
-          <p className="text-[14px] sm:text-[15px] leading-[1.9] text-white/70 max-w-xl">{t.lede}</p>
+          <p className="text-[14px] sm:text-[15px] leading-[1.9] text-white/70 max-w-xl">{t.lede.map((part, k) => <span key={k} className="inline-block">{part}</span>)}</p>
         </div>
       </header>
 
@@ -718,27 +721,27 @@ export default function GuestRegisterForm() {
                   </select>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
                   <div>
                     <label htmlFor="gr-checkin" className={labelCls}>{t.checkin}{requiredMark}</label>
-                    <input id="gr-checkin" type="date" value={checkin} onChange={(e) => setCheckin(e.target.value)} className={inputCls} />
+                    <input id="gr-checkin" type="date" value={checkin} onChange={(e) => setCheckin(e.target.value)} className={dateTimeCls} />
                   </div>
                   <div>
                     <label htmlFor="gr-checkout" className={labelCls}>{t.checkout}{requiredMark}</label>
-                    <input id="gr-checkout" type="date" value={checkout} min={checkin || undefined} onChange={(e) => setCheckout(e.target.value)} className={inputCls} />
+                    <input id="gr-checkout" type="date" value={checkout} min={checkin || undefined} onChange={(e) => setCheckout(e.target.value)} className={dateTimeCls} />
                   </div>
                 </div>
                 {nights > 0 && (
                   <p className="text-[12px] text-switch-teal-deep font-semibold">{t.nights(nights)}</p>
                 )}
-                <div className="grid grid-cols-2 gap-4 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end [&>*]:min-w-0">
                   <div>
                     <label htmlFor="gr-checkin-time" className={labelCls}>{t.checkinTime}{kiosk ? requiredMark : <span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span>}</label>
-                    <input id="gr-checkin-time" type="time" value={checkinTime} onChange={(e) => setCheckinTime(e.target.value)} className={inputCls} />
+                    <input id="gr-checkin-time" type="time" value={checkinTime} onChange={(e) => setCheckinTime(e.target.value)} className={dateTimeCls} />
                   </div>
                   <div>
                     <label htmlFor="gr-checkout-time" className={labelCls}>{t.checkoutTime}{kiosk ? requiredMark : <span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span>}</label>
-                    <input id="gr-checkout-time" type="time" value={checkoutTime} onChange={(e) => setCheckoutTime(e.target.value)} className={inputCls} />
+                    <input id="gr-checkout-time" type="time" value={checkoutTime} onChange={(e) => setCheckoutTime(e.target.value)} className={dateTimeCls} />
                   </div>
                 </div>
               </div>
@@ -879,16 +882,16 @@ export default function GuestRegisterForm() {
                         </label>
                         {photoErrors[`f${i}`] && <p className="mt-2 text-[12px] text-danger leading-relaxed" role="alert">{photoErrors[`f${i}`]}</p>}
                         {g.facePhotoFileId && (
-                          <span className="ml-3 text-[12px] text-switch-gray-mid">
-                            <span className="break-all">{g.facePhotoName}</span>
+                          <div className="mt-1 flex items-center gap-1 text-[12px] text-switch-gray-mid">
+                            <span className="min-w-0 break-all">{g.facePhotoName}</span>
                             <button
                               type="button"
                               onClick={() => updateGuest(i, { facePhotoFileId: "", facePhotoName: "", facePhotoMethod: "", facePhotoAgeSec: -1 })}
-                              className="ml-2 underline underline-offset-2 hover:text-danger"
+                              className="shrink-0 min-h-[44px] px-2 underline underline-offset-2 hover:text-danger"
                             >
                               {t.photoRemove}
                             </button>
-                          </span>
+                          </div>
                         )}
                         <p className="mt-1.5 text-[12px] text-switch-gray-mid">{t.facePhotoHint}</p>
                         {preview && <p className="mt-1 text-[12px] text-amber-900">{t.previewNoPhoto}</p>}
@@ -921,16 +924,16 @@ export default function GuestRegisterForm() {
                             </label>
                             {photoErrors[`p${i}`] && <p className="mt-2 text-[12px] text-danger leading-relaxed" role="alert">{photoErrors[`p${i}`]}</p>}
                             {g.photoFileId && (
-                              <span className="ml-3 text-[12px] text-switch-gray-mid">
-                                <span className="break-all">{g.photoName}</span>
+                              <div className="mt-1 flex items-center gap-1 text-[12px] text-switch-gray-mid">
+                                <span className="min-w-0 break-all">{g.photoName}</span>
                                 <button
                                   type="button"
                                   onClick={() => updateGuest(i, { photoFileId: "", photoName: "", photoMethod: "", photoAgeSec: -1 })}
-                                  className="ml-2 underline underline-offset-2 hover:text-danger"
+                                  className="shrink-0 min-h-[44px] px-2 underline underline-offset-2 hover:text-danger"
                                 >
                                   {t.photoRemove}
                                 </button>
-                              </span>
+                              </div>
                             )}
                             <p className="mt-1.5 text-[12px] text-switch-gray-mid">{t.photoHint}</p>
                             {preview && <p className="mt-1 text-[12px] text-amber-900">{t.previewNoPhoto}</p>}
@@ -941,7 +944,7 @@ export default function GuestRegisterForm() {
 
                       {property?.type === "旅館業" && (
                         <details open={kiosk || undefined} className="rounded-switch-md border border-switch-gray-pale bg-switch-stone-01 px-4 py-3">
-                          <summary className="text-[13px] font-semibold text-switch-gray-dark cursor-pointer select-none">{kiosk ? t.kioskOptionalTitle : t.optionalTitle}</summary>
+                          <summary className="-my-3 py-3 text-[13px] font-semibold text-switch-gray-dark cursor-pointer select-none">{kiosk ? t.kioskOptionalTitle : t.optionalTitle}</summary>
                           <div className="grid sm:grid-cols-2 gap-4 pt-4">
                             <div>
                               <label className={labelCls}>{t.gender}</label>
@@ -994,7 +997,7 @@ export default function GuestRegisterForm() {
                     className="mt-0.5 accent-[#167B81] shrink-0" />
                   <span className="text-[13px] text-switch-charcoal/85 leading-relaxed">
                     {t.consent}{" "}
-                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-switch-teal-deep underline underline-offset-2">{t.privacy}</a>
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="inline-block text-switch-teal-deep underline underline-offset-2">{t.privacy}</a>
                   </span>
                 </label>
 
