@@ -82,13 +82,16 @@ const FOLDER = "mimeType = 'application/vnd.google-apps.folder'";
 
 async function findDriveTargets(row: MatchedRow) {
   const targets: { id: string; name: string; kind: string }[] = [];
-  let parent = DRIVE_FOLDER_ID;
+  // 同時作成で同名フォルダが重複していることがあるので、各段の同名候補をすべて辿る
+  let parents = [DRIVE_FOLDER_ID];
   for (const name of receiptFolderPath(row)) {
-    const hit = (await listChildren(parent, `${FOLDER} and name = '${q(name)}'`))[0];
-    if (!hit) { parent = ""; break; }
-    parent = hit.id;
+    const next: string[] = [];
+    for (const parent of parents) {
+      for (const f of await listChildren(parent, `${FOLDER} and name = '${q(name)}'`)) next.push(f.id);
+    }
+    parents = next;
   }
-  if (parent) {
+  for (const parent of parents) {
     for (const f of await listChildren(parent, FOLDER)) {
       if (isReceiptFolderName(f.name, receiptId)) targets.push({ id: f.id, name: f.name, kind: "写真フォルダ" });
     }
@@ -154,8 +157,8 @@ async function run() {
   const rows = await findRows();
   console.log(`受付 ID: ${receiptId}（${commit ? "実行" : "dry-run・何も変えません"}）`);
   const pending = readPlan();
-  if (rows.length === 0 && pending?.rowsDeleted) {
-    // 前回、行は消したが Drive の途中で止まった
+  if (rows.length === 0 && pending) {
+    // 前回、行は消した（削除の応答を受け取れなかった場合も含む）が Drive の途中で止まった
     for (const t of pending.drive) console.log(`  Drive（前回の残り）: ${t.kind}「${t.name}」(${t.id})`);
     if (!commit) { console.log("dry-run のため変更していません。--commit で続きを片付けます。"); return; }
     await trashDrive(pending);
