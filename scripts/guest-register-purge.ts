@@ -7,7 +7,12 @@
 // - 行は削除（空行を残すと以降の追記の位置がずれるため）。旅館業用の No. は =ROW()-5 なので詰め直される
 // - Drive はゴミ箱へ移すだけ（共有ドライブのゴミ箱から 30 日は戻せる）
 // - 受付中フォルダの原本は日次の掃除（/api/guest-register/cleanup）が 24 時間後に消すので触らない
+// - 実行中は排他を取る（同時に 2 つ走らせない）。Drive の途中で止まったら同じコマンドの再実行で続きを片付ける
+//   （対象は tmp/guest-register-purge/<受付ID>.json に書き残し、終わったら消す）
 // - 本番の名簿・本物のゲストの行に使わないこと（テスト送信の後片付け専用）
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import {
   FIRST_DATA_ROW, RECEIPT_ID_RE, isReceiptFolderName, isReceiptPhotoName, matchReceiptRows, planProblem, receiptFolderPath,
   type MatchedRow, type RegisterTab,
@@ -95,15 +100,73 @@ async function findDriveTargets(row: MatchedRow) {
   return targets;
 }
 
+// 全実行で共有する排他（行番号を読んでから消し終えるまで持つ。並行実行で別の行を消さないため）
+const LOCK_DIR = path.join(os.tmpdir(), "guest-register-purge.lock");
+function acquireLock(): void {
+  try {
+    fs.mkdirSync(LOCK_DIR);
+  } catch {
+    const age = Math.round((Date.now() - fs.statSync(LOCK_DIR).mtimeMs) / 1000);
+    console.error(`中止: 別の後片付けが実行中です（${age} 秒前から）。終わってから実行してください。残骸なら ${LOCK_DIR} を消してください。`);
+    process.exit(1);
+  }
+}
+function releaseLock(): void {
+  fs.rmSync(LOCK_DIR, { recursive: true, force: true });
+}
+
+// 変更前に Drive の対象を書き残す（行を消した後に Drive だけ失敗しても、再実行で続きから片付けられるように）
+const PLAN_DIR = path.resolve(process.cwd(), "tmp/guest-register-purge");
+const planPath = path.join(PLAN_DIR, `${receiptId}.json`);
+type DriveTarget = { id: string; name: string; kind: string };
+function readPlan(): { rowsDeleted: boolean; drive: DriveTarget[] } | null {
+  try { return JSON.parse(fs.readFileSync(planPath, "utf8")); } catch { return null; }
+}
+function writePlan(plan: { rowsDeleted: boolean; drive: DriveTarget[] }): void {
+  fs.mkdirSync(PLAN_DIR, { recursive: true });
+  fs.writeFileSync(planPath, JSON.stringify(plan, null, 2));
+}
+
+async function trashDrive(plan: { rowsDeleted: boolean; drive: DriveTarget[] }): Promise<void> {
+  while (plan.drive.length > 0) {
+    const t = plan.drive[0];
+    await getJson(`https://www.googleapis.com/drive/v3/files/${t.id}?supportsAllDrives=true&fields=id`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ trashed: true }),
+    });
+    console.log(`Drive をゴミ箱へ移しました: ${t.name}`);
+    plan.drive.shift();
+    writePlan(plan);
+  }
+  fs.rmSync(planPath, { force: true });
+}
+
 async function main() {
   auth = { Authorization: `Bearer ${await token()}` };
+  if (commit) acquireLock();
+  try {
+    await run();
+  } finally {
+    if (commit) releaseLock();
+  }
+}
+
+async function run() {
   const rows = await findRows();
-  const problem = planProblem(rows);
   console.log(`受付 ID: ${receiptId}（${commit ? "実行" : "dry-run・何も変えません"}）`);
+  const pending = readPlan();
+  if (rows.length === 0 && pending?.rowsDeleted) {
+    // 前回、行は消したが Drive の途中で止まった
+    for (const t of pending.drive) console.log(`  Drive（前回の残り）: ${t.kind}「${t.name}」(${t.id})`);
+    if (!commit) { console.log("dry-run のため変更していません。--commit で続きを片付けます。"); return; }
+    await trashDrive(pending);
+    return;
+  }
+  const problem = planProblem(rows);
   for (const r of rows) console.log(`  行: ${r.tab}!${r.sheetRow}  ${r.checkin}  ${r.propertyName}  ${r.guestName}`);
   if (problem) {
     console.error(`中止: ${problem}`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   const driveTargets = await findDriveTargets(rows[0]);
   for (const t of driveTargets) console.log(`  Drive: ${t.kind}「${t.name}」(${t.id})`);
@@ -114,17 +177,20 @@ async function main() {
     return;
   }
 
-  // 消す直前に読み直し、行の位置が変わっていないことを確かめる（並行して追記・削除があったら止める）
-  const again = await findRows();
-  if (JSON.stringify(again) !== JSON.stringify(rows)) {
-    console.error("中止: 確認中に名簿の行が動きました。もう一度 dry-run から実行してください。");
-    process.exit(1);
-  }
   const meta = await getJson<{ sheets: { properties: { sheetId: number; title: string } }[] }>(
     `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties(sheetId,title)`,
   );
   const sheetId = meta.sheets.find((s) => s.properties.title === rows[0].tab)?.properties.sheetId;
   if (sheetId === undefined) throw new Error(`タブ ${rows[0].tab} が見つかりません`);
+  // 消す直前に読み直し、行の位置が変わっていないことを確かめる（フォームの追記は末尾にしか入らないが念のため）
+  const again = await findRows();
+  if (JSON.stringify(again) !== JSON.stringify(rows)) {
+    console.error("中止: 確認中に名簿の行が動きました。もう一度 dry-run から実行してください。");
+    process.exitCode = 1;
+    return;
+  }
+  const plan = { rowsDeleted: false, drive: driveTargets };
+  writePlan(plan);
   // 下の行から消す（上から消すと後ろの行番号がずれる）
   const requests = [...rows].sort((a, b) => b.sheetRow - a.sheetRow).map((r) => ({
     deleteDimension: { range: { sheetId, dimension: "ROWS", startIndex: r.sheetRow - 1, endIndex: r.sheetRow } },
@@ -132,13 +198,10 @@ async function main() {
   await getJson(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requests }),
   });
+  plan.rowsDeleted = true;
+  writePlan(plan);
   console.log(`名簿の行を ${rows.length} 行削除しました。`);
-  for (const t of driveTargets) {
-    await getJson(`https://www.googleapis.com/drive/v3/files/${t.id}?supportsAllDrives=true&fields=id`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ trashed: true }),
-    });
-    console.log(`Drive をゴミ箱へ移しました: ${t.name}`);
-  }
+  await trashDrive(plan);
 }
 
 main().catch((e) => {

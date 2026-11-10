@@ -552,7 +552,16 @@ export default function GuestRegisterForm() {
   clearAllRef.current = clearAll;
   useEffect(() => {
     if (!idleArmed) { setIdleWarn(0); return; }
-    const mark = () => { lastActivityRef.current = Date.now(); pickerOpenedAtRef.current = 0; };
+    const mark = () => {
+      // スリープ等でタイマーが止まっていた間に期限が切れていたら、操作時刻を更新する前に空へ戻す
+      // （復帰直後の focus やタップで前の人の入力が残らないように）
+      const { phase } = kioskIdleTick(Date.now(), {
+        lastActivity: lastActivityRef.current, pickerOpenedAt: pickerOpenedAtRef.current, busy: busyRef.current,
+      });
+      if (phase.phase === "expired") { clearAllRef.current(); window.scrollTo({ top: 0 }); return; }
+      lastActivityRef.current = Date.now();
+      pickerOpenedAtRef.current = 0;
+    };
     // cancel = カメラを閉じた（対応ブラウザのみ）・focus = カメラから画面に戻った。どちらもカメラを開いた状態を解く
     const events = ["pointerdown", "touchstart", "keydown", "input", "change", "scroll", "wheel", "cancel", "focus"] as const;
     for (const ev of events) window.addEventListener(ev, mark, { capture: true, passive: true });
