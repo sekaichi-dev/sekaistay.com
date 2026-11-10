@@ -15,12 +15,13 @@
  * 20MB までそのまま置く。
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FREQUENT_NATIONALITIES, OTHER_NATIONALITIES, FALLBACK_NATIONALITIES } from "@/lib/nationalities";
 import { compressImage, readIntoMemory, reportFailure, uploadPhoto } from "./photo-upload";
 import StaffPreviewBanner from "@/components/StaffPreviewBanner";
 import { isStaffPreview } from "@/lib/staff-preview";
 import { isKioskProperty, resolveLockedProperty } from "@/lib/guest-register-kiosk";
+import { blankRegisterFields, emptyGuest, hasEnteredData, kioskIdleTick, photoAgeSec, type GuestForm } from "@/lib/guest-register-form-state";
 
 const MAX_GUESTS = 8;
 
@@ -33,36 +34,6 @@ interface PropertyOption {
   nameEn: string;
   type: PropertyType;
 }
-
-interface GuestForm {
-  name: string;
-  /** お子様カード（削除可）。API へは送らない表示用の区分。 */
-  isChild: boolean;
-  jaResident: boolean | null;
-  address: string;
-  sameAddress: boolean;
-  nationality: string;
-  occupation: string;
-  contact: string;
-  sameContact: boolean;
-  passportNo: string;
-  /** Drive 受付中フォルダに置いた写真のファイル ID（"" = 未添付） */
-  photoFileId: string;
-  photoName: string;
-  facePhotoFileId: string;
-  facePhotoName: string;
-  gender: string;
-  age: string;
-  prevStay: string;
-  nextDest: string;
-}
-
-const emptyGuest = (isChild = false): GuestForm => ({
-  name: "", isChild, jaResident: null, address: "", sameAddress: false, nationality: "",
-  occupation: "", contact: "", sameContact: false, passportNo: "",
-  photoFileId: "", photoName: "", facePhotoFileId: "", facePhotoName: "",
-  gender: "", age: "", prevStay: "", nextDest: "",
-});
 
 const T = {
   ja: {
@@ -119,6 +90,9 @@ const T = {
     errNextDest: (w: string) => `${w}: 行先地を入力してください`,
     kioskNext: "次の方の登録へ",
     kioskAutoBack: (s: number) => `${s}秒後に最初の画面に戻ります。`,
+    idleTitle: "入力を続けますか？",
+    idleBody: (s: number) => `操作がないため、あと${s}秒で入力内容を消去して最初の画面に戻ります。`,
+    idleContinue: "続ける",
     photoRetake: "画像を変更",
     photoRemove: "削除",
     photoAttached: "添付済み",
@@ -222,6 +196,9 @@ const T = {
     errNextDest: (w: string) => `${w}: please enter the next destination`,
     kioskNext: "Next guest",
     kioskAutoBack: (s: number) => `Returning to the start screen in ${s} seconds.`,
+    idleTitle: "Are you still there?",
+    idleBody: (s: number) => `No activity was detected. Your entries will be cleared in ${s} seconds.`,
+    idleContinue: "Continue",
     photoRetake: "Change image",
     photoRemove: "Remove",
     photoAttached: "Attached",
@@ -302,6 +279,14 @@ export default function GuestRegisterForm() {
   const [photoErrors, setPhotoErrors] = useState<Record<string, string>>({});
   // 運営プレビュー（?preview=1 のときだけ）。送信と写真の受付（Drive の受付中フォルダへ書く）を止める
   const [preview, setPreview] = useState(false);
+  // 共有端末の無操作リセット: 確認の残り秒数（0 = 確認を出していない）
+  const [idleWarn, setIdleWarn] = useState(0);
+  // 初期化のたびに入力欄を作り直す（ファイル入力は React の管理外で、前の人が撮った写真を保持し続けるため）
+  const [formEpoch, setFormEpoch] = useState(0);
+  const lastActivityRef = useRef(0);
+  // カメラ（ファイル入力）を開いている間は無操作として数えない（開いた時刻・0 = 閉じている）
+  const pickerOpenedAtRef = useRef(0);
+  const busyRef = useRef(false);
 
   const t = T[lang];
 
@@ -399,10 +384,15 @@ export default function GuestRegisterForm() {
     if (!file) return;
     setError("");
     const slot = `${kind === "passport" ? "p" : "f"}${index}`;
+    // 共有端末はカメラ直接起動の入力（capture 属性つき）・それ以外はファイル選択。画面の申告として名簿の V 列に残す
+    const method = kiosk ? "camera" : "file";
+    const ageSec = photoAgeSec(file.lastModified, Date.now());
     setPhotoBusy(slot);
     setPhotoErrors((prev) => ({ ...prev, [slot]: "" }));
     const failSlot = (msg: string) => { setError(msg); setPhotoErrors((prev) => ({ ...prev, [slot]: msg })); };
-    const clear = kind === "passport" ? { photoFileId: "", photoName: "" } : { facePhotoFileId: "", facePhotoName: "" };
+    const clear = kind === "passport"
+      ? { photoFileId: "", photoName: "", photoMethod: "" as const, photoAgeSec: -1 }
+      : { facePhotoFileId: "", facePhotoName: "", facePhotoMethod: "" as const, facePhotoAgeSec: -1 };
     const source = await readIntoMemory(file);
     if (!source) {
       updateGuest(index, clear);
@@ -428,8 +418,8 @@ export default function GuestRegisterForm() {
     try {
       const fileId = await uploadPhoto(compressed, bookingRef);
       updateGuest(index, kind === "passport"
-        ? { photoFileId: fileId, photoName: file.name }
-        : { facePhotoFileId: fileId, facePhotoName: file.name });
+        ? { photoFileId: fileId, photoName: file.name, photoMethod: method, photoAgeSec: ageSec }
+        : { facePhotoFileId: fileId, facePhotoName: file.name, facePhotoMethod: method, facePhotoAgeSec: ageSec });
     } catch (e) {
       updateGuest(index, clear);
       failSlot(t.photoUploadFailed);
@@ -502,7 +492,13 @@ export default function GuestRegisterForm() {
           nextDest: g.nextDest,
           photoFileId: g.jaResident === false ? g.photoFileId : "",
           facePhotoFileId: g.facePhotoFileId,
+          photoMethod: g.jaResident === false ? g.photoMethod : "",
+          photoAgeSec: g.jaResident === false ? g.photoAgeSec : -1,
+          facePhotoMethod: g.facePhotoMethod,
+          facePhotoAgeSec: g.facePhotoAgeSec,
         })),
+        // 画面をどう開いたか（?p= で施設が固定 / 一覧から選択）。名簿の W 列に残す記録（申告であって証明ではない）
+        entry: lockedProperty ? "fixed-url" : "list",
       };
       const res = await fetch("/api/guest-register", {
         method: "POST",
@@ -530,17 +526,59 @@ export default function GuestRegisterForm() {
     }
   }
 
+  // 送信後・無操作リセットの共通の初期化（施設と表示言語は残す）。消す項目は blankRegisterFields() が正本
   function clearAll() {
-    setGuests([emptyGuest()]);
-    setConsent(false);
+    const blank = blankRegisterFields();
+    setGuests(blank.guests);
+    setConsent(blank.consent);
     setError("");
     setPhotoErrors({});
     // 共有端末では次の人が別の予約なので、リンクの予約番号（b=）も引き継がない
-    setBookingRef("");
-    setCheckin("");
-    setCheckout("");
-    setCheckinTime("");
-    setCheckoutTime("");
+    setBookingRef(blank.bookingRef);
+    setCheckin(blank.checkin);
+    setCheckout(blank.checkout);
+    setCheckinTime(blank.checkinTime);
+    setCheckoutTime(blank.checkoutTime);
+    setIdleWarn(0);
+    setFormEpoch((n) => n + 1);
+  }
+
+  // 共有端末の無操作リセット: 入力が 1 文字でもある状態で 3 分操作が無ければ確認を出し、30 秒反応が無ければ空に戻す。
+  // 送信中・写真のアップロード中・カメラを開いている間は数えない。
+  busyRef.current = submitting || photoBusy !== null;
+  const dirty = hasEnteredData({ checkin, checkout, checkinTime, checkoutTime, bookingRef, consent, guests });
+  const idleArmed = kiosk && !preview && !receiptId && dirty;
+  const clearAllRef = useRef(clearAll);
+  clearAllRef.current = clearAll;
+  useEffect(() => {
+    if (!idleArmed) { setIdleWarn(0); return; }
+    const mark = () => { lastActivityRef.current = Date.now(); pickerOpenedAtRef.current = 0; };
+    // cancel = カメラを閉じた（対応ブラウザのみ）・focus = カメラから画面に戻った。どちらもカメラを開いた状態を解く
+    const events = ["pointerdown", "touchstart", "keydown", "input", "change", "scroll", "wheel", "cancel", "focus"] as const;
+    for (const ev of events) window.addEventListener(ev, mark, { capture: true, passive: true });
+    lastActivityRef.current = Date.now();
+    const id = window.setInterval(() => {
+      const { phase: p, lastActivity } = kioskIdleTick(Date.now(), {
+        lastActivity: lastActivityRef.current, pickerOpenedAt: pickerOpenedAtRef.current, busy: busyRef.current,
+      });
+      lastActivityRef.current = lastActivity;
+      if (p.phase === "active") setIdleWarn(0);
+      else if (p.phase === "warn") setIdleWarn(p.secondsLeft);
+      else { clearAllRef.current(); window.scrollTo({ top: 0 }); }
+    }, 1000);
+    return () => {
+      for (const ev of events) window.removeEventListener(ev, mark, { capture: true });
+      window.clearInterval(id);
+    };
+  }, [idleArmed]);
+
+  function onPickerOpen(e: React.MouseEvent<HTMLInputElement>) {
+    (e.target as HTMLInputElement).value = "";
+    pickerOpenedAtRef.current = Date.now();
+  }
+  function onPickerClosed() {
+    pickerOpenedAtRef.current = 0;
+    lastActivityRef.current = Date.now();
   }
 
   function resetForNext() {
@@ -620,7 +658,7 @@ export default function GuestRegisterForm() {
             </button>
           </div>
         ) : (
-          <form onSubmit={onSubmit} noValidate autoComplete={ac}>
+          <form key={formEpoch} onSubmit={onSubmit} noValidate autoComplete={ac}>
             {/* honeypot */}
             <input id="gr-website" type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
@@ -807,9 +845,9 @@ export default function GuestRegisterForm() {
                             accept="image/*"
                             className="hidden"
                             disabled={preview}
-                            onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
+                            onClick={onPickerOpen}
                             capture={kiosk ? "user" : undefined}
-                            onChange={(e) => onPhotoChange("face", i, e.target.files?.[0] || null)}
+                            onChange={(e) => { onPickerClosed(); onPhotoChange("face", i, e.target.files?.[0] || null); }}
                           />
                           {photoBusy === `f${i}` ? t.photoUploading : g.facePhotoFileId ? `✓ ${t.photoAttached}` : kiosk ? t.photoCamera : t.photoSelect}
                         </label>
@@ -819,7 +857,7 @@ export default function GuestRegisterForm() {
                             <span className="break-all">{g.facePhotoName}</span>
                             <button
                               type="button"
-                              onClick={() => updateGuest(i, { facePhotoFileId: "", facePhotoName: "" })}
+                              onClick={() => updateGuest(i, { facePhotoFileId: "", facePhotoName: "", facePhotoMethod: "", facePhotoAgeSec: -1 })}
                               className="ml-2 underline underline-offset-2 hover:text-danger"
                             >
                               {t.photoRemove}
@@ -849,9 +887,9 @@ export default function GuestRegisterForm() {
                                 accept="image/*"
                                 className="hidden"
                                 disabled={preview}
-                                onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
+                                onClick={onPickerOpen}
                                 capture={kiosk ? "environment" : undefined}
-                                onChange={(e) => onPhotoChange("passport", i, e.target.files?.[0] || null)}
+                                onChange={(e) => { onPickerClosed(); onPhotoChange("passport", i, e.target.files?.[0] || null); }}
                               />
                               {photoBusy === `p${i}` ? t.photoUploading : g.photoFileId ? `✓ ${t.photoAttached}` : kiosk ? t.photoCamera : t.photoSelect}
                             </label>
@@ -861,7 +899,7 @@ export default function GuestRegisterForm() {
                                 <span className="break-all">{g.photoName}</span>
                                 <button
                                   type="button"
-                                  onClick={() => updateGuest(i, { photoFileId: "", photoName: "" })}
+                                  onClick={() => updateGuest(i, { photoFileId: "", photoName: "", photoMethod: "", photoAgeSec: -1 })}
                                   className="ml-2 underline underline-offset-2 hover:text-danger"
                                 >
                                   {t.photoRemove}
@@ -954,6 +992,22 @@ export default function GuestRegisterForm() {
           </form>
         )}
       </main>
+
+      {idleWarn > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-switch-charcoal/60 px-5" role="alertdialog" aria-modal="true" aria-labelledby="gr-idle-title">
+          <div className="w-full max-w-sm rounded-switch-lg bg-white p-7 text-center shadow-switch-card">
+            <h2 id="gr-idle-title" className="text-[18px] font-bold text-switch-charcoal mb-2">{t.idleTitle}</h2>
+            <p className="text-[14px] leading-[1.8] text-switch-gray-dark mb-6" aria-live="polite">{t.idleBody(idleWarn)}</p>
+            <button
+              type="button"
+              onClick={() => { lastActivityRef.current = Date.now(); setIdleWarn(0); }}
+              className="w-full rounded-switch-md bg-switch-teal hover:bg-switch-teal-deep py-3.5 text-[16px] font-bold text-white tracking-wide transition-colors"
+            >
+              {t.idleContinue}
+            </button>
+          </div>
+        </div>
+      )}
 
       <footer className="border-t border-switch-gray-pale py-8">
         <p className="text-center text-[11px] tracking-[0.14em] text-switch-gray-mid/70">
