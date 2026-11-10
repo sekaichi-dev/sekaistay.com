@@ -352,7 +352,7 @@ export default function GuestRegisterForm() {
   );
   const lockedProperty = useMemo(() => resolveLockedProperty(urlPropertyId, properties), [urlPropertyId, properties]);
   // 玄関の共有端末で使う物件: カメラ撮影のみ・自動補完なし・送信後に空へ戻す・条例の記載事項を必須に
-  const kiosk = isKioskProperty(lockedProperty?.id);
+  const kiosk = isKioskProperty(property?.id);
   const ac = kiosk ? "off" : undefined;
 
   // 共有端末では完了画面を一定時間で閉じて最初の画面に戻す（次の人に受付 ID や前の人の気配を残さない）
