@@ -535,6 +535,8 @@ export default function GuestRegisterForm() {
     setConsent(false);
     setError("");
     setPhotoErrors({});
+    // 共有端末では次の人が別の予約なので、リンクの予約番号（b=）も引き継がない
+    setBookingRef("");
     setCheckin("");
     setCheckout("");
     setCheckinTime("");
