@@ -23,11 +23,13 @@ function isoFromSlash(v: string | undefined): string {
   return m ? `${m[1]}-${m[2]}-${m[3]}` : "";
 }
 
-/** 民泊用: B 列が受付 ID / 旅館業用: P 列（備考）を「｜」で分けた項目のどれかが「受付ID: <ID>」 */
+/** 民泊用: B 列が受付 ID / 旅館業用: P 列（備考）の末尾の項目が「受付ID: <ID>」（buildRyokanRows が最後に足す。
+ *  前の項目はゲストの自由記述なので見ない） */
 export function rowMatchesReceipt(tab: RegisterTab, row: readonly (string | undefined)[], receiptId: string): boolean {
   if (!RECEIPT_ID_RE.test(receiptId)) return false;
   if (tab === "民泊用") return (row[1] || "").trim() === receiptId;
-  return (row[15] || "").split("｜").some((part) => part.trim() === `受付ID: ${receiptId}`);
+  const parts = (row[15] || "").split("｜");
+  return parts[parts.length - 1].trim() === `受付ID: ${receiptId}`;
 }
 
 export function matchReceiptRows(tab: RegisterTab, values: readonly (readonly (string | undefined)[])[], receiptId: string): MatchedRow[] {

@@ -287,6 +287,9 @@ export default function GuestRegisterForm() {
   // カメラ（ファイル入力）を開いている間は無操作として数えない（開いた時刻・0 = 閉じている）
   const pickerOpenedAtRef = useRef(0);
   const busyRef = useRef(false);
+  // 処理中の写真の数（写真欄は複数あり、photoBusy は最後に始めた 1 つしか表さない）と、画面を空に戻した回数
+  const photosInFlightRef = useRef(0);
+  const resetEpochRef = useRef(0);
 
   const t = T[lang];
 
@@ -382,6 +385,18 @@ export default function GuestRegisterForm() {
   async function onPhotoChange(kind: "passport" | "face", index: number, file: File | null) {
     if (preview) return;
     if (!file) return;
+    // 共有端末で開始後に画面が空へ戻ったら（無操作リセット・送信後）、この写真の結果は次の人のカードに書かない
+    const epoch = resetEpochRef.current;
+    const stale = () => resetEpochRef.current !== epoch;
+    photosInFlightRef.current += 1;
+    try {
+      await handlePhoto(kind, index, file, stale);
+    } finally {
+      photosInFlightRef.current -= 1;
+    }
+  }
+
+  async function handlePhoto(kind: "passport" | "face", index: number, file: File, stale: () => boolean) {
     setError("");
     const slot = `${kind === "passport" ? "p" : "f"}${index}`;
     // 共有端末はカメラ直接起動の入力（capture 属性つき）・それ以外はファイル選択。画面の申告として名簿の V 列に残す
@@ -389,13 +404,14 @@ export default function GuestRegisterForm() {
     const ageSec = photoAgeSec(file.lastModified, Date.now());
     setPhotoBusy(slot);
     setPhotoErrors((prev) => ({ ...prev, [slot]: "" }));
-    const failSlot = (msg: string) => { setError(msg); setPhotoErrors((prev) => ({ ...prev, [slot]: msg })); };
+    const apply = (patch: Partial<GuestForm>) => { if (!stale()) updateGuest(index, patch); };
+    const failSlot = (msg: string) => { if (stale()) return; setError(msg); setPhotoErrors((prev) => ({ ...prev, [slot]: msg })); };
     const clear = kind === "passport"
       ? { photoFileId: "", photoName: "", photoMethod: "" as const, photoAgeSec: -1 }
       : { facePhotoFileId: "", facePhotoName: "", facePhotoMethod: "" as const, facePhotoAgeSec: -1 };
     const source = await readIntoMemory(file);
     if (!source) {
-      updateGuest(index, clear);
+      apply(clear);
       failSlot(t.photoUnreadable);
       setPhotoBusy(null);
       reportFailure("read", "UNREADABLE", `${kind} ${file.type || "(no type)"} ${file.size}B`, bookingRef);
@@ -409,7 +425,7 @@ export default function GuestRegisterForm() {
       compressed = r.file;
       if (!r.compressed) reportFailure("compress-fallback", "ORIGINAL_SENT", `${kind} ${source.type || "(no type)"} ${source.size}B`, bookingRef);
     } catch {
-      updateGuest(index, clear);
+      apply(clear);
       failSlot(t.photoTooLarge);
       setPhotoBusy(null);
       reportFailure("compress", "TOO_LARGE", `${kind} ${file.type || "(no type)"} ${file.size}B`, bookingRef);
@@ -417,11 +433,11 @@ export default function GuestRegisterForm() {
     }
     try {
       const fileId = await uploadPhoto(compressed, bookingRef);
-      updateGuest(index, kind === "passport"
+      apply(kind === "passport"
         ? { photoFileId: fileId, photoName: file.name, photoMethod: method, photoAgeSec: ageSec }
         : { facePhotoFileId: fileId, facePhotoName: file.name, facePhotoMethod: method, facePhotoAgeSec: ageSec });
     } catch (e) {
-      updateGuest(index, clear);
+      apply(clear);
       failSlot(t.photoUploadFailed);
       reportFailure("upload", String((e as Error)?.message || e), `${kind} ${compressed.type} ${compressed.size}B (orig ${file.size}B)`, bookingRef);
     } finally {
@@ -541,6 +557,7 @@ export default function GuestRegisterForm() {
     setCheckoutTime(blank.checkoutTime);
     setIdleWarn(0);
     setFormEpoch((n) => n + 1);
+    resetEpochRef.current += 1;
   }
 
   // 共有端末の無操作リセット: 入力が 1 文字でもある状態で 3 分操作が無ければ確認を出し、30 秒反応が無ければ空に戻す。
@@ -556,7 +573,7 @@ export default function GuestRegisterForm() {
       // スリープ等でタイマーが止まっていた間に期限が切れていたら、操作時刻を更新する前に空へ戻す
       // （復帰直後の focus やタップで前の人の入力が残らないように）
       const { phase } = kioskIdleTick(Date.now(), {
-        lastActivity: lastActivityRef.current, pickerOpenedAt: pickerOpenedAtRef.current, busy: busyRef.current,
+        lastActivity: lastActivityRef.current, pickerOpenedAt: pickerOpenedAtRef.current, busy: busyRef.current || photosInFlightRef.current > 0,
       });
       if (phase.phase === "expired") { clearAllRef.current(); window.scrollTo({ top: 0 }); return; }
       lastActivityRef.current = Date.now();
@@ -568,7 +585,7 @@ export default function GuestRegisterForm() {
     lastActivityRef.current = Date.now();
     const id = window.setInterval(() => {
       const { phase: p, lastActivity } = kioskIdleTick(Date.now(), {
-        lastActivity: lastActivityRef.current, pickerOpenedAt: pickerOpenedAtRef.current, busy: busyRef.current,
+        lastActivity: lastActivityRef.current, pickerOpenedAt: pickerOpenedAtRef.current, busy: busyRef.current || photosInFlightRef.current > 0,
       });
       lastActivityRef.current = lastActivity;
       if (p.phase === "active") setIdleWarn(0);

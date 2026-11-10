@@ -16,6 +16,8 @@ test("purge: 受付 ID の完全一致だけ（前方一致・部分一致・形
   assert.equal(rowMatchesReceipt("旅館業用", p(`メモ｜受付ID: ${ID}`), ID), true);
   assert.equal(rowMatchesReceipt("旅館業用", p(`受付ID: ${ID}9`), ID), false);
   assert.equal(rowMatchesReceipt("旅館業用", p(`受付ID: G-261110-ZZZZ`), ID), false);
+  // 備考（自由記述）に書かれた別の受付 ID には一致しない
+  assert.equal(rowMatchesReceipt("旅館業用", p(`受付ID: ${ID}｜受付ID: G-261110-ZZZZ`), ID), false);
 });
 
 test("purge: シート上の行番号・宿泊日・物件名を取り出し、Drive の道筋を組む", () => {
