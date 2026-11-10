@@ -252,8 +252,9 @@ const T = {
 } as const;
 
 const inputCls = "w-full rounded-switch-md border border-switch-stone-border bg-white px-3.5 py-2.5 text-[15px] text-switch-charcoal placeholder:text-switch-stone-text-disabled focus:outline-none focus:border-switch-teal focus:ring-2 focus:ring-switch-teal/20 transition-colors";
-// 日付・時刻: iOS WebKit の date/time 入力は固有の最小幅を持ち列からはみ出すので min-w-0 で列幅に従わせ、空欄で高さが潰れないよう最低高を持たせる
-const dateTimeCls = `${inputCls} block min-w-0 max-w-full min-h-[3rem]`;
+// 日付・時刻: iOS の date/time 入力は標準の見た目のままだと width 指定を無視して枠からはみ出す（実機で確認）。
+// appearance を外して他の入力欄と同じ箱にし、外すと中央に寄る値は左寄せに戻す。空欄で高さが潰れないよう最低高を持たせる
+const dateTimeCls = `${inputCls} block box-border appearance-none min-w-0 max-w-full min-h-[3rem] text-left [&::-webkit-date-and-time-value]:text-left`;
 const labelCls = "block text-[13px] font-semibold text-switch-charcoal mb-1.5";
 // クリエイティブガイド準拠: アクセントはティール（オレンジ不使用・2026-07-24）
 const requiredMark = <span className="ml-1 text-[10px] font-bold text-switch-teal align-middle">*</span>;
@@ -721,7 +722,7 @@ export default function GuestRegisterForm() {
                   </select>
                   )}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 items-end [&>*]:min-w-0">
                   <div>
                     <label htmlFor="gr-checkin" className={labelCls}>{t.checkin}{requiredMark}</label>
                     <input id="gr-checkin" type="date" value={checkin} onChange={(e) => setCheckin(e.target.value)} className={dateTimeCls} />
@@ -734,7 +735,7 @@ export default function GuestRegisterForm() {
                 {nights > 0 && (
                   <p className="text-[12px] text-switch-teal-deep font-semibold">{t.nights(nights)}</p>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end [&>*]:min-w-0">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 items-end [&>*]:min-w-0">
                   <div>
                     <label htmlFor="gr-checkin-time" className={labelCls}>{t.checkinTime}{kiosk ? requiredMark : <span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span>}</label>
                     <input id="gr-checkin-time" type="time" value={checkinTime} onChange={(e) => setCheckinTime(e.target.value)} className={dateTimeCls} />
