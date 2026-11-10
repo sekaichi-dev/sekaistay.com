@@ -20,6 +20,7 @@ import { FREQUENT_NATIONALITIES, OTHER_NATIONALITIES, FALLBACK_NATIONALITIES } f
 import { compressImage, readIntoMemory, reportFailure, uploadPhoto } from "./photo-upload";
 import StaffPreviewBanner from "@/components/StaffPreviewBanner";
 import { isStaffPreview } from "@/lib/staff-preview";
+import { isKioskProperty, resolveLockedProperty } from "@/lib/guest-register-kiosk";
 
 const MAX_GUESTS = 8;
 
@@ -108,6 +109,16 @@ const T = {
     passportNo: "パスポート番号",
     passportPhoto: "パスポート写真ページの画像",
     photoSelect: "画像を選択",
+    photoCamera: "カメラで撮影",
+    photoCameraRetake: "撮り直す",
+    kioskOptionalTitle: "追加情報（必須・渋谷区の条例に基づく記載事項）",
+    errCheckinTime: "チェックイン予定時刻を入力してください",
+    errCheckoutTime: "チェックアウト予定時刻を入力してください",
+    errAge: (w: string) => `${w}: 年齢を入力してください`,
+    errPrevStay: (w: string) => `${w}: 前泊地を入力してください`,
+    errNextDest: (w: string) => `${w}: 行先地を入力してください`,
+    kioskNext: "次の方の登録へ",
+    kioskAutoBack: (s: number) => `${s}秒後に最初の画面に戻ります。`,
     photoRetake: "画像を変更",
     photoRemove: "削除",
     photoAttached: "添付済み",
@@ -201,6 +212,16 @@ const T = {
     passportNo: "Passport number",
     passportPhoto: "Photo of your passport ID page",
     photoSelect: "Choose image",
+    photoCamera: "Take a photo",
+    photoCameraRetake: "Retake",
+    kioskOptionalTitle: "Additional details (required by local ordinance)",
+    errCheckinTime: "Please enter the planned check-in time",
+    errCheckoutTime: "Please enter the planned check-out time",
+    errAge: (w: string) => `${w}: please enter the age`,
+    errPrevStay: (w: string) => `${w}: please enter the previous place of stay`,
+    errNextDest: (w: string) => `${w}: please enter the next destination`,
+    kioskNext: "Next guest",
+    kioskAutoBack: (s: number) => `Returning to the start screen in ${s} seconds.`,
     photoRetake: "Change image",
     photoRemove: "Remove",
     photoAttached: "Attached",
@@ -262,6 +283,9 @@ export default function GuestRegisterForm() {
   const [properties, setProperties] = useState<PropertyOption[] | null>(null);
   const [propertiesError, setPropertiesError] = useState(false);
   const [propertyId, setPropertyId] = useState("");
+  // URL の p=（案内リンク・玄関端末のホーム画面）。一覧にある物件なら施設欄を固定する
+  const [urlPropertyId, setUrlPropertyId] = useState("");
+  const [kioskCountdown, setKioskCountdown] = useState(0);
   const [checkin, setCheckin] = useState("");
   const [checkout, setCheckout] = useState("");
   const [checkinTime, setCheckinTime] = useState("");
@@ -287,7 +311,7 @@ export default function GuestRegisterForm() {
     const q = params.get("lang");
     if (q === "en" || (q !== "ja" && !navigator.language.startsWith("ja"))) setLang("en");
     const p = params.get("p");
-    if (p) setPropertyId(p);
+    if (p) { setPropertyId(p); setUrlPropertyId(p); }
     // b = 予約番号（案内リンクに付与）。名簿と予約を 1 対 1 で突き合わせるため、そのまま送り返す。
     const b = params.get("b") || "";
     if (/^\d{5,12}$/.test(b)) setBookingRef(b);
@@ -326,6 +350,18 @@ export default function GuestRegisterForm() {
     () => properties?.find((p) => p.id === propertyId) || null,
     [properties, propertyId],
   );
+  const lockedProperty = useMemo(() => resolveLockedProperty(urlPropertyId, properties), [urlPropertyId, properties]);
+  // 玄関の共有端末で使う物件: カメラ撮影のみ・自動補完なし・送信後に空へ戻す・条例の記載事項を必須に
+  const kiosk = isKioskProperty(property?.id);
+  const ac = kiosk ? "off" : undefined;
+
+  // 共有端末では完了画面を一定時間で閉じて最初の画面に戻す（次の人に受付 ID や前の人の気配を残さない）
+  useEffect(() => {
+    if (!kiosk || !receiptId) return;
+    if (kioskCountdown <= 0) { setReceiptId(""); return; }
+    const id = window.setTimeout(() => setKioskCountdown((c) => c - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [kiosk, receiptId, kioskCountdown]);
 
   const nights = useMemo(() => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(checkin) || !/^\d{4}-\d{2}-\d{2}$/.test(checkout)) return 0;
@@ -406,6 +442,8 @@ export default function GuestRegisterForm() {
   function validate(): string | null {
     if (!property) return t.errProperty;
     if (nights < 1 || nights > 90) return t.errDates;
+    if (kiosk && !checkinTime) return t.errCheckinTime;
+    if (kiosk && !checkoutTime) return t.errCheckoutTime;
     for (let i = 0; i < guests.length; i++) {
       const g = guests[i];
       const who = guestLabels[i];
@@ -416,6 +454,11 @@ export default function GuestRegisterForm() {
       if (property.type === "民泊" && !g.occupation.trim()) return t.errOccupation(who);
       if (!(i > 0 && g.sameContact) && !g.contact.trim()) return t.errContact(who);
       if (!g.facePhotoFileId) return t.errFacePhoto(who);
+      if (kiosk) {
+        if (!g.age.trim()) return t.errAge(who);
+        if (!g.prevStay.trim()) return t.errPrevStay(who);
+        if (!g.nextDest.trim()) return t.errNextDest(who);
+      }
       if (needsPassport(g)) {
         if (!g.passportNo.trim()) return t.errPassportNo(who);
         if (!g.photoFileId) return t.errPhoto(who);
@@ -473,6 +516,11 @@ export default function GuestRegisterForm() {
         return;
       }
       setReceiptId(data.receiptId || "OK");
+      if (kiosk) {
+        // 共有端末: 送った内容を画面の状態から即座に消す（戻る操作や次の人に前の人の入力が残らないように）
+        clearAll();
+        setKioskCountdown(20);
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       setError(t.errSubmit);
@@ -482,11 +530,29 @@ export default function GuestRegisterForm() {
     }
   }
 
-  function resetForNext() {
+  function clearAll() {
     setGuests([emptyGuest()]);
     setConsent(false);
-    setReceiptId("");
     setError("");
+    setPhotoErrors({});
+    // 共有端末では次の人が別の予約なので、リンクの予約番号（b=）も引き継がない
+    setBookingRef("");
+    setCheckin("");
+    setCheckout("");
+    setCheckinTime("");
+    setCheckoutTime("");
+  }
+
+  function resetForNext() {
+    if (kiosk) {
+      clearAll();
+    } else {
+      setGuests([emptyGuest()]);
+      setConsent(false);
+      setError("");
+    }
+    setKioskCountdown(0);
+    setReceiptId("");
   }
 
   const langToggle = (
@@ -544,17 +610,17 @@ export default function GuestRegisterForm() {
               <span className="block font-mono-editorial text-[10px] tracking-ticker text-switch-gray-mid mb-1">{t.receiptId}</span>
               <span className="font-mono-editorial text-[16px] font-bold text-switch-teal-deep">{receiptId}</span>
             </div>
-            <p className="text-[13px] text-switch-gray-mid leading-[1.8] mb-6">{t.successMore}</p>
+            <p className="text-[13px] text-switch-gray-mid leading-[1.8] mb-6">{kiosk ? t.kioskAutoBack(kioskCountdown) : t.successMore}</p>
             <button
               type="button"
               onClick={resetForNext}
               className="rounded-switch-md border border-switch-stone-border bg-white px-6 py-3 text-[14px] font-semibold text-switch-charcoal hover:bg-switch-stone-over transition-colors"
             >
-              {t.registerMore}
+              {kiosk ? t.kioskNext : t.registerMore}
             </button>
           </div>
         ) : (
-          <form onSubmit={onSubmit} noValidate>
+          <form onSubmit={onSubmit} noValidate autoComplete={ac}>
             {/* honeypot */}
             <input id="gr-website" type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
@@ -564,6 +630,13 @@ export default function GuestRegisterForm() {
               <div className="space-y-5">
                 <div>
                   <label htmlFor="gr-property" className={labelCls}>{t.property}{requiredMark}</label>
+                  {lockedProperty ? (
+                    <div id="gr-property" className={`${inputCls} bg-switch-stone-01`} aria-readonly="true">
+                      {lang === "en" && lockedProperty.nameEn ? lockedProperty.nameEn : lockedProperty.name}
+                    </div>
+                  ) : urlPropertyId && properties === null && !propertiesError ? (
+                    <div className={`${inputCls} bg-switch-stone-01 text-switch-gray-mid`}>{t.propertyLoading}</div>
+                  ) : (
                   <select
                     id="gr-property"
                     value={propertyId}
@@ -579,6 +652,7 @@ export default function GuestRegisterForm() {
                       </option>
                     ))}
                   </select>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -595,11 +669,11 @@ export default function GuestRegisterForm() {
                 )}
                 <div className="grid grid-cols-2 gap-4 items-end">
                   <div>
-                    <label htmlFor="gr-checkin-time" className={labelCls}>{t.checkinTime}<span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span></label>
+                    <label htmlFor="gr-checkin-time" className={labelCls}>{t.checkinTime}{kiosk ? requiredMark : <span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span>}</label>
                     <input id="gr-checkin-time" type="time" value={checkinTime} onChange={(e) => setCheckinTime(e.target.value)} className={inputCls} />
                   </div>
                   <div>
-                    <label htmlFor="gr-checkout-time" className={labelCls}>{t.checkoutTime}<span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span></label>
+                    <label htmlFor="gr-checkout-time" className={labelCls}>{t.checkoutTime}{kiosk ? requiredMark : <span className="whitespace-nowrap font-normal text-switch-gray-mid">{t.timeOptional}</span>}</label>
                     <input id="gr-checkout-time" type="time" value={checkoutTime} onChange={(e) => setCheckoutTime(e.target.value)} className={inputCls} />
                   </div>
                 </div>
@@ -636,7 +710,7 @@ export default function GuestRegisterForm() {
                     <div className="space-y-4">
                       <div>
                         <label className={labelCls}>{t.name}{requiredMark}</label>
-                        <input type="text" value={g.name} maxLength={100} placeholder={t.namePh}
+                        <input type="text" autoComplete={ac} autoCorrect={ac} spellCheck={kiosk ? false : undefined} value={g.name} maxLength={100} placeholder={t.namePh}
                           onChange={(e) => updateGuest(i, { name: e.target.value })} className={inputCls} />
                         <p className="mt-1 text-[12px] text-switch-gray-mid">{t.nameHint}</p>
                       </div>
@@ -692,7 +766,7 @@ export default function GuestRegisterForm() {
                           )}
                         </div>
                         {!(i > 0 && g.sameAddress) && (
-                          <input type="text" value={g.address} maxLength={300} placeholder={t.addressPh}
+                          <input type="text" autoComplete={ac} autoCorrect={ac} spellCheck={kiosk ? false : undefined} value={g.address} maxLength={300} placeholder={t.addressPh}
                             onChange={(e) => updateGuest(i, { address: e.target.value })} className={inputCls} />
                         )}
                       </div>
@@ -701,7 +775,7 @@ export default function GuestRegisterForm() {
                         {property?.type === "民泊" && (
                           <div>
                             <label className={labelCls}>{t.occupation}{requiredMark}</label>
-                            <input type="text" value={g.occupation} maxLength={100} placeholder={t.occupationPh}
+                            <input type="text" autoComplete={ac} autoCorrect={ac} spellCheck={kiosk ? false : undefined} value={g.occupation} maxLength={100} placeholder={t.occupationPh}
                               onChange={(e) => updateGuest(i, { occupation: e.target.value })} className={inputCls} />
                           </div>
                         )}
@@ -717,7 +791,7 @@ export default function GuestRegisterForm() {
                             )}
                           </div>
                           {!(i > 0 && g.sameContact) && (
-                            <input type="text" value={g.contact} maxLength={200} placeholder={t.contactPh}
+                            <input type="text" autoComplete={ac} autoCorrect={ac} spellCheck={kiosk ? false : undefined} value={g.contact} maxLength={200} placeholder={t.contactPh}
                               onChange={(e) => updateGuest(i, { contact: e.target.value })} className={inputCls} />
                           )}
                         </div>
@@ -734,9 +808,10 @@ export default function GuestRegisterForm() {
                             className="hidden"
                             disabled={preview}
                             onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
+                            capture={kiosk ? "user" : undefined}
                             onChange={(e) => onPhotoChange("face", i, e.target.files?.[0] || null)}
                           />
-                          {photoBusy === `f${i}` ? t.photoUploading : g.facePhotoFileId ? `✓ ${t.photoAttached}` : t.photoSelect}
+                          {photoBusy === `f${i}` ? t.photoUploading : g.facePhotoFileId ? `✓ ${t.photoAttached}` : kiosk ? t.photoCamera : t.photoSelect}
                         </label>
                         {photoErrors[`f${i}`] && <p className="mt-2 text-[12px] text-danger leading-relaxed" role="alert">{photoErrors[`f${i}`]}</p>}
                         {g.facePhotoFileId && (
@@ -763,7 +838,7 @@ export default function GuestRegisterForm() {
                         <div className="space-y-4">
                           <div>
                             <label className={labelCls}>{t.passportNo}{requiredMark}</label>
-                            <input type="text" value={g.passportNo} maxLength={30} placeholder="XX1234567"
+                            <input type="text" autoComplete={ac} autoCorrect={ac} spellCheck={kiosk ? false : undefined} value={g.passportNo} maxLength={30} placeholder="XX1234567"
                               onChange={(e) => updateGuest(i, { passportNo: e.target.value })} className={inputCls} />
                           </div>
                           <div>
@@ -775,9 +850,10 @@ export default function GuestRegisterForm() {
                                 className="hidden"
                                 disabled={preview}
                                 onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
+                                capture={kiosk ? "environment" : undefined}
                                 onChange={(e) => onPhotoChange("passport", i, e.target.files?.[0] || null)}
                               />
-                              {photoBusy === `p${i}` ? t.photoUploading : g.photoFileId ? `✓ ${t.photoAttached}` : t.photoSelect}
+                              {photoBusy === `p${i}` ? t.photoUploading : g.photoFileId ? `✓ ${t.photoAttached}` : kiosk ? t.photoCamera : t.photoSelect}
                             </label>
                             {photoErrors[`p${i}`] && <p className="mt-2 text-[12px] text-danger leading-relaxed" role="alert">{photoErrors[`p${i}`]}</p>}
                             {g.photoFileId && (
@@ -800,8 +876,8 @@ export default function GuestRegisterForm() {
                       )}
 
                       {property?.type === "旅館業" && (
-                        <details className="rounded-switch-md border border-switch-gray-pale bg-switch-stone-01 px-4 py-3">
-                          <summary className="text-[13px] font-semibold text-switch-gray-dark cursor-pointer select-none">{t.optionalTitle}</summary>
+                        <details open={kiosk || undefined} className="rounded-switch-md border border-switch-gray-pale bg-switch-stone-01 px-4 py-3">
+                          <summary className="text-[13px] font-semibold text-switch-gray-dark cursor-pointer select-none">{kiosk ? t.kioskOptionalTitle : t.optionalTitle}</summary>
                           <div className="grid sm:grid-cols-2 gap-4 pt-4">
                             <div>
                               <label className={labelCls}>{t.gender}</label>
@@ -812,18 +888,18 @@ export default function GuestRegisterForm() {
                               </select>
                             </div>
                             <div>
-                              <label className={labelCls}>{t.age}</label>
-                              <input type="text" inputMode="numeric" value={g.age} maxLength={10}
+                              <label className={labelCls}>{t.age}{kiosk && requiredMark}</label>
+                              <input type="text" autoComplete={ac} autoCorrect={ac} spellCheck={kiosk ? false : undefined} inputMode="numeric" value={g.age} maxLength={10}
                                 onChange={(e) => updateGuest(i, { age: e.target.value })} className={inputCls} />
                             </div>
                             <div>
-                              <label className={labelCls}>{t.prevStay}</label>
-                              <input type="text" value={g.prevStay} maxLength={100} placeholder={t.prevStayPh}
+                              <label className={labelCls}>{t.prevStay}{kiosk && requiredMark}</label>
+                              <input type="text" autoComplete={ac} autoCorrect={ac} spellCheck={kiosk ? false : undefined} value={g.prevStay} maxLength={100} placeholder={t.prevStayPh}
                                 onChange={(e) => updateGuest(i, { prevStay: e.target.value })} className={inputCls} />
                             </div>
                             <div>
-                              <label className={labelCls}>{t.nextDest}</label>
-                              <input type="text" value={g.nextDest} maxLength={100} placeholder={t.nextDestPh}
+                              <label className={labelCls}>{t.nextDest}{kiosk && requiredMark}</label>
+                              <input type="text" autoComplete={ac} autoCorrect={ac} spellCheck={kiosk ? false : undefined} value={g.nextDest} maxLength={100} placeholder={t.nextDestPh}
                                 onChange={(e) => updateGuest(i, { nextDest: e.target.value })} className={inputCls} />
                             </div>
                           </div>
