@@ -5,6 +5,7 @@ import { useScrollFade } from "@/hooks/useScrollFade";
 import { useSwitchCtaLabels } from "@/hooks/useSwitchCtaLabels";
 import SectionHead from "./deco/SectionHead";
 import DashboardDemo from "./DashboardDemo";
+import { IconBarChart, IconChat, IconTarget, IconFolder, IconLock } from "@/components/Icons";
 
 const CIRCLED = ["①", "②", "③", "④", "⑤", "⑥", "⑦"] as const;
 
@@ -105,10 +106,10 @@ const otherFeatures = [
 ];
 
 const dashboardBullets = [
-  { icon: "📊", text: "売上・稼働率をリアルタイムで確認" },
-  { icon: "💬", text: "運営チームに直チャット" },
-  { icon: "🎯", text: "3ヶ月ごと、専任スタッフと収益レビューMTG" },
-  { icon: "📁", text: "freee / マネフォ互換CSVをワンタップ出力" },
+  { Icon: IconBarChart, text: "売上・稼働率をリアルタイムで確認" },
+  { Icon: IconChat, text: "運営チームに直チャット" },
+  { Icon: IconTarget, text: "3ヶ月ごと、専任スタッフと収益レビューMTG" },
+  { Icon: IconFolder, text: "freee / マネフォ互換CSVをワンタップ出力" },
 ];
 
 const dashboardStats = [
@@ -185,17 +186,17 @@ export default function SwitchServices() {
                 ))}
               </div>
 
-              {/* bullets 縦並び（絵文字アイコン） */}
+              {/* bullets 縦並び（線アイコン） */}
               <div className="space-y-2.5">
                 <div className="flex items-start gap-2.5 bg-white/60 rounded-md px-2.5 py-1.5 border border-switch-teal/10">
-                  <span className="flex-shrink-0 text-base leading-none">🔒</span>
+                  <IconLock size={16} className="flex-shrink-0 mt-px text-switch-teal-deep" />
                   <p className="text-[13px] sm:text-sm text-switch-charcoal font-bold leading-snug">
                     オーナー様、知人様のご予約を1タップでブロック可能
                   </p>
                 </div>
                 {dashboardBullets.map((item) => (
                   <div key={item.text} className="flex items-start gap-2.5 bg-white/60 rounded-md px-2.5 py-1.5 border border-switch-teal/10">
-                    <span className="flex-shrink-0 text-base leading-none">{item.icon}</span>
+                    <item.Icon size={16} className="flex-shrink-0 mt-px text-switch-teal-deep" />
                     <p className="text-[13px] sm:text-sm text-switch-charcoal font-bold leading-snug">
                       {item.text}
                     </p>

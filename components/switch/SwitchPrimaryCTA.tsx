@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useSwitchCtaLabels } from "@/hooks/useSwitchCtaLabels";
+import { IconPencil, IconCoinZero, IconBarChart, IconTarget } from "@/components/Icons";
 
 /**
  * SwitchPrimaryCTA — /switch LP の最重要CTA（PainPoints直後に配置）
@@ -12,10 +13,10 @@ import { useSwitchCtaLabels } from "@/hooks/useSwitchCtaLabels";
  */
 
 const CHIPS = [
-  { icon: "📝", text: "1分で入力" },
-  { icon: "🆓", text: "完全無料" },
-  { icon: "💰", text: "売上を算出" },
-  { icon: "🎯", text: "改善ポイントを記載" },
+  { Icon: IconPencil, text: "1分で入力" },
+  { Icon: IconCoinZero, text: "完全無料" },
+  { Icon: IconBarChart, text: "売上を算出" },
+  { Icon: IconTarget, text: "改善ポイントを記載" },
 ];
 
 type CompareStat = {
@@ -168,7 +169,7 @@ export default function SwitchPrimaryCTA({
               key={chip.text}
               className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full bg-white/10 text-white border border-white/20"
             >
-              <span aria-hidden>{chip.icon}</span>
+              <chip.Icon size={14} className="flex-shrink-0" />
               {chip.text}
             </span>
           ))}
