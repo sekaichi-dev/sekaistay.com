@@ -171,9 +171,9 @@ function HomeView() {
       </div>
 
       <div className="px-5 pb-4">
-        <p className="text-[10px] text-switch-gray-mid mb-1">4月18日(土)</p>
+        <p className="text-[10px] text-switch-gray-mid mb-1">4月18日(土) · Matsumoto 様</p>
         <h2 className="text-lg font-bold text-black leading-tight">
-          Good morning, Matsumotoさん
+          2026年4月の運用状況
         </h2>
       </div>
 
