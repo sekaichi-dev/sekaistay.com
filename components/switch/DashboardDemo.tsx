@@ -642,12 +642,12 @@ function ExpensesView() {
           <p className="text-[11px] font-bold text-black mb-0.5">領収書をアップロード</p>
           <p className="text-[9px] text-switch-gray-mid mb-2.5">PDF・画像をドラッグするか選択してください</p>
           <div className="flex justify-center gap-1.5 mb-2">
-            <button className="text-[9px] font-bold bg-switch-teal-deep text-white px-2.5 py-1 rounded-md">📷 画像</button>
-            <button className="text-[9px] font-bold bg-white border border-switch-gray-light text-switch-gray-dark px-2.5 py-1 rounded-md">📄 PDF</button>
-            <button className="text-[9px] font-bold bg-white border border-switch-gray-light text-switch-gray-dark px-2.5 py-1 rounded-md">📸 撮影</button>
+            <button className="text-[9px] font-bold bg-switch-teal-deep text-white px-2.5 py-1 rounded-md">画像</button>
+            <button className="text-[9px] font-bold bg-white border border-switch-gray-light text-switch-gray-dark px-2.5 py-1 rounded-md">PDF</button>
+            <button className="text-[9px] font-bold bg-white border border-switch-gray-light text-switch-gray-dark px-2.5 py-1 rounded-md">撮影</button>
           </div>
           <span className="inline-block text-[8px] font-bold bg-switch-teal-deep text-white px-2 py-0.5 rounded-full">
-            ✨ 自動仕分け対応
+            自動仕分け対応
           </span>
         </div>
       </div>

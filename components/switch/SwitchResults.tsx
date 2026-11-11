@@ -3,6 +3,7 @@
 import Image from "next/image";
 import CountUp from "./deco/CountUp";
 import SectionHead from "./deco/SectionHead";
+import { IconTrophy } from "@/components/Icons";
 
 export default function SwitchResults() {
   return (
@@ -56,8 +57,8 @@ export default function SwitchResults() {
 
         {/* Award callout */}
         <div className="mb-10 rounded-xl border border-yellow-400/70 bg-gradient-to-r from-yellow-50 via-yellow-100/40 to-yellow-50 px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-4 shadow-sm">
-          <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-yellow-400 text-switch-charcoal flex items-center justify-center text-2xl sm:text-3xl shadow-md">
-            🏆
+          <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-yellow-400 text-switch-charcoal flex items-center justify-center shadow-md">
+            <IconTrophy size={24} className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
           <div className="leading-tight">
             <p className="text-[10px] sm:text-xs font-bold text-yellow-700 tracking-widest uppercase">BEST OF SAUNA STAY 2026</p>
@@ -88,7 +89,7 @@ export default function SwitchResults() {
                 高級ヴィラ
               </span>
               <span className="absolute top-3 right-3 bg-yellow-400 text-switch-charcoal text-[10px] font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                <span aria-hidden>🏆</span>サウナ部門 全国1位
+                <IconTrophy size={12} className="flex-shrink-0" />サウナ部門 全国1位
               </span>
             </div>
             <div className="p-5">
