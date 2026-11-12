@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  parseRegisterInput, validateGuests, needsPassport, makeGroupId, nowJstString,
+  parseRegisterInput, validateGuests, validatePhotos, needsPassport, needsIdPhoto, makeGroupId, nowJstString,
   buildMinpakuRows, buildRyokanRows, appendRows, claimStagedPhoto, ensurePassportFolder,
   fetchProperties, sanitizeFilePart, StagedPhotoError,
 } from "@/lib/guest-register";
@@ -62,17 +62,8 @@ export async function POST(req: NextRequest) {
   const guestError = validateGuests(input, property.type);
   if (guestError) return NextResponse.json({ error: guestError }, { status: 400 });
 
-  // 写真の有無（旅券: 国内住所なしは必須・顔写真: 全員必須 2026-07-24）
-  for (let i = 0; i < input.guests.length; i++) {
-    const guest = input.guests[i];
-    const who = `宿泊者${i + 1} / Guest ${i + 1}`;
-    if (needsPassport(guest) && !guest.photoFileId) {
-      return NextResponse.json({ error: `${who}: パスポート写真を添付してください / Passport photo is required` }, { status: 400 });
-    }
-    if (!guest.facePhotoFileId) {
-      return NextResponse.json({ error: `${who}: 顔写真を添付してください / Face photo is required` }, { status: 400 });
-    }
-  }
+  const photoError = validatePhotos(input);
+  if (photoError) return NextResponse.json({ error: photoError }, { status: 400 });
 
   const groupId = makeGroupId();
   const receivedAt = nowJstString();
@@ -80,6 +71,7 @@ export async function POST(req: NextRequest) {
 
   let photoLinks: (string | null)[];
   let facePhotoLinks: (string | null)[];
+  let idPhotoLinks: (string | null)[];
   try {
     // 保管先: 報告期間（2ヶ月区切り）/ 物件 / 予約（受付ID_代表者）。フォルダ作成に失敗しても登録は止めない。
     let folderId: string | undefined;
@@ -88,7 +80,7 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.error("[guest-register] passport folder ensure failed (fallback to root):", e);
     }
-    [photoLinks, facePhotoLinks] = await Promise.all([
+    [photoLinks, facePhotoLinks, idPhotoLinks] = await Promise.all([
       Promise.all(input.guests.map((g, i) => {
         if (!needsPassport(g) || !g.photoFileId) return Promise.resolve(null);
         return claimStagedPhoto(g.photoFileId, `${property.id}_${datePart}_${sanitizeFilePart(g.name)}_${groupId}`, folderId);
@@ -96,6 +88,11 @@ export async function POST(req: NextRequest) {
       Promise.all(input.guests.map((g) =>
         claimStagedPhoto(g.facePhotoFileId, `顔写真_${property.id}_${datePart}_${sanitizeFilePart(g.name)}_${groupId}`, folderId),
       )),
+      // 身分証（共有端末モード×国内住所あり）。旅券の写しと同じフォルダに「身分証_」の名前で置く
+      Promise.all(input.guests.map((g) => {
+        if (!needsIdPhoto(g, property.id) || !g.idPhotoFileId) return Promise.resolve(null);
+        return claimStagedPhoto(g.idPhotoFileId, `身分証_${property.id}_${datePart}_${sanitizeFilePart(g.name)}_${groupId}`, folderId);
+      })),
     ]);
   } catch (e) {
     if (e instanceof StagedPhotoError) {
@@ -114,8 +111,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const rows = property.type === "民泊"
-      ? buildMinpakuRows(input, property, groupId, photoLinks, facePhotoLinks, receivedAt)
-      : buildRyokanRows(input, property, groupId, photoLinks, facePhotoLinks, receivedAt);
+      ? buildMinpakuRows(input, property, groupId, photoLinks, facePhotoLinks, receivedAt, idPhotoLinks)
+      : buildRyokanRows(input, property, groupId, photoLinks, facePhotoLinks, receivedAt, idPhotoLinks);
     await appendRows(property.type === "民泊" ? "民泊用" : "旅館業用", rows);
   } catch (e) {
     console.error("[guest-register] sheets append failed:", e);

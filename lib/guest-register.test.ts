@@ -261,10 +261,10 @@ test("bookingRef: 数字の予約番号だけ受け取り、両タブの U 列�
     assert.equal(parseRegisterInput({ ...input(), bookingRef: bad }).input!.bookingRef, "", String(bad));
   }
   const m = buildMinpakuRows(ok.input! as never, property() as never, "G-1", [null], [null], "2026/09/20 10:00");
-  assert.equal(m[0].length, 23); // A〜U は従来どおり・V 撮影方法・W 入力端末を末尾に足した（2026-11-10）
+  assert.equal(m[0].length, 24); // A〜U は従来どおり・V 撮影方法・W 入力端末（2026-11-10）・X 身分証（2026-11-12）を末尾に足した
   assert.equal(m[0][20], "93363867");
   const r = buildRyokanRows(ok.input! as never, property({ type: "旅館業" }) as never, "G-1", [null], [null], "2026/09/20 10:00");
-  assert.equal(r[0].length, 23);
+  assert.equal(r[0].length, 24);
   assert.equal(r[0][20], "93363867");
   assert.equal(r[0][18], "2026/09/20 10:00"); // S=受付日時 は動かさない（ops が列固定で読む）
 });
@@ -444,4 +444,62 @@ test("entryCell: 一覧から選んだ場合と共有端末モード以外の物
   assert.equal(entryCell("list", "T422"), "一覧から選択・共有端末モード");
   assert.equal(entryCell("fixed-url", "351180"), "施設固定URL(p=351180)");
   assert.equal(entryCell("", "T422"), "");
+});
+
+const { needsIdPhoto, validatePhotos } = await import("./guest-register.ts");
+const FACE = "face_FILE-123456";
+const PASS = "pass_FILE-123456";
+const IDP = "idph_FILE-123456";
+
+test("needsIdPhoto: 共有端末モードの施設×国内住所ありだけ true", () => {
+  assert.equal(needsIdPhoto({ jaResident: true }, "T422"), true);
+  assert.equal(needsIdPhoto({ jaResident: false }, "T422"), false); // 国外居住は旅券で足りる
+  assert.equal(needsIdPhoto({ jaResident: true }, "351180"), false); // 非対象施設は変化なし
+  assert.equal(needsIdPhoto({ jaResident: true }, ""), false);
+});
+
+test("validatePhotos: 共有端末モード×国内住所ありは身分証なしを拒否・ありなら通す", () => {
+  const ng = parseRegisterInput(input({ propertyId: "T422", guests: [guest({ jaResident: true, nationality: "日本", facePhotoFileId: FACE })] })).input!;
+  assert.match(validatePhotos(ng)!, /身分証/);
+  const ok = parseRegisterInput(input({ propertyId: "T422", guests: [guest({ jaResident: true, nationality: "日本", facePhotoFileId: FACE, idPhotoFileId: IDP, idPhotoMethod: "camera", idPhotoAgeSec: 4 })] })).input!;
+  assert.equal(validatePhotos(ok), null);
+  assert.equal(ok.guests[0].idPhotoFileId, IDP);
+  // 2 人目だけ欠けても拒否（宿泊者全員分）
+  const two = parseRegisterInput(input({ propertyId: "T422", guests: [
+    guest({ jaResident: true, nationality: "日本", facePhotoFileId: FACE, idPhotoFileId: IDP }),
+    guest({ jaResident: true, nationality: "日本", facePhotoFileId: FACE }),
+  ] })).input!;
+  assert.match(validatePhotos(two)!, /宿泊者2.*身分証/);
+});
+
+test("validatePhotos: 共有端末モードでも国外居住は身分証不要（旅券の写しで足りる）・送られても受け取らない", () => {
+  const abroad = parseRegisterInput(input({ propertyId: "T422", guests: [guest({ jaResident: false, facePhotoFileId: FACE, photoFileId: PASS, idPhotoFileId: IDP })] })).input!;
+  assert.equal(validatePhotos(abroad), null);
+  assert.equal(abroad.guests[0].idPhotoFileId, "");
+  const noPass = parseRegisterInput(input({ propertyId: "T422", guests: [guest({ jaResident: false, facePhotoFileId: FACE })] })).input!;
+  assert.match(validatePhotos(noPass)!, /パスポート/);
+});
+
+test("validatePhotos: 非対象施設は今までどおり（国内住所ありは顔写真だけで通り、身分証は受け取らない）", () => {
+  const dom = parseRegisterInput(input({ propertyId: "351180", guests: [guest({ jaResident: true, nationality: "日本", facePhotoFileId: FACE, idPhotoFileId: IDP })] })).input!;
+  assert.equal(validatePhotos(dom), null);
+  assert.equal(dom.guests[0].idPhotoFileId, "");
+  const noFace = parseRegisterInput(input({ propertyId: "351180", guests: [guest({ jaResident: true, nationality: "日本" })] })).input!;
+  assert.match(validatePhotos(noFace)!, /顔写真/);
+});
+
+test("X 列: 身分証のリンクは末尾に足し、A〜W の並びは変えない・撮影方法に身分証が載る", () => {
+  const parsed = parseRegisterInput(input({ propertyId: "T422", entry: "fixed-url", guests: [guest({ jaResident: true, nationality: "日本", passportNo: "",
+    facePhotoFileId: FACE, facePhotoMethod: "camera", facePhotoAgeSec: 5, idPhotoFileId: IDP, idPhotoMethod: "camera", idPhotoAgeSec: 7 })] })).input!;
+  const r = buildRyokanRows(parsed as never, property({ id: "T422", type: "旅館業" }) as never, "G-9", [null], ["https://f"], "2026/11/12 20:00", ["https://id"]);
+  assert.equal(r[0].length, 24);
+  assert.equal(r[0][7], "－"); // H 旅券写しの保存 は旅券だけを表す
+  assert.equal(r[0][19], "https://f");
+  assert.equal(r[0][21], "顔:カメラ起動(撮影から5秒) / 身分証:カメラ起動(撮影から7秒)");
+  assert.equal(r[0][22], "施設固定URL(p=T422)・共有端末モード");
+  assert.equal(r[0][23], "https://id");
+  // 身分証なし（非対象施設・旧呼び出し）は X 列が空
+  const old = buildMinpakuRows(parseRegisterInput(input()).input! as never, property() as never, "G-1", [null], [null], "x");
+  assert.equal(old[0].length, 24);
+  assert.equal(old[0][23], "");
 });
