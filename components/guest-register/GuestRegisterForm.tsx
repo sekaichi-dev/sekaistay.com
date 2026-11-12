@@ -21,9 +21,11 @@ import { compressImage, readIntoMemory, reportFailure, uploadPhoto } from "./pho
 import StaffPreviewBanner from "@/components/StaffPreviewBanner";
 import { isStaffPreview } from "@/lib/staff-preview";
 import { isKioskProperty, resolveLockedProperty } from "@/lib/guest-register-kiosk";
-import { blankRegisterFields, emptyGuest, hasEnteredData, kioskIdleTick, photoAgeSec, type GuestForm } from "@/lib/guest-register-form-state";
+import { blankRegisterFields, emptyGuest, hasEnteredData, kioskIdleTick, needsKioskIdPhoto, photoAgeSec, type GuestForm } from "@/lib/guest-register-form-state";
 
 const MAX_GUESTS = 8;
+
+type PhotoKind = "passport" | "face" | "id";
 
 type Lang = "ja" | "en";
 type PropertyType = "民泊" | "旅館業";
@@ -105,6 +107,11 @@ const T = {
     facePhotoLabel: "顔写真",
     facePhotoWhy: "ご本人確認のため、ご宿泊者全員にお顔がはっきり写った写真のご提出をお願いしています（自撮り写真で構いません）。",
     facePhotoHint: "正面からお顔がはっきり写った画像を添付してください。画像は自動で圧縮されます。",
+    idPhotoLabel: "身分証の写真",
+    idPhotoWhy: "ご本人確認のため、日本国内に住所がある方は身分証（運転免許証・マイナンバーカードの表面・健康保険証・パスポートなど）の氏名が分かる面を撮影してください。",
+    idPhotoMyNumber: "マイナンバーカードは裏面（個人番号が記載された面）を撮影しないでください。",
+    idPhotoHint: "氏名の文字が読めるように撮影してください。画像は自動で圧縮されます。",
+    errIdPhoto: (w: string) => `${w}: 身分証の写真を添付してください`,
     optionalTitle: "追加情報（任意・自治体条例対応）",
     gender: "性別",
     genderOptions: ["", "男", "女", "その他"],
@@ -211,6 +218,11 @@ const T = {
     facePhotoLabel: "Face photo",
     facePhotoWhy: "For identity verification, every guest is asked to provide a clear photo of their face (a selfie is fine).",
     facePhotoHint: "Attach a clear, front-facing photo of your face. The image is compressed automatically.",
+    idPhotoLabel: "Photo of your ID",
+    idPhotoWhy: "For identity verification, guests with an address in Japan are asked to photograph the side of an ID that shows their name (driver's license, front of My Number Card, health insurance card, passport, etc.).",
+    idPhotoMyNumber: "Do not photograph the back of a My Number Card (the side with the individual number).",
+    idPhotoHint: "Make sure the name on the ID is readable. The image is compressed automatically.",
+    errIdPhoto: (w: string) => `${w}: please attach a photo of your ID`,
     optionalTitle: "Additional details (optional)",
     gender: "Gender",
     genderOptions: ["", "男", "女", "その他"],
@@ -277,7 +289,7 @@ export default function GuestRegisterForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [receiptId, setReceiptId] = useState("");
-  // 圧縮中の写真キー（旅券 = "p0"〜 / 顔写真 = "f0"〜）
+  // 圧縮中の写真キー（旅券 = "p0"〜 / 顔写真 = "f0"〜 / 身分証 = "i0"〜）
   const [photoBusy, setPhotoBusy] = useState<string | null>(null);
   // 写真欄ごとの失敗理由。ページ末尾のエラー欄はスマホだと写真ボタンから遠く、ゲストが気づけない（2026-10-08 に 5 回やり直し）
   const [photoErrors, setPhotoErrors] = useState<Record<string, string>>({});
@@ -386,7 +398,7 @@ export default function GuestRegisterForm() {
 
   // 旅券写しは判読性重視の 1600px/450KB・顔写真は本人確認できれば足りるので 1200px/300KB。
   // 縮小したらその場で Drive へ置き、フォームにはファイル ID だけ持つ。
-  async function onPhotoChange(kind: "passport" | "face", index: number, file: File | null) {
+  async function onPhotoChange(kind: PhotoKind, index: number, file: File | null) {
     if (preview) return;
     if (!file) return;
     // 共有端末で開始後に画面が空へ戻ったら（無操作リセット・送信後）、この写真の結果は次の人のカードに書かない
@@ -400,9 +412,9 @@ export default function GuestRegisterForm() {
     }
   }
 
-  async function handlePhoto(kind: "passport" | "face", index: number, file: File, stale: () => boolean) {
+  async function handlePhoto(kind: PhotoKind, index: number, file: File, stale: () => boolean) {
     setError("");
-    const slot = `${kind === "passport" ? "p" : "f"}${index}`;
+    const slot = `${kind === "passport" ? "p" : kind === "id" ? "i" : "f"}${index}`;
     // 共有端末はカメラ直接起動の入力（capture 属性つき）・それ以外はファイル選択。画面の申告として名簿の V 列に残す
     const method = kiosk ? "camera" : "file";
     const ageSec = photoAgeSec(file.lastModified, Date.now());
@@ -412,7 +424,9 @@ export default function GuestRegisterForm() {
     const failSlot = (msg: string) => { if (stale()) return; setError(msg); setPhotoErrors((prev) => ({ ...prev, [slot]: msg })); };
     const clear = kind === "passport"
       ? { photoFileId: "", photoName: "", photoMethod: "" as const, photoAgeSec: -1 }
-      : { facePhotoFileId: "", facePhotoName: "", facePhotoMethod: "" as const, facePhotoAgeSec: -1 };
+      : kind === "id"
+        ? { idPhotoFileId: "", idPhotoName: "", idPhotoMethod: "" as const, idPhotoAgeSec: -1 }
+        : { facePhotoFileId: "", facePhotoName: "", facePhotoMethod: "" as const, facePhotoAgeSec: -1 };
     const source = await readIntoMemory(file);
     if (!source) {
       apply(clear);
@@ -423,8 +437,9 @@ export default function GuestRegisterForm() {
     }
     let compressed: File;
     try {
-      const r = kind === "passport"
-        ? await compressImage(source, 1600, 450_000, "passport.jpg")
+      // 身分証は旅券と同じく文字の判読性重視
+      const r = kind === "passport" || kind === "id"
+        ? await compressImage(source, 1600, 450_000, kind === "id" ? "id.jpg" : "passport.jpg")
         : await compressImage(source, 1200, 300_000, "face.jpg");
       compressed = r.file;
       if (!r.compressed) reportFailure("compress-fallback", "ORIGINAL_SENT", `${kind} ${source.type || "(no type)"} ${source.size}B`, bookingRef);
@@ -439,7 +454,9 @@ export default function GuestRegisterForm() {
       const fileId = await uploadPhoto(compressed, bookingRef);
       apply(kind === "passport"
         ? { photoFileId: fileId, photoName: file.name, photoMethod: method, photoAgeSec: ageSec }
-        : { facePhotoFileId: fileId, facePhotoName: file.name, facePhotoMethod: method, facePhotoAgeSec: ageSec });
+        : kind === "id"
+          ? { idPhotoFileId: fileId, idPhotoName: file.name, idPhotoMethod: method, idPhotoAgeSec: ageSec }
+          : { facePhotoFileId: fileId, facePhotoName: file.name, facePhotoMethod: method, facePhotoAgeSec: ageSec });
     } catch (e) {
       apply(clear);
       failSlot(t.photoUploadFailed);
@@ -464,6 +481,7 @@ export default function GuestRegisterForm() {
       if (property.type === "民泊" && !g.occupation.trim()) return t.errOccupation(who);
       if (!(i > 0 && g.sameContact) && !g.contact.trim()) return t.errContact(who);
       if (!g.facePhotoFileId) return t.errFacePhoto(who);
+      if (needsKioskIdPhoto(kiosk, g) && !g.idPhotoFileId) return t.errIdPhoto(who);
       if (kiosk) {
         if (!g.age.trim()) return t.errAge(who);
         if (!g.prevStay.trim()) return t.errPrevStay(who);
@@ -516,6 +534,10 @@ export default function GuestRegisterForm() {
           photoAgeSec: g.jaResident === false ? g.photoAgeSec : -1,
           facePhotoMethod: g.facePhotoMethod,
           facePhotoAgeSec: g.facePhotoAgeSec,
+          // 身分証は共有端末モード×国内住所ありのときだけ送る（国外居住に切り替えた人の写真は送らない）
+          idPhotoFileId: needsKioskIdPhoto(kiosk, g) ? g.idPhotoFileId : "",
+          idPhotoMethod: needsKioskIdPhoto(kiosk, g) ? g.idPhotoMethod : "",
+          idPhotoAgeSec: needsKioskIdPhoto(kiosk, g) ? g.idPhotoAgeSec : -1,
         })),
         // 画面をどう開いたか（?p= で施設が固定 / 一覧から選択）。名簿の W 列に残す記録（申告であって証明ではない）
         entry: lockedProperty ? "fixed-url" : "list",
@@ -897,6 +919,43 @@ export default function GuestRegisterForm() {
                         <p className="mt-1.5 text-[12px] text-switch-gray-mid">{t.facePhotoHint}</p>
                         {preview && <p className="mt-1 text-[12px] text-amber-900">{t.previewNoPhoto}</p>}
                       </div>
+
+                      {/* 身分証欄は玄関の共有端末モード×国内住所ありの時だけ表示（背面カメラでその場撮影のみ・2026-11-12） */}
+                      {needsKioskIdPhoto(kiosk, g) && (
+                      <div className="rounded-switch-md border p-4 sm:p-5 border-switch-teal/35 bg-switch-teal-tint/40">
+                        <label className={labelCls}>{t.idPhotoLabel}{requiredMark}</label>
+                        <p className="text-[11.5px] text-switch-gray-mid leading-relaxed mb-2">{t.idPhotoWhy}</p>
+                        <p className="text-[12px] font-semibold text-amber-900 leading-relaxed mb-3">{t.idPhotoMyNumber}</p>
+                        <label className={`inline-flex items-center gap-2 rounded-switch-md border px-4 py-2.5 text-[13px] font-semibold cursor-pointer transition-colors ${g.idPhotoFileId ? "border-switch-teal bg-switch-teal-tint text-switch-teal-deep" : "border-switch-stone-border bg-white text-switch-charcoal hover:bg-switch-stone-over"}${preview ? " pointer-events-none opacity-60" : ""}`}>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={preview}
+                            onClick={onPickerOpen}
+                            capture="environment"
+                            data-testid={`id-photo-${i}`}
+                            onChange={(e) => { onPickerClosed(); onPhotoChange("id", i, e.target.files?.[0] || null); }}
+                          />
+                          {photoBusy === `i${i}` ? t.photoUploading : g.idPhotoFileId ? `✓ ${t.photoAttached}` : t.photoCamera}
+                        </label>
+                        {photoErrors[`i${i}`] && <p className="mt-2 text-[12px] text-danger leading-relaxed" role="alert">{photoErrors[`i${i}`]}</p>}
+                        {g.idPhotoFileId && (
+                          <div className="mt-1 flex items-center gap-1 text-[12px] text-switch-gray-mid">
+                            <span className="min-w-0 break-all">{g.idPhotoName}</span>
+                            <button
+                              type="button"
+                              onClick={() => updateGuest(i, { idPhotoFileId: "", idPhotoName: "", idPhotoMethod: "", idPhotoAgeSec: -1 })}
+                              className="shrink-0 min-h-[44px] px-2 underline underline-offset-2 hover:text-danger"
+                            >
+                              {t.photoRemove}
+                            </button>
+                          </div>
+                        )}
+                        <p className="mt-1.5 text-[12px] text-switch-gray-mid">{t.idPhotoHint}</p>
+                        {preview && <p className="mt-1 text-[12px] text-amber-900">{t.previewNoPhoto}</p>}
+                      </div>
+                      )}
 
                       {/* パスポート欄は国外居住を選んだ時だけ表示（国内住所ありは法定不要）。表示時は国籍を問わず必須 */}
                       {g.jaResident === false && (

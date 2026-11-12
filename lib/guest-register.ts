@@ -1,7 +1,8 @@
 // 宿泊者名簿 (/guest-register) — Google Sheets/Drive 連携とレコード組み立て。
 // 認証は lib/sheets-backup.ts と同じ env (GOOGLE_CLIENT_ID/SECRET/REFRESH_TOKEN_SEKAICHI) を使用。
 // 書き込み先スプシ: 宿泊者名簿_旅館業_民泊（旅館業用/民泊用タブ・1名1行・A〜W列。T=顔写真リンク 2026-07-24追加・
-// U=予約番号・V=撮影方法・W=入力端末 2026-11-10 追加。ops は A6:U だけを読むので V・W を足しても列位置は変わらない）
+// U=予約番号・V=撮影方法・W=入力端末 2026-11-10 追加・X=身分証(Driveリンク) 2026-11-12 追加。
+// ops は A6:U だけを読むので V〜X を足しても列位置は変わらない）
 // 集計式は 民泊用!A6:A505 参照のため、追記行が505行を超えたら式レンジの拡張が必要。
 // スプシ・旅券写しフォルダとも共有ドライブ「SEKAI STAY」内（2026-07-14 移行）。
 // Drive API は supportsAllDrives 必須（外すと共有ドライブ内の親が 404 になる）。
@@ -49,6 +50,10 @@ export interface GuestInput {
   photoAgeSec?: number;
   facePhotoMethod?: CaptureMethod;
   facePhotoAgeSec?: number;
+  /** 国内に住所がある宿泊者の身分証の写真（玄関の共有端末モードの施設だけ・それ以外は常に ""） */
+  idPhotoFileId?: string;
+  idPhotoMethod?: CaptureMethod;
+  idPhotoAgeSec?: number;
 }
 
 export type CaptureMethod = "" | "camera" | "file";
@@ -99,6 +104,12 @@ const FIELD_MAX: Record<string, number> = {
   nextDest: 100,
   note: 500,
 };
+
+// 玄関の共有端末モードの施設では、国内に住所がある宿泊者にも身分証の写真を 1 枚求める（2026-11-12 テンイチ決定・
+// 旅館業の ICT 本人確認は「顔及び身分証・旅券」。国内住所なしは旅券の写しで足りるので二重に求めない）
+export function needsIdPhoto(guest: Pick<GuestInput, "jaResident">, propertyId: string): boolean {
+  return isKioskProperty(propertyId) && guest.jaResident;
+}
 
 // 国内住所なしは国籍を問わず旅券必須（2026-07-10 テンイチ指示。外国籍は法令上の義務・日本国籍は運用上の必須）
 export function needsPassport(guest: Pick<GuestInput, "jaResident" | "nationality">): boolean {
@@ -176,10 +187,26 @@ export function parseRegisterInput(raw: unknown): { input?: RegisterInput; error
       photoAgeSec: ageSecOf(g.photoAgeSec),
       facePhotoMethod: captureMethodOf(g.facePhotoMethod),
       facePhotoAgeSec: ageSecOf(g.facePhotoAgeSec),
+      // 身分証は共有端末モードの施設×国内住所ありのときだけ受け取る（他の施設の名簿の挙動は変えない）
+      ...(isKioskProperty(propertyId) && g.jaResident === true
+        ? { idPhotoFileId: driveIdOrEmpty(g.idPhotoFileId), idPhotoMethod: captureMethodOf(g.idPhotoMethod), idPhotoAgeSec: ageSecOf(g.idPhotoAgeSec) }
+        : { idPhotoFileId: "", idPhotoMethod: "" as CaptureMethod, idPhotoAgeSec: -1 }),
     });
   }
   const entry: EntryKind = r.entry === "fixed-url" || r.entry === "list" ? r.entry : "";
   return { input: { propertyId, checkin, checkout, checkinTime, checkoutTime, note, bookingRef, guests, entry } };
+}
+
+// 写真の有無（旅券: 国内住所なしは必須・顔写真: 全員必須 2026-07-24・身分証: 共有端末モード×国内住所ありは必須 2026-11-12）
+export function validatePhotos(input: RegisterInput): string | null {
+  for (let i = 0; i < input.guests.length; i++) {
+    const g = input.guests[i];
+    const who = `宿泊者${i + 1} / Guest ${i + 1}`;
+    if (needsPassport(g) && !g.photoFileId) return `${who}: パスポート写真を添付してください / Passport photo is required`;
+    if (!g.facePhotoFileId) return `${who}: 顔写真を添付してください / Face photo is required`;
+    if (needsIdPhoto(g, input.propertyId) && !g.idPhotoFileId) return `${who}: 身分証の写真を添付してください / ID photo is required`;
+  }
+  return null;
 }
 
 // 法定必須項目の充足チェック（民泊=職業必須 / 旅館業=連絡先必須・両方とも氏名住所連絡先は取る）
@@ -235,10 +262,11 @@ function captureLabel(method: CaptureMethod | undefined, ageSec: number | undefi
   return "申告なし";
 }
 
-export function captureCell(g: GuestInput, hasPassportPhoto: boolean): string {
-  if (!g.facePhotoMethod && !g.photoMethod) return "";
+export function captureCell(g: GuestInput, hasPassportPhoto: boolean, hasIdPhoto = false): string {
+  if (!g.facePhotoMethod && !g.photoMethod && !g.idPhotoMethod) return "";
   const parts = [`顔:${captureLabel(g.facePhotoMethod, g.facePhotoAgeSec)}`];
   if (hasPassportPhoto) parts.push(`旅券:${captureLabel(g.photoMethod, g.photoAgeSec)}`);
+  if (hasIdPhoto) parts.push(`身分証:${captureLabel(g.idPhotoMethod, g.idPhotoAgeSec)}`);
   return parts.join(" / ");
 }
 
@@ -249,10 +277,11 @@ export function entryCell(entry: EntryKind | undefined, propertyId: string): str
   return "";
 }
 
-// 民泊用タブ A〜W列（1名1行・U=予約番号・V=撮影方法・W=入力端末）。定期報告の式が参照するのは A(届出番号) H(国籍) J(開始日) L(終了日)。
+// 民泊用タブ A〜X列（1名1行・U=予約番号・V=撮影方法・W=入力端末・X=身分証）。定期報告の式が参照するのは A(届出番号) H(国籍) J(開始日) L(終了日)。
 export function buildMinpakuRows(
   input: RegisterInput, property: Property, groupId: string,
   photoLinks: (string | null)[], facePhotoLinks: (string | null)[], receivedAt: string,
+  idPhotoLinks: (string | null)[] = [],
 ): unknown[][] {
   const nights = calcNights(input.checkin, input.checkout);
   return input.guests.map((g, i) => [
@@ -277,15 +306,17 @@ export function buildMinpakuRows(
     receivedAt,
     facePhotoLinks[i] || "",
     input.bookingRef,
-    captureCell(g, !!photoLinks[i]),
+    captureCell(g, !!photoLinks[i], !!idPhotoLinks[i]),
     entryCell(input.entry, property.id),
+    idPhotoLinks[i] || "",
   ]);
 }
 
-// 旅館業用タブ A〜W列（1名1行・U=予約番号・V=撮影方法・W=入力端末）。No.列は =ROW()-5 で自動採番（行削除にも追従）。
+// 旅館業用タブ A〜X列（1名1行・U=予約番号・V=撮影方法・W=入力端末・X=身分証）。No.列は =ROW()-5 で自動採番（行削除にも追従）。
 export function buildRyokanRows(
   input: RegisterInput, property: Property, groupId: string,
   photoLinks: (string | null)[], facePhotoLinks: (string | null)[], receivedAt: string,
+  idPhotoLinks: (string | null)[] = [],
 ): unknown[][] {
   return input.guests.map((g, i) => [
     "=ROW()-5",
@@ -309,8 +340,9 @@ export function buildRyokanRows(
     receivedAt,
     facePhotoLinks[i] || "",
     input.bookingRef,
-    captureCell(g, !!photoLinks[i]),
+    captureCell(g, !!photoLinks[i], !!idPhotoLinks[i]),
     entryCell(input.entry, property.id),
+    idPhotoLinks[i] || "",
   ]);
 }
 
@@ -372,7 +404,7 @@ export async function retryTransientOnce(call: () => Promise<Response>, waitMs =
 }
 
 export async function appendRows(tab: "旅館業用" | "民泊用", rows: unknown[][]): Promise<void> {
-  return appendSheetRows(`${tab}!A6:W`, rows);
+  return appendSheetRows(`${tab}!A6:X`, rows);
 }
 
 /** 名簿スプシの任意のタブ・範囲へ追記（本人確認タブなど名簿本体以外もここを通す）。

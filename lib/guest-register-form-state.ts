@@ -26,6 +26,11 @@ export interface GuestForm {
   facePhotoName: string;
   facePhotoMethod: PhotoMethod;
   facePhotoAgeSec: number;
+  /** 身分証（玄関の共有端末モード×国内住所あり）。Drive 受付中フォルダのファイル ID（"" = 未添付） */
+  idPhotoFileId: string;
+  idPhotoName: string;
+  idPhotoMethod: PhotoMethod;
+  idPhotoAgeSec: number;
   gender: string;
   age: string;
   prevStay: string;
@@ -37,8 +42,14 @@ export const emptyGuest = (isChild = false): GuestForm => ({
   occupation: "", contact: "", sameContact: false, passportNo: "",
   photoFileId: "", photoName: "", photoMethod: "", photoAgeSec: -1,
   facePhotoFileId: "", facePhotoName: "", facePhotoMethod: "", facePhotoAgeSec: -1,
+  idPhotoFileId: "", idPhotoName: "", idPhotoMethod: "", idPhotoAgeSec: -1,
   gender: "", age: "", prevStay: "", nextDest: "",
 });
+
+/** 玄関の共有端末モードでは、国内に住所がある宿泊者に身分証の写真を求める（国外居住は旅券で足りる・サーバーの needsIdPhoto と同じ条件） */
+export function needsKioskIdPhoto(kiosk: boolean, g: Pick<GuestForm, "jaResident">): boolean {
+  return kiosk && g.jaResident === true;
+}
 
 /** 共有端末で人が入れ替わるときに消す項目（施設と表示言語は残す）。 */
 export interface RegisterFields {

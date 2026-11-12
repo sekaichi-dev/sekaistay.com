@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 const {
-  emptyGuest, blankRegisterFields, hasEnteredData, idlePhase, kioskIdleTick, photoAgeSec, KIOSK_IDLE_MS, KIOSK_WARN_MS, PICKER_PAUSE_MAX_MS,
+  emptyGuest, blankRegisterFields, needsKioskIdPhoto, hasEnteredData, idlePhase, kioskIdleTick, photoAgeSec, KIOSK_IDLE_MS, KIOSK_WARN_MS, PICKER_PAUSE_MAX_MS,
 } = await import("./guest-register-form-state.ts");
 
 test("blankRegisterFields: 空の状態は「入力なし」", () => {
@@ -16,6 +16,7 @@ test("hasEnteredData: どの項目を 1 つ入れても「入力あり」（初�
     name: "a", jaResident: true, address: "a", sameAddress: true, nationality: "日本", occupation: "a", contact: "a",
     sameContact: true, passportNo: "a", photoFileId: "x", photoName: "x", photoMethod: "camera", photoAgeSec: 3,
     facePhotoFileId: "x", facePhotoName: "x", facePhotoMethod: "file", facePhotoAgeSec: 3,
+    idPhotoFileId: "x", idPhotoName: "x", idPhotoMethod: "camera", idPhotoAgeSec: 3,
     gender: "男", age: "30", prevStay: "a", nextDest: "a",
   };
   const keys = Object.keys(emptyGuest()).filter((k) => k !== "isChild");
@@ -62,4 +63,22 @@ test("kioskIdleTick: 送信中・アップロード中・カメラを開いて�
   // カメラを開いたまま 10 分戻らなければ止めておかない
   const stale = kioskIdleTick(later, { lastActivity: t0, pickerOpenedAt: later - PICKER_PAUSE_MAX_MS, busy: false });
   assert.equal(stale.phase.phase, "expired");
+});
+
+test("needsKioskIdPhoto: 共有端末モード×国内住所ありだけ（国外居住・未選択・非対象施設は求めない）", () => {
+  assert.equal(needsKioskIdPhoto(true, { jaResident: true }), true);
+  assert.equal(needsKioskIdPhoto(true, { jaResident: false }), false);
+  assert.equal(needsKioskIdPhoto(true, { jaResident: null }), false);
+  assert.equal(needsKioskIdPhoto(false, { jaResident: true }), false);
+});
+
+test("blankRegisterFields: 送信後・無操作の初期化で身分証の写真も消える", () => {
+  const g = blankRegisterFields().guests[0];
+  assert.equal(g.idPhotoFileId, "");
+  assert.equal(g.idPhotoName, "");
+  assert.equal(g.idPhotoMethod, "");
+  assert.equal(g.idPhotoAgeSec, -1);
+  const f = blankRegisterFields();
+  f.guests = [{ ...emptyGuest(), idPhotoFileId: "x" }];
+  assert.equal(hasEnteredData(f), true); // 身分証だけ撮った状態でも無操作リセットが動く
 });
