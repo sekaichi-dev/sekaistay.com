@@ -42,7 +42,7 @@ export default function CompanyInfo() {
               </tr>
               <tr className="border-b border-switch-gray-light">
                 <td className="py-3 pr-4 text-switch-gray-mid font-bold align-top">資本金<br /><span className="font-normal text-[10px]">(資本準備金含む)</span></td>
-                <td className="py-3 text-switch-charcoal">3,400万円</td>
+                <td className="py-3 text-switch-charcoal">3,200万円</td>
               </tr>
               <tr>
                 <td className="py-3 pr-4 text-switch-gray-mid font-bold align-top">法人番号</td>
