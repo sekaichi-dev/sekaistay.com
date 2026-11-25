@@ -96,12 +96,6 @@ const trustBadges: TrustBadge[] = [
     icon: "✓",
   },
   {
-    id: "national-locations",
-    label: "全国管理拠点",
-    value: "7拠点",
-    icon: "📍",
-  },
-  {
     id: "ministry-registration",
     label: "国交大臣登録",
     value: "第F05780号",

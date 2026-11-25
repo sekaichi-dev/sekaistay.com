@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     template: '%s | SEKAI STAY',
   },
   description:
-    '管理物件レビュー平均4.8・Airbnbスーパーホスト認定。SEKAI STAYは稼働率と収益を上げる民泊運用代行です。全国7拠点・手数料8%・24時間オーナーダッシュボード。最短2週間で切り替え可能。',
+    '管理物件レビュー平均4.8・Airbnbスーパーホスト認定。SEKAI STAYは稼働率と収益を上げる民泊運用代行です。全国対応・手数料8%・24時間オーナーダッシュボード。最短2週間で切り替え可能。',
   keywords: [
     '民泊 運用代行',
     '民泊 管理代行',
@@ -108,7 +108,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'SEKAI STAY | 成果で選ばれる民泊運用代行',
     description:
-      '管理物件レビュー平均4.8。稼働率を上げ、収益を最大化する民泊運用代行サービス。全国7拠点・24時間オーナーダッシュボード。',
+      '管理物件レビュー平均4.8。稼働率を上げ、収益を最大化する民泊運用代行サービス。全国対応・24時間オーナーダッシュボード。',
     type: 'website',
     locale: 'ja_JP',
     siteName: 'SEKAI STAY',
@@ -121,7 +121,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'SEKAI STAY | 成果で選ばれる民泊運用代行',
     description:
-      '管理物件レビュー平均4.8・Airbnbスーパーホスト認定。稼働率と収益を上げる民泊運用代行。全国7拠点。',
+      '管理物件レビュー平均4.8・Airbnbスーパーホスト認定。稼働率と収益を上げる民泊運用代行。全国対応。',
     // twitter:image は app/twitter-image.jpg（ファイル規約）に任せる。
     images: [OG_IMAGE_URL],
   },
@@ -169,7 +169,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               alternateName: '株式会社セカイチ',
               url: SITE_URL,
               logo: `${SITE_URL}/sekai_stay_03_03.png`,
-              description: '管理物件レビュー平均4.8・Airbnbスーパーホスト認定。稼働率と収益を上げる民泊運用代行サービス。全国7拠点。',
+              description: '管理物件レビュー平均4.8・Airbnbスーパーホスト認定。稼働率と収益を上げる民泊運用代行サービス。全国対応。',
               address: {
                 '@type': 'PostalAddress',
                 streetAddress: '青葉台2-20-7 KM中目黒ビル1F',

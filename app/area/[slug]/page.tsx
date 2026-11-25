@@ -5,7 +5,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
 import { getAreaBySlug, getAllAreas } from '@/lib/areas'
-import { getOfficeForArea, getHQOffice } from '@/lib/offices'
+import { getHQOffice } from '@/lib/offices'
 import { IconArrowRight } from '@/components/Icons'
 import AuditLink from '@/components/audit/AuditLink'
 
@@ -56,11 +56,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 function LocalBusinessJsonLd({ area }: { area: { name: string; prefecture: string; slug: string } }) {
-  const office = getOfficeForArea(area.slug) || getHQOffice()
+  const office = getHQOffice()
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
-    name: `SEKAI STAY ${office.name}`,
+    name: 'SEKAI STAY',
     description: `${area.name}の民泊運用代行サービス`,
     url: `${SITE_URL}/area/${area.slug}`,
     address: {
@@ -176,7 +176,6 @@ export default function AreaDetailPage({ params }: Props) {
     },
   ]
 
-  const office = getOfficeForArea(area.slug)
   const monthly = (area.avgRevenue / 10000).toFixed(0)
 
   return (
@@ -285,19 +284,6 @@ export default function AreaDetailPage({ params }: Props) {
                 </div>
               ))}
             </div>
-
-            {office && (
-              <div className="mt-12 rounded-[10px] bg-mist px-7 py-9 sm:px-10 sm:py-10">
-                <p className="text-[12px] font-bold tracking-[0.16em] text-sekai-teal">対応エリア担当</p>
-                <h3 className="mt-2 text-[clamp(1.25rem,2.2vw,1.5rem)] font-bold leading-snug text-ink">
-                  {area.name}エリア担当：{office.name}
-                </h3>
-                <p className="mt-3 text-[14px] leading-[1.9] text-ink/75">{office.displayAddress}</p>
-                <p className="mt-2 text-[13px] leading-[1.85] text-ink/60">
-                  地元スタッフが{area.name}の物件特性を熟知した運営をサポートします。
-                </p>
-              </div>
-            )}
           </div>
         </section>
 
