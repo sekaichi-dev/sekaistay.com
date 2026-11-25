@@ -243,7 +243,6 @@ export const ECOSYSTEM = {
     spots: [
       { name: 'The World Cafe', area: '東京・中目黒' },
       { name: 'Kyoto F&B', area: '京都' },
-      { name: 'その他の拠点', area: '全国' },
     ],
   },
 
